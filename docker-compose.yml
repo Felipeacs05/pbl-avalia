@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: avalia_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: tfs_user
+      POSTGRES_PASSWORD: tfs_pass
+      POSTGRES_DB: tfs_test
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docs/schema.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+volumes:
+  postgres_data:
