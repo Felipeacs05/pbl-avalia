@@ -1,3 +1,53 @@
+<<<<<<< HEAD
+# ==========================================
+# Repositório Monorepo: Avalia-system
+# ==========================================
+
+# IDEs e Editores
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+.apt_generated/
+.sts4-cache/
+.springBeans
+
+# Logs e Temporários
+*.log
+*.tmp
+cp.txt
+
+# Sistema Operacional
+.DS_Store
+Thumbs.db
+
+# ==========================================
+# Backend (Java / Maven)
+# ==========================================
+backend/target/
+target/
+backend/.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# ==========================================
+# Frontend (Node / Vite / React)
+# ==========================================
+frontend/node_modules/
+node_modules/
+frontend/dist/
+dist/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+.eslintcache
+=======
 node_modules/ 
 dist/ 
 .env 
@@ -6,3 +56,4 @@ target/
 .idea/ 
 .vscode/ 
 *.iml 
+>>>>>>> c7003149b7692c2d76f62acb89e15e85f90fecef
