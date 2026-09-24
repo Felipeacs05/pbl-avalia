@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # ==========================================
 # Repositório Monorepo: Avalia-system
 # ==========================================
@@ -46,3 +47,13 @@ frontend/.env.development.local
 frontend/.env.test.local
 frontend/.env.production.local
 .eslintcache
+=======
+node_modules/ 
+dist/ 
+.env 
+target/ 
+*.class 
+.idea/ 
+.vscode/ 
+*.iml 
+>>>>>>> c7003149b7692c2d76f62acb89e15e85f90fecef
