@@ -84,7 +84,7 @@ class UserServiceTest {
 
         assertThatThrownBy(() -> userService.register(request, invalidPhoto))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("JPG ou PNG");
+                .hasMessageContaining("JPG, PNG ou JPEG");
     }
 
     @ParameterizedTest
