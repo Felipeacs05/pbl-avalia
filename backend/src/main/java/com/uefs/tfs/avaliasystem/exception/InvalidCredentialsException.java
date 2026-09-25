@@ -10,9 +10,12 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  * revelar se o e-mail existe ou não no banco — critério de segurança da US02.
  */
 @ResponseStatus(HttpStatus.UNAUTHORIZED)
-public class CredenciaisInvalidasException extends RuntimeException {
+public class InvalidCredentialsException extends RuntimeException {
 
-    public CredenciaisInvalidasException(String message) {
+    public InvalidCredentialsException(String message) {
         super(message);
+    }
+    public InvalidCredentialsException() {
+        super("Credenciais inválidas");
     }
 }

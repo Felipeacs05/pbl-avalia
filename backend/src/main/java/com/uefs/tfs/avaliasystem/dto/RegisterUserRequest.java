@@ -9,8 +9,8 @@ import lombok.AllArgsConstructor;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CadastroUsuarioRequest {
-    private String nome;
+public class RegisterUserRequest {
+    private String name;
     private String email;
-    private String senha;
+    private String password;
 }
