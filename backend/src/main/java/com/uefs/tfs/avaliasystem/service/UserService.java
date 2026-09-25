@@ -1,12 +1,25 @@
-package com.uefs.tfs.avaliasystem.repository;
+package com.uefs.tfs.avaliasystem.service;
 
+import com.uefs.tfs.avaliasystem.dto.RegisterUserRequest;
+import com.uefs.tfs.avaliasystem.dto.DashboardResponse;
+import com.uefs.tfs.avaliasystem.dto.LoginResponse;
 import com.uefs.tfs.avaliasystem.model.User;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Optional;
+public interface UserService {
+    User register(RegisterUserRequest request, MultipartFile photo);
 
-@Repository
-public interface UserRepository extends JpaRepository<User, Long> {
-    Optional<User> findByEmail(String email);
+    /**
+     * Authenticates the user and returns a signed JWT token with a 24-hour expiration.
+     */
+    LoginResponse login(String email, String password);
+
+    /**
+     * Returns the user dashboard with rooms where the user is Tutor and Student.
+     */
+    DashboardResponse getDashboard(Long userId);
+
+    default DashboardResponse obterDashboard(Long usuarioId) {
+        return getDashboard(usuarioId);
+    }
 }
