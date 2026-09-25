@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  * Usada, por exemplo, ao tentar acessar o dashboard de um usuário inexistente.
  */
 @ResponseStatus(HttpStatus.NOT_FOUND)
-public class UsuarioNaoEncontradoException extends RuntimeException {
+public class UserNotFoundException extends RuntimeException {
 
-    public UsuarioNaoEncontradoException(String message) {
+    public UserNotFoundException(String message) {
         super(message);
     }
 }

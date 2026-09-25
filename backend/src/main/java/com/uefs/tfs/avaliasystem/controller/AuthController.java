@@ -1,41 +1,43 @@
 package com.uefs.tfs.avaliasystem.controller;
 
-import com.uefs.tfs.avaliasystem.dto.CadastroUsuarioRequest;
-import com.uefs.tfs.avaliasystem.model.Usuario;
-import com.uefs.tfs.avaliasystem.service.UsuarioService;
-import org.springframework.http.HttpStatus;
+import com.uefs.tfs.avaliasystem.dto.RegisterUserRequest;
+import com.uefs.tfs.avaliasystem.dto.UserResponse;
+import com.uefs.tfs.avaliasystem.model.User;
+import com.uefs.tfs.avaliasystem.service.UserService;
+import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/v1/auth")
+@AllArgsConstructor
 public class AuthController {
 
-    private final UsuarioService usuarioService;
+    private final UserService userService;
 
-    @Autowired
-    public AuthController(UsuarioService usuarioService) {
-        this.usuarioService = usuarioService;
-    }
+    @PostMapping(value = "/register", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    public ResponseEntity<UserResponse> register(
+            @Valid @RequestPart("dados") RegisterUserRequest request,
+            @RequestPart(value = "foto", required = true) MultipartFile photo) {
 
-    @PostMapping(value = "/cadastro", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
-    public ResponseEntity<Usuario> cadastrar(
-            @RequestPart("dados") CadastroUsuarioRequest dados,
-            @RequestPart(value = "foto", required = false) MultipartFile foto) {
-            
-        if (foto == null || foto.isEmpty()) {
+        if (photo.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
-        
-        // Simples sanitização de XSS para o teste de script malicioso
-        if (dados.getNome() != null) {
-            dados.setNome(dados.getNome().replaceAll("<script.*?>", "").replaceAll("</script>", ""));
-        }
 
-        Usuario usuario = usuarioService.cadastrar(dados, foto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(usuario);
+        User user = userService.register(request, photo);
+        UserResponse response = UserResponse.fromUser(user);
+
+        URI location = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/v1/users/{id}")
+                .buildAndExpand(user.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(response);
     }
 }

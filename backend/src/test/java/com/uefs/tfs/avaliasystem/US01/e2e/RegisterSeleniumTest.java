@@ -21,14 +21,14 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @Tag("e2e")
 @DisplayName("US01 - Testes E2E com Selenium (Cadastro e Upload)")
-class CadastroSeleniumTest {
+class RegisterSeleniumTest {
 
     private WebDriver driver;
-    private CadastroPage cadastroPage;
+    private RegisterPage registerPage;
     private static final String BASE_URL = "http://localhost:5173";
 
     @TempDir
-    Path pastaTemporaria;
+    Path tempFolder;
 
     @BeforeEach
     void setUp() {
@@ -41,7 +41,7 @@ class CadastroSeleniumTest {
 
         // Nota: requer ChromeDriver no PATH ou compatível com a versão instalada do Chrome
         driver = new ChromeDriver(options);
-        cadastroPage = new CadastroPage(driver);
+        registerPage = new RegisterPage(driver);
     }
 
     @AfterEach
@@ -52,46 +52,46 @@ class CadastroSeleniumTest {
     }
 
     @Test
-    @DisplayName("Cenário Válido: Upload de foto com loading visual e cadastro bem-sucedido")
-    void deveExibirLoadingVisualDuranteUploadEConcluirCadastro() throws IOException {
+    @DisplayName("Cenário Válido: Upload de foto com loading visual e cadastro concluído")
+    void shouldDisplayVisualLoadingDuringUploadAndCompleteRegistration() throws IOException {
         // 1. Criação de arquivo fake JPG temporário
-        Path fotoValida = pastaTemporaria.resolve("perfil_teste.jpg");
-        Files.write(fotoValida, new byte[1024 * 50]); // 50 KB
+        Path validPhoto = tempFolder.resolve("perfil_teste.jpg");
+        Files.write(validPhoto, new byte[1024 * 50]); // 50 KB
 
-        cadastroPage.acessar(BASE_URL);
-        cadastroPage.preencherFormulario("Marina Souza", "marina@uefs.br", "SenhaForte@2026");
-        cadastroPage.anexarFoto(fotoValida.toAbsolutePath().toString());
+        registerPage.accessUrl(BASE_URL);
+        registerPage.fillOutForm("Marina Souza", "marina@uefs.br", "SenhaForte@2026");
+        registerPage.attachPhoto(validPhoto.toAbsolutePath().toString());
 
-        cadastroPage.submeter();
+        registerPage.submit();
 
         // 2. Validação de UX (Critério 3): O spinner de loading deve aparecer durante o upload
-        assertThat(cadastroPage.aguardarAparicaoLoading())
-                .as("O componente de loading (spinner/barra) deve ficar visível durante o upload")
+        assertThat(registerPage.waitForLoadingToAppear())
+                .as("O componente de loading (spinner/barra) deve estar visível durante o upload")
                 .isTrue();
 
         // 3. O spinner deve desaparecer após o término da requisição
-        assertThat(cadastroPage.aguardarDesaparecimentoLoading())
+        assertThat(registerPage.waitForLoadingToDisappear())
                 .as("O componente de loading deve desaparecer após a conclusão")
                 .isTrue();
 
         // 4. Mensagem de sucesso deve estar visível
-        assertThat(cadastroPage.isMensagemSucessoVisivel())
+        assertThat(registerPage.isSuccessMessageVisible())
                 .as("A mensagem de confirmação de cadastro deve ser exibida ao usuário")
                 .isTrue();
     }
 
     @Test
-    @DisplayName("Cenário Inválido 1: Submissão sem foto deve ser bloqueada na interface")
-    void deveBloquearCadastroSemFotoDePerfil() {
-        cadastroPage.acessar(BASE_URL);
-        cadastroPage.preencherFormulario("Marina Souza", "marina@uefs.br", "SenhaForte@2026");
+    @DisplayName("Cenário Inválido: Submissão sem foto deve ser bloqueada na interface")
+    void shouldBlockRegistrationWithoutProfilePhoto() {
+        registerPage.accessUrl(BASE_URL);
+        registerPage.fillOutForm("Marina Souza", "marina@uefs.br", "SenhaForte@2026");
 
         // Submete sem anexar foto
-        cadastroPage.submeter();
+        registerPage.submit();
 
         // Validação (Critério 4): UI deve alertar que a foto é obrigatória
-        assertThat(cadastroPage.isErroFotoObrigatoriaVisivel())
-                .as("A interface deve destacar a obrigatoriedade da foto de perfil")
+        assertThat(registerPage.isMandatoryPhotoErrorVisible())
+                .as("A interface deve destacar que a foto de perfil é obrigatória")
                 .isTrue();
     }
 }

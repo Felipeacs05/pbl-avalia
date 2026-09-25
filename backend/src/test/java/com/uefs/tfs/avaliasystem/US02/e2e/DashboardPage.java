@@ -5,9 +5,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-
 import java.time.Duration;
-import java.util.List;
 
 /**
  * Page Object Model para a tela de Dashboard (US02).
@@ -16,29 +14,27 @@ import java.util.List;
  *   - "Salas que participo (Aluno)"
  */
 public class DashboardPage {
-
     private final WebDriver driver;
     private final WebDriverWait wait;
 
     // Seletores semânticos das abas e seções
-    private final By containerDashboard = By.id("dashboard-container");
-    private final By tabTutor = By.id("tab-tutor");
-    private final By tabAluno = By.id("tab-aluno");
-    private final By secaoSalasTutor = By.id("secao-salas-tutor");
-    private final By secaoSalasAluno = By.id("secao-salas-aluno");
-    private final By cardSala = By.className("card-sala");
-    private final By nomeSala = By.className("nome-sala");
+    private final By dashboardContainer = By.id("dashboard-container");
+    private final By tutorTab = By.id("tab-tutor");
+    private final By studentTab = By.id("tab-aluno");
+    private final By tutorRoomsSection = By.id("secao-salas-tutor");
+    private final By studentRoomsSection = By.id("secao-salas-aluno");
+    private final By roomCard = By.className("card-sala");
 
     public DashboardPage(WebDriver driver) {
         this.driver = driver;
         this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
     }
 
-    public boolean aguardarCarregamento() {
+    public boolean waitForLoading() {
         try {
             wait.until(ExpectedConditions.or(
                     ExpectedConditions.urlContains("/dashboard"),
-                    ExpectedConditions.visibilityOfElementLocated(containerDashboard)
+                    ExpectedConditions.visibilityOfElementLocated(dashboardContainer)
             ));
             return true;
         } catch (Exception e) {
@@ -46,57 +42,45 @@ public class DashboardPage {
         }
     }
 
-    public boolean isAbaTutorVisivel() {
+    public boolean isTutorTabVisible() {
         try {
-            return wait.until(ExpectedConditions.visibilityOfElementLocated(tabTutor)).isDisplayed();
+            return wait.until(ExpectedConditions.visibilityOfElementLocated(tutorTab)).isDisplayed();
         } catch (Exception e) {
             return false;
         }
     }
 
-    public boolean isAbaAlunoVisivel() {
+    public boolean isStudentTabVisible() {
         try {
-            return wait.until(ExpectedConditions.visibilityOfElementLocated(tabAluno)).isDisplayed();
+            return wait.until(ExpectedConditions.visibilityOfElementLocated(studentTab)).isDisplayed();
         } catch (Exception e) {
             return false;
         }
     }
 
-    public void selecionarAbaTutor() {
-        WebElement tab = wait.until(ExpectedConditions.elementToBeClickable(tabTutor));
+    public void selectTutorTab() {
+        WebElement tab = wait.until(ExpectedConditions.elementToBeClickable(tutorTab));
         tab.click();
     }
 
-    public void selecionarAbaAluno() {
-        WebElement tab = wait.until(ExpectedConditions.elementToBeClickable(tabAluno));
+    public void selectStudentTab() {
+        WebElement tab = wait.until(ExpectedConditions.elementToBeClickable(studentTab));
         tab.click();
     }
 
-    public boolean isSecaoSalasTutorExibida() {
+    public boolean isTutorRoomsSectionDisplayed() {
         try {
-            return wait.until(ExpectedConditions.visibilityOfElementLocated(secaoSalasTutor)).isDisplayed();
+            return wait.until(ExpectedConditions.visibilityOfElementLocated(tutorRoomsSection)).isDisplayed();
         } catch (Exception e) {
             return false;
         }
     }
 
-    public boolean isSecaoSalasAlunoExibida() {
+    public boolean isStudentRoomsSectionDisplayed() {
         try {
-            return wait.until(ExpectedConditions.visibilityOfElementLocated(secaoSalasAluno)).isDisplayed();
+            return wait.until(ExpectedConditions.visibilityOfElementLocated(studentRoomsSection)).isDisplayed();
         } catch (Exception e) {
             return false;
         }
-    }
-
-    public int getQuantidadeSalasTutor() {
-        WebElement secao = wait.until(ExpectedConditions.visibilityOfElementLocated(secaoSalasTutor));
-        List<WebElement> cards = secao.findElements(cardSala);
-        return cards.size();
-    }
-
-    public int getQuantidadeSalasAluno() {
-        WebElement secao = wait.until(ExpectedConditions.visibilityOfElementLocated(secaoSalasAluno));
-        List<WebElement> cards = secao.findElements(cardSala);
-        return cards.size();
     }
 }
