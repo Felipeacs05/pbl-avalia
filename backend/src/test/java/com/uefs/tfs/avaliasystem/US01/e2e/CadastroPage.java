@@ -18,40 +18,40 @@ public class CadastroPage {
     private final WebDriverWait wait;
 
     // Seletores dos elementos da interface
-    private final By inputNome = By.id("nome");
-    private final By inputEmail = By.id("email");
-    private final By inputSenha = By.id("senha");
-    private final By inputFileFoto = By.id("foto-perfil");
-    private final By btnCadastrar = By.id("btn-cadastrar");
+    private final By nameInput = By.id("nome");
+    private final By emailInput = By.id("email");
+    private final By passwordInput = By.id("senha");
+    private final By photoFileInput = By.id("foto-perfil");
+    private final By registerButton = By.id("btn-cadastrar");
     private final By spinnerLoading = By.id("upload-loading-spinner");
-    private final By mensagemSucesso = By.id("mensagem-sucesso");
-    private final By mensagemErroFoto = By.id("erro-foto-obrigatoria");
+    private final By successMessage = By.id("mensagem-sucesso");
+    private final By photoErrorMessage = By.id("erro-foto-obrigatoria");
 
     public CadastroPage(WebDriver driver) {
         this.driver = driver;
         this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
     }
 
-    public void acessar(String baseUrl) {
+    public void navigateTo(String baseUrl) {
         driver.get(baseUrl + "/cadastro");
     }
 
-    public void preencherFormulario(String nome, String email, String senha) {
-        driver.findElement(inputNome).clear();
-        driver.findElement(inputNome).sendKeys(nome);
-        driver.findElement(inputEmail).clear();
-        driver.findElement(inputEmail).sendKeys(email);
-        driver.findElement(inputSenha).clear();
-        driver.findElement(inputSenha).sendKeys(senha);
+    public void fillForm(String name, String email, String password) {
+        driver.findElement(nameInput).clear();
+        driver.findElement(nameInput).sendKeys(name);
+        driver.findElement(emailInput).clear();
+        driver.findElement(emailInput).sendKeys(email);
+        driver.findElement(passwordInput).clear();
+        driver.findElement(passwordInput).sendKeys(password);
     }
 
-    public void anexarFoto(String caminhoAbsolutoArquivo) {
-        WebElement inputFoto = driver.findElement(inputFileFoto);
-        inputFoto.sendKeys(caminhoAbsolutoArquivo);
+    public void attachPhoto(String absoluteFilePath) {
+        WebElement photoInput = driver.findElement(photoFileInput);
+        photoInput.sendKeys(absoluteFilePath);
     }
 
-    public void submeter() {
-        driver.findElement(btnCadastrar).click();
+    public void submit() {
+        driver.findElement(registerButton).click();
     }
 
     /**
@@ -59,7 +59,7 @@ public class CadastroPage {
      * Aguarda explicitamente o componente de loading (spinner/barra de progresso)
      * ficar visível durante a requisição de upload.
      */
-    public boolean aguardarAparicaoLoading() {
+    public boolean waitForLoadingAppearance() {
         try {
             WebElement spinner = wait.until(ExpectedConditions.visibilityOfElementLocated(spinnerLoading));
             return spinner.isDisplayed();
@@ -71,17 +71,17 @@ public class CadastroPage {
     /**
      * Aguarda o componente de loading desaparecer após a conclusão da resposta.
      */
-    public boolean aguardarDesaparecimentoLoading() {
+    public boolean waitForLoadingDisappearance() {
         return wait.until(ExpectedConditions.invisibilityOfElementLocated(spinnerLoading));
     }
 
-    public boolean isMensagemSucessoVisivel() {
-        WebElement msg = wait.until(ExpectedConditions.visibilityOfElementLocated(mensagemSucesso));
+    public boolean isSuccessMessageVisible() {
+        WebElement msg = wait.until(ExpectedConditions.visibilityOfElementLocated(successMessage));
         return msg.isDisplayed();
     }
 
-    public boolean isErroFotoObrigatoriaVisivel() {
-        WebElement erro = wait.until(ExpectedConditions.visibilityOfElementLocated(mensagemErroFoto));
-        return erro.isDisplayed();
+    public boolean isPhotoRequiredErrorVisible() {
+        WebElement error = wait.until(ExpectedConditions.visibilityOfElementLocated(photoErrorMessage));
+        return error.isDisplayed();
     }
 }

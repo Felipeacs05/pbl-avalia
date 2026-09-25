@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *  - Cenário Inválido: submissão sem foto bloqueada na UI com mensagem de erro.
  */
 @Tag("e2e")
-@DisplayName("US01 - Testes E2E com Selenium (Cadastro e Upload)")
+@DisplayName("US01 - E2E Tests with Selenium (Registration and Upload)")
 class CadastroSeleniumTest {
 
     private WebDriver driver;
@@ -28,7 +28,7 @@ class CadastroSeleniumTest {
     private static final String BASE_URL = "http://localhost:5173";
 
     @TempDir
-    Path pastaTemporaria;
+    Path tempFolder;
 
     @BeforeEach
     void setUp() {
@@ -52,37 +52,37 @@ class CadastroSeleniumTest {
     }
 
     @Test
-    @DisplayName("Cenário Válido: Upload de foto com loading visual e cadastro bem-sucedido")
-    void deveExibirLoadingVisualDuranteUploadEConcluirCadastro() throws IOException {
+    @DisplayName("Valid Scenario: Photo upload with visual loading and successful registration")
+    void shouldDisplayVisualLoadingDuringUploadAndCompleteRegistration() throws IOException {
         // 1. Criação de arquivo fake JPG temporário
-        Path fotoValida = pastaTemporaria.resolve("perfil_teste.jpg");
-        Files.write(fotoValida, new byte[1024 * 50]); // 50 KB
+        Path validPhoto = tempFolder.resolve("perfil_teste.jpg");
+        Files.write(validPhoto, new byte[1024 * 50]); // 50 KB
 
         cadastroPage.acessar(BASE_URL);
         cadastroPage.preencherFormulario("Marina Souza", "marina@uefs.br", "SenhaForte@2026");
-        cadastroPage.anexarFoto(fotoValida.toAbsolutePath().toString());
+        cadastroPage.anexarFoto(validPhoto.toAbsolutePath().toString());
 
         cadastroPage.submeter();
 
         // 2. Validação de UX (Critério 3): O spinner de loading deve aparecer durante o upload
         assertThat(cadastroPage.aguardarAparicaoLoading())
-                .as("O componente de loading (spinner/barra) deve ficar visível durante o upload")
+                .as("The loading component (spinner/bar) should be visible during upload")
                 .isTrue();
 
         // 3. O spinner deve desaparecer após o término da requisição
         assertThat(cadastroPage.aguardarDesaparecimentoLoading())
-                .as("O componente de loading deve desaparecer após a conclusão")
+                .as("The loading component should disappear after completion")
                 .isTrue();
 
         // 4. Mensagem de sucesso deve estar visível
         assertThat(cadastroPage.isMensagemSucessoVisivel())
-                .as("A mensagem de confirmação de cadastro deve ser exibida ao usuário")
+                .as("The registration confirmation message should be displayed to the user")
                 .isTrue();
     }
 
     @Test
-    @DisplayName("Cenário Inválido 1: Submissão sem foto deve ser bloqueada na interface")
-    void deveBloquearCadastroSemFotoDePerfil() {
+    @DisplayName("Invalid Scenario 1: Submission without photo should be blocked in the interface")
+    void shouldBlockRegistrationWithoutProfilePhoto() {
         cadastroPage.acessar(BASE_URL);
         cadastroPage.preencherFormulario("Marina Souza", "marina@uefs.br", "SenhaForte@2026");
 
@@ -91,7 +91,7 @@ class CadastroSeleniumTest {
 
         // Validação (Critério 4): UI deve alertar que a foto é obrigatória
         assertThat(cadastroPage.isErroFotoObrigatoriaVisivel())
-                .as("A interface deve destacar a obrigatoriedade da foto de perfil")
+                .as("The interface should highlight that the profile photo is required")
                 .isTrue();
     }
 }

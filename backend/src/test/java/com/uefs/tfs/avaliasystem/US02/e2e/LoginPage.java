@@ -5,7 +5,6 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-
 import java.time.Duration;
 
 /**
@@ -13,47 +12,46 @@ import java.time.Duration;
  * Encapsula seletores, interações e esperas explícitas (Explicit Waits).
  */
 public class LoginPage {
-
     private final WebDriver driver;
     private final WebDriverWait wait;
 
     // Seletores dos elementos da interface de Login
-    private final By inputEmail = By.id("email");
-    private final By inputSenha = By.id("senha");
-    private final By btnEntrar = By.id("btn-entrar");
-    private final By alertaErro = By.id("alerta-erro-login");
+    private final By emailInput = By.id("email");
+    private final By passwordInput = By.id("senha");
+    private final By loginButton = By.id("btn-entrar");
+    private final By errorAlert = By.id("alerta-erro-login");
 
     public LoginPage(WebDriver driver) {
         this.driver = driver;
         this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
     }
 
-    public void acessar(String baseUrl) {
+    public void navigateTo(String baseUrl) {
         driver.get(baseUrl + "/login");
     }
 
-    public void preencherCredenciais(String email, String senha) {
-        WebElement emailEl = wait.until(ExpectedConditions.visibilityOfElementLocated(inputEmail));
+    public void fillCredentials(String email, String password) {
+        WebElement emailEl = wait.until(ExpectedConditions.visibilityOfElementLocated(emailInput));
         emailEl.clear();
         emailEl.sendKeys(email);
 
-        WebElement senhaEl = driver.findElement(inputSenha);
-        senhaEl.clear();
-        senhaEl.sendKeys(senha);
+        WebElement passwordEl = driver.findElement(passwordInput);
+        passwordEl.clear();
+        passwordEl.sendKeys(password);
     }
 
-    public void submeter() {
-        driver.findElement(btnEntrar).click();
+    public void submit() {
+        driver.findElement(loginButton).click();
     }
 
-    public String obterMensagemErro() {
-        WebElement erro = wait.until(ExpectedConditions.visibilityOfElementLocated(alertaErro));
+    public String getErrorMessage() {
+        WebElement erro = wait.until(ExpectedConditions.visibilityOfElementLocated(errorAlert));
         return erro.getText();
     }
 
-    public boolean isAlertaErroVisivel() {
+    public boolean isErrorAlertVisible() {
         try {
-            return wait.until(ExpectedConditions.visibilityOfElementLocated(alertaErro)).isDisplayed();
+            return wait.until(ExpectedConditions.visibilityOfElementLocated(errorAlert)).isDisplayed();
         } catch (Exception e) {
             return false;
         }
