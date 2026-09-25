@@ -19,6 +19,7 @@ import lombok.AllArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -40,30 +41,5 @@ public class User {
         this.email = email;
         this.password = password;
         this.profilePictureUrl = profilePictureUrl;
-    }
-
-    // Compatibility methods
-    public String getNome() {
-        return name;
-    }
-
-    public void setNome(String nome) {
-        this.name = nome;
-    }
-
-    public String getSenha() {
-        return password;
-    }
-
-    public void setSenha(String senha) {
-        this.password = senha;
-    }
-
-    public String getFotoPerfilUrl() {
-        return profilePictureUrl;
-    }
-
-    public void setFotoPerfilUrl(String fotoPerfilUrl) {
-        this.profilePictureUrl = fotoPerfilUrl;
     }
 }

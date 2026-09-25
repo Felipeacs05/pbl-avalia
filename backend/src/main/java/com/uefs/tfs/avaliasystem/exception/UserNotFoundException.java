@@ -4,15 +4,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
- * Lançada quando e-mail ou senha não correspondem a nenhum usuário válido.
- *
- * A mensagem é intencionalmente genérica ("Credenciais inválidas") para não
- * revelar se o e-mail existe ou não no banco — critério de segurança da US02.
+ * Lançada quando o ID de usuário fornecido não corresponde a nenhum registro.
+ * Usada, por exemplo, ao tentar acessar o dashboard de um usuário inexistente.
  */
-@ResponseStatus(HttpStatus.UNAUTHORIZED)
-public class InvalidCredentialsException extends RuntimeException {
+@ResponseStatus(HttpStatus.NOT_FOUND)
+public class UserNotFoundException extends RuntimeException {
 
-    public InvalidCredentialsException(String message) {
+    public UserNotFoundException(String message) {
         super(message);
     }
 }

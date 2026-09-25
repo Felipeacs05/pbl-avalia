@@ -1,71 +1,66 @@
 package com.uefs.tfs.avaliasystem.service;
 
-import com.uefs.tfs.avaliasystem.dto.CadastroUsuarioRequest;
+import com.uefs.tfs.avaliasystem.dto.RegisterUserRequest;
 import com.uefs.tfs.avaliasystem.dto.DashboardResponse;
 import com.uefs.tfs.avaliasystem.dto.LoginResponse;
-import com.uefs.tfs.avaliasystem.model.Usuario;
-import com.uefs.tfs.avaliasystem.repository.UsuarioRepository;
+import com.uefs.tfs.avaliasystem.model.User;
+import com.uefs.tfs.avaliasystem.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-@Service
-public class UsuarioServiceImpl implements UsuarioService {
+import java.util.Set;
 
-    private final UsuarioRepository usuarioRepository;
+@Service
+public class UserServiceImpl implements UserService {
+
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
+            "image/jpeg",
+            "image/jpg",
+            "image/png"
+    );
 
-    public UsuarioServiceImpl(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
-        this.usuarioRepository = usuarioRepository;
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
     @Override
-    public Usuario cadastrar(CadastroUsuarioRequest request, MultipartFile foto) {
-        if (foto != null && foto.getSize() > MAX_FILE_SIZE) {
-            throw new IllegalArgumentException("arquivos acima de 5MB devem ser rejeitados antes de qualquer persistência");
-        }
+    public User register(RegisterUserRequest request, MultipartFile photo) {
+        if (photo != null) {
+            if (photo.getSize() > MAX_FILE_SIZE) {
+                throw new IllegalArgumentException("arquivos acima de 5MB devem ser rejeitados antes de qualquer persistência");
+            }
 
-        if (foto != null && foto.getContentType() != null) {
-            String contentType = foto.getContentType().toLowerCase();
-            if (!contentType.equals("image/jpeg") && !contentType.equals("image/jpg") && !contentType.equals("image/png")) {
+            String contentType = photo.getContentType();
+            if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase())) {
                 throw new IllegalArgumentException("arquivos que não sejam JPG ou PNG devem ser rejeitados");
             }
         }
 
-        String senhaCriptografada = passwordEncoder.encode(request.getSenha());
-        
-        // Simulação do salvamento da foto e geração de URL
-        String fotoUrl = "url-da-foto";
+        String rawPassword = request.getPassword() != null ? request.getPassword() : request.getSenha();
+        String encryptedPassword = rawPassword != null ? passwordEncoder.encode(rawPassword) : null;
 
-        Usuario usuario = new Usuario(request.getNome(), request.getEmail(), senhaCriptografada, fotoUrl);
-        return usuarioRepository.save(usuario);
+        // Simulação do salvamento da foto e geração de URL
+        String photoUrl = "url-da-foto";
+
+        String name = request.getName() != null ? request.getName() : request.getNome();
+        String email = request.getEmail();
+
+        User user = new User(name, email, encryptedPassword, photoUrl);
+        return userRepository.save(user);
     }
 
-    /**
-     * TODO (US02 — sprint de implementação): Buscar usuário pelo e-mail,
-     * verificar senha com BCrypt, gerar token JWT assinado com expiração de 24 h
-     * e retornar {@link LoginResponse}. Lançar
-     * {@link com.uefs.tfs.avaliasystem.exception.CredenciaisInvalidasException}
-     * com mensagem genérica em caso de falha (nunca revelar se o e-mail existe).
-     */
     @Override
-    public LoginResponse login(String email, String senha) {
+    public LoginResponse login(String email, String password) {
         throw new UnsupportedOperationException("login ainda não implementado — aguardando US02");
     }
 
-    /**
-     * TODO (US02 — sprint de implementação): Buscar o usuário pelo ID,
-     * consultar as salas onde ele é Tutor (criador) e as salas onde é Aluno
-     * (inscrito via código) e retornar um {@link DashboardResponse} com as
-     * duas listas separadas. Lançar
-     * {@link com.uefs.tfs.avaliasystem.exception.UsuarioNaoEncontradoException}
-     * se o ID não existir.
-     */
     @Override
-    public DashboardResponse obterDashboard(Long usuarioId) {
-        throw new UnsupportedOperationException("obterDashboard ainda não implementado — aguardando US02");
+    public DashboardResponse getDashboard(Long userId) {
+        throw new UnsupportedOperationException("getDashboard ainda não implementado — aguardando US02");
     }
 }
-
