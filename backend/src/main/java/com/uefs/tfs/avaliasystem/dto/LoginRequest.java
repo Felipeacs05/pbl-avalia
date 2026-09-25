@@ -1,14 +1,13 @@
 package com.uefs.tfs.avaliasystem.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * DTO de requisição de login (US02).
- * Recebe e-mail e senha em texto puro — a senha é verificada pelo serviço
- * contra o hash BCrypt armazenado no banco.
+ * Login request DTO (US02).
  */
 @Getter
 @Setter
@@ -16,5 +15,15 @@ import lombok.Setter;
 @AllArgsConstructor
 public class LoginRequest {
     private String email;
+
+    @JsonAlias("password")
     private String senha;
+
+    public String getPassword() {
+        return senha;
+    }
+
+    public void setPassword(String password) {
+        this.senha = password;
+    }
 }

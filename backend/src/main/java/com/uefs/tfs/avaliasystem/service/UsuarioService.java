@@ -1,26 +1,66 @@
 package com.uefs.tfs.avaliasystem.service;
 
-import com.uefs.tfs.avaliasystem.dto.CadastroUsuarioRequest;
+import com.uefs.tfs.avaliasystem.dto.RegisterUserRequest;
 import com.uefs.tfs.avaliasystem.dto.DashboardResponse;
 import com.uefs.tfs.avaliasystem.dto.LoginResponse;
-import com.uefs.tfs.avaliasystem.model.Usuario;
+import com.uefs.tfs.avaliasystem.model.User;
+import com.uefs.tfs.avaliasystem.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-public interface UsuarioService {
-    Usuario cadastrar(CadastroUsuarioRequest request, MultipartFile foto);
+import java.util.Set;
 
-    /**
-     * Autentica o usuário e retorna um token JWT com prazo de 24 h.
-     * Lança {@link com.uefs.tfs.avaliasystem.exception.CredenciaisInvalidasException}
-     * com mensagem genérica caso o e-mail ou senha sejam inválidos.
-     */
-    LoginResponse login(String email, String senha);
+@Service
+public class UserServiceImpl implements UserService {
 
-    /**
-     * Retorna o dashboard do usuário com duas listas separadas:
-     * salas onde ele é Tutor e salas onde ele é Aluno.
-     * Lança {@link com.uefs.tfs.avaliasystem.exception.UsuarioNaoEncontradoException}
-     * caso o ID não corresponda a nenhum usuário cadastrado.
-     */
-    DashboardResponse obterDashboard(Long usuarioId);
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
+            "image/jpeg",
+            "image/jpg",
+            "image/png"
+    );
+
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    @Override
+    public User register(RegisterUserRequest request, MultipartFile photo) {
+        if (photo != null) {
+            if (photo.getSize() > MAX_FILE_SIZE) {
+                throw new IllegalArgumentException("arquivos acima de 5MB devem ser rejeitados antes de qualquer persistência");
+            }
+
+            String contentType = photo.getContentType();
+            if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase())) {
+                throw new IllegalArgumentException("arquivos que não sejam JPG ou PNG devem ser rejeitados");
+            }
+        }
+
+        String rawPassword = request.getPassword() != null ? request.getPassword() : request.getSenha();
+        String encryptedPassword = rawPassword != null ? passwordEncoder.encode(rawPassword) : null;
+
+        // Simulação do salvamento da foto e geração de URL
+        String photoUrl = "url-da-foto";
+
+        String name = request.getName() != null ? request.getName() : request.getNome();
+        String email = request.getEmail();
+
+        User user = new User(name, email, encryptedPassword, photoUrl);
+        return userRepository.save(user);
+    }
+
+    @Override
+    public LoginResponse login(String email, String password) {
+        throw new UnsupportedOperationException("login ainda não implementado — aguardando US02");
+    }
+
+    @Override
+    public DashboardResponse getDashboard(Long userId) {
+        throw new UnsupportedOperationException("getDashboard ainda não implementado — aguardando US02");
+    }
 }
