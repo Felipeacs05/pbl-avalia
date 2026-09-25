@@ -2,7 +2,7 @@ package com.uefs.tfs.avaliasystem.US01;
 
 import tools.jackson.databind.ObjectMapper;
 import com.uefs.tfs.avaliasystem.controller.AuthController;
-import com.uefs.tfs.avaliasystem.dto.UserRegistrationRequest;
+import com.uefs.tfs.avaliasystem.dto.RegisterUserRequest;
 import com.uefs.tfs.avaliasystem.model.User;
 import com.uefs.tfs.avaliasystem.service.UserService;
 import org.junit.jupiter.api.DisplayName;
@@ -48,7 +48,7 @@ class AuthControllerRegisterTest {
     @Test
     @DisplayName("US01 - cadastro válido com foto retorna 201 e não vaza senha pura")
     void shouldRegisterSuccessfullyWhenPhotoIsSent() throws Exception {
-        var requestData = new UserRegistrationRequest("Ana Silva", "ana@uefs.br", "senhaForte123");
+        var requestData = new RegisterUserRequest("Ana Silva", "ana@uefs.br", "senhaForte123");
         var dataPart = new MockMultipartFile(
                 "data", "", "application/json", objectMapper.writeValueAsBytes(requestData));
         var photoPart = new MockMultipartFile(
@@ -71,7 +71,7 @@ class AuthControllerRegisterTest {
     @Test
     @DisplayName("US01 - cadastro sem foto de perfil retorna 400")
     void shouldRejectRegistrationWithoutProfilePhoto() throws Exception {
-        var requestData = new UserRegistrationRequest("Ana Silva", "ana@uefs.br", "senhaForte123");
+        var requestData = new RegisterUserRequest("Ana Silva", "ana@uefs.br", "senhaForte123");
         var dataPart = new MockMultipartFile(
                 "data", "", "application/json", objectMapper.writeValueAsBytes(requestData));
 
@@ -82,7 +82,7 @@ class AuthControllerRegisterTest {
     @Test
     @DisplayName("US01 - cadastro com foto vazia (0 bytes) retorna 400")
     void shouldRejectRegistrationWithEmptyPhoto() throws Exception {
-        var requestData = new UserRegistrationRequest("Ana Silva", "ana@uefs.br", "senhaForte123");
+        var requestData = new RegisterUserRequest("Ana Silva", "ana@uefs.br", "senhaForte123");
         var dataPart = new MockMultipartFile(
                 "data", "", "application/json", objectMapper.writeValueAsBytes(requestData));
         var emptyPhoto = new MockMultipartFile(
@@ -97,14 +97,14 @@ class AuthControllerRegisterTest {
     @Test
     @DisplayName("US01 - sanitização de XSS verificada na entrada do serviço com ArgumentCaptor")
     void shouldSanitizeMaliciousXssInputs() throws Exception {
-        var requestData = new UserRegistrationRequest("<script>alert(1)</script>Ana", "ana@uefs.br", "senhaForte123");
+        var requestData = new RegisterUserRequest("<script>alert(1)</script>Ana", "ana@uefs.br", "senhaForte123");
         var dataPart = new MockMultipartFile(
                 "data", "", "application/json", objectMapper.writeValueAsBytes(requestData));
         var photoPart = new MockMultipartFile(
                 "photo", "perfil.jpg", "image/jpeg", "conteudo-fake".getBytes());
 
         when(userService.register(any(), any())).thenAnswer(inv -> {
-            UserRegistrationRequest req = inv.getArgument(0);
+            RegisterUserRequest req = inv.getArgument(0);
             return new User(req.getName(), req.getEmail(), "hash", "url");
         });
 
@@ -115,7 +115,7 @@ class AuthControllerRegisterTest {
                 .andExpect(jsonPath("$.name", not(containsString("<script>"))));
 
         // Inspeção real do dado repassado à camada de Service
-        ArgumentCaptor<UserRegistrationRequest> captor = ArgumentCaptor.forClass(UserRegistrationRequest.class);
+        ArgumentCaptor<RegisterUserRequest> captor = ArgumentCaptor.forClass(RegisterUserRequest.class);
         verify(userService).register(captor.capture(), any());
         assertThat(captor.getValue().getName())
                 .as("O nome repassado ao serviço não deve conter tags script")
@@ -130,14 +130,14 @@ class AuthControllerRegisterTest {
     })
     @DisplayName("US01 - sanitização de SQL Injection nos campos de entrada")
     void shouldProtectAgainstSqlInjection(String payloadSqli) throws Exception {
-        var requestData = new UserRegistrationRequest(payloadSqli, "teste@uefs.br", "senhaForte123");
+        var requestData = new RegisterUserRequest(payloadSqli, "teste@uefs.br", "senhaForte123");
         var dataPart = new MockMultipartFile(
                 "data", "", "application/json", objectMapper.writeValueAsBytes(requestData));
         var photoPart = new MockMultipartFile(
                 "photo", "perfil.jpg", "image/jpeg", "conteudo-fake".getBytes());
 
         when(userService.register(any(), any())).thenAnswer(inv -> {
-            UserRegistrationRequest req = inv.getArgument(0);
+            RegisterUserRequest req = inv.getArgument(0);
             return new User(req.getName(), req.getEmail(), "hash", "url");
         });
 
@@ -146,7 +146,7 @@ class AuthControllerRegisterTest {
                         .file(photoPart))
                 .andExpect(status().isCreated());
 
-        ArgumentCaptor<UserRegistrationRequest> captor = ArgumentCaptor.forClass(UserRegistrationRequest.class);
+        ArgumentCaptor<RegisterUserRequest> captor = ArgumentCaptor.forClass(RegisterUserRequest.class);
         verify(userService).register(captor.capture(), any());
         assertThat(captor.getValue().getName()).isNotNull();
     }

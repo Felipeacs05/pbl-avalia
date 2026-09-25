@@ -1,6 +1,6 @@
 package com.uefs.tfs.avaliasystem.US01;
 
-import com.uefs.tfs.avaliasystem.dto.UserRegistrationRequest;
+import com.uefs.tfs.avaliasystem.dto.RegisterUserRequest;
 import com.uefs.tfs.avaliasystem.model.User;
 import com.uefs.tfs.avaliasystem.repository.UserRepository;
 import com.uefs.tfs.avaliasystem.service.UserServiceImpl;
@@ -46,7 +46,7 @@ class UserServiceTest {
     @Test
     @DisplayName("US01 - senha deve ser criptografada via BCrypt antes de salvar no banco")
     void shouldEncryptPasswordBeforeSaving() {
-        var request = new UserRegistrationRequest("Ana Silva", "ana@uefs.br", "senhaForte123");
+        var request = new RegisterUserRequest("Ana Silva", "ana@uefs.br", "senhaForte123");
         var profilePicture = new MockMultipartFile("photo", "perfil.jpg", "image/jpeg", "conteudo-fake".getBytes());
 
         when(passwordEncoder.encode("senhaForte123")).thenReturn("$2a$10$hashSimuladoDeExemplo");
@@ -66,7 +66,7 @@ class UserServiceTest {
     @Test
     @DisplayName("US01 - foto de perfil maior que 5MB deve ser rejeitada")
     void shouldRejectPhotoAboveSizeLimit() {
-        var request = new UserRegistrationRequest("Ana Silva", "ana@uefs.br", "senhaForte123");
+        var request = new RegisterUserRequest("Ana Silva", "ana@uefs.br", "senhaForte123");
         byte[] contentAbove5MB = new byte[6 * 1024 * 1024]; // 6 MB
         var largePhoto = new MockMultipartFile("photo", "perfil.jpg", "image/jpeg", contentAbove5MB);
 
@@ -79,7 +79,7 @@ class UserServiceTest {
     @ValueSource(strings = {"application/pdf", "image/gif", "application/octet-stream", "text/plain"})
     @DisplayName("US01 - formatos de arquivo diferentes de JPG ou PNG devem ser rejeitados")
     void shouldRejectPhotoWithInvalidFormats(String invalidContentType) {
-        var request = new UserRegistrationRequest("Ana Silva", "ana@uefs.br", "senhaForte123");
+        var request = new RegisterUserRequest("Ana Silva", "ana@uefs.br", "senhaForte123");
         var invalidPhoto = new MockMultipartFile("photo", "arquivo.bin", invalidContentType, "conteudo".getBytes());
 
         assertThatThrownBy(() -> userService.register(request, invalidPhoto))
@@ -91,7 +91,7 @@ class UserServiceTest {
     @ValueSource(strings = {"image/jpeg", "image/jpg", "image/png"})
     @DisplayName("US01 - formatos válidos (JPG, JPEG, PNG) devem ser aceitos com sucesso")
     void shouldAcceptValidFormats(String validContentType) {
-        var request = new UserRegistrationRequest("Ana Silva", "ana@uefs.br", "senhaForte123");
+        var request = new RegisterUserRequest("Ana Silva", "ana@uefs.br", "senhaForte123");
         var validPhoto = new MockMultipartFile("photo", "foto.img", validContentType, "conteudo-ok".getBytes());
 
         when(passwordEncoder.encode(any())).thenReturn("hash");
