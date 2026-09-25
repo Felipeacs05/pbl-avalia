@@ -4,7 +4,8 @@ import tools.jackson.databind.ObjectMapper;
 import com.uefs.tfs.avaliasystem.controller.AuthController;
 import com.uefs.tfs.avaliasystem.dto.LoginRequest;
 import com.uefs.tfs.avaliasystem.dto.LoginResponse;
-import com.uefs.tfs.avaliasystem.service.UsuarioService;
+import com.uefs.tfs.avaliasystem.exception.InvalidCredentialsException;
+import com.uefs.tfs.avaliasystem.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -47,7 +48,7 @@ class AuthLoginControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private UsuarioService usuarioService;
+    private UserService userService;
 
     // ────────────────────────────────────────────────────────────────────────
     //  TESTES VÁLIDOS
@@ -55,11 +56,11 @@ class AuthLoginControllerTest {
 
     @Nested
     @DisplayName("Testes Válidos — Login e Token JWT")
-    class TestesValidos {
+    class ValidTests {
 
         @Test
         @DisplayName("US02-V1 — login com credenciais corretas retorna 200 e token JWT")
-        void deveRetornarTokenJwtAoLogarComCredenciaisCorretas() throws Exception {
+        void shouldReturnJwtTokenWhenLoggingInWithCorrectCredentials() throws Exception {
             var loginRequest = new LoginRequest("ana@uefs.br", "senhaForte123");
 
             // Token simulado com expiração em 24h a partir de agora
@@ -69,7 +70,7 @@ class AuthLoginControllerTest {
                     expiresAt.toEpochMilli()
             );
 
-            when(usuarioService.login(anyString(), anyString())).thenReturn(response);
+            when(userService.login(anyString(), anyString())).thenReturn(response);
 
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -82,25 +83,25 @@ class AuthLoginControllerTest {
 
         @Test
         @DisplayName("US02-V2 — token gerado possui prazo de validade de até 24h no futuro")
-        void tokenDeveConterPrazoDeValidadeEm24Horas() throws Exception {
+        void tokenShouldHave24HourExpiration() throws Exception {
             var loginRequest = new LoginRequest("ana@uefs.br", "senhaForte123");
 
-            long agora = Instant.now().toEpochMilli();
-            long em24h = Instant.now().plus(24, ChronoUnit.HOURS).toEpochMilli();
+            long now = Instant.now().toEpochMilli();
+            long in24Hours = Instant.now().plus(24, ChronoUnit.HOURS).toEpochMilli();
 
             var response = new LoginResponse(
                     "eyJhbGciOiJIUzI1NiJ9.payload.signature",
-                    em24h
+                    in24Hours
             );
 
-            when(usuarioService.login(anyString(), anyString())).thenReturn(response);
+            when(userService.login(anyString(), anyString())).thenReturn(response);
 
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(loginRequest)))
                     .andExpect(status().isOk())
                     // expiresAt deve ser maior que o instante atual (token válido)
-                    .andExpect(jsonPath("$.expiresAt").value(greaterThan(agora)))
+                    .andExpect(jsonPath("$.expiresAt").value(greaterThan(now)))
                     // expiresAt deve ser no máximo 24h + uma margem de 5 s a partir de agora
                     .andExpect(jsonPath("$.expiresAt").value(lessThanOrEqualTo(
                             Instant.now().plus(24, ChronoUnit.HOURS).plusSeconds(5).toEpochMilli()
@@ -109,7 +110,7 @@ class AuthLoginControllerTest {
 
         @Test
         @DisplayName("US02-V3 — resposta de login não expõe senha do usuário")
-        void respostaDeLoginNaoDeveExporSenha() throws Exception {
+        void loginResponseShouldNotExposePassword() throws Exception {
             var loginRequest = new LoginRequest("ana@uefs.br", "senhaForte123");
 
             var response = new LoginResponse(
@@ -117,7 +118,7 @@ class AuthLoginControllerTest {
                     Instant.now().plus(24, ChronoUnit.HOURS).toEpochMilli()
             );
 
-            when(usuarioService.login(anyString(), anyString())).thenReturn(response);
+            when(userService.login(anyString(), anyString())).thenReturn(response);
 
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -134,15 +135,15 @@ class AuthLoginControllerTest {
 
     @Nested
     @DisplayName("Testes Inválidos — Falhas de Autenticação")
-    class TestesInvalidos {
+    class InvalidTests {
 
         @Test
         @DisplayName("US02-I1 — senha incorreta retorna 401 com mensagem genérica")
-        void devRetornar401ComMensagemGenericaParaSenhaIncorreta() throws Exception {
+        void shouldReturn401WithGenericMessageForIncorrectPassword() throws Exception {
             var loginRequest = new LoginRequest("ana@uefs.br", "senhaErrada");
 
-            when(usuarioService.login("ana@uefs.br", "senhaErrada"))
-                    .thenThrow(new com.uefs.tfs.avaliasystem.exception.CredenciaisInvalidasException("Credenciais inválidas"));
+            when(userService.login("ana@uefs.br", "senhaErrada"))
+                    .thenThrow(new InvalidCredentialsException("Credenciais inválidas"));
 
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -159,11 +160,11 @@ class AuthLoginControllerTest {
 
         @Test
         @DisplayName("US02-I2 — e-mail inexistente retorna 401 com a mesma mensagem genérica (não revela ausência do e-mail)")
-        void devRetornar401ComMensagemGenericaParaEmailInexistente() throws Exception {
+        void shouldReturn401WithGenericMessageForNonExistentEmail() throws Exception {
             var loginRequest = new LoginRequest("naoexiste@uefs.br", "qualquerSenha");
 
-            when(usuarioService.login("naoexiste@uefs.br", "qualquerSenha"))
-                    .thenThrow(new com.uefs.tfs.avaliasystem.exception.CredenciaisInvalidasException("Credenciais inválidas"));
+            when(userService.login("naoexiste@uefs.br", "qualquerSenha"))
+                    .thenThrow(new InvalidCredentialsException("Credenciais inválidas"));
 
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -178,31 +179,31 @@ class AuthLoginControllerTest {
 
         @Test
         @DisplayName("US02-I3 — requisição com token JWT expirado retorna 401 (Unauthorized)")
-        void devRetornar401ParaTokenJwtExpirado() throws Exception {
+        void shouldReturn401ForExpiredJwtToken() throws Exception {
             // Token expirado: mesmo formato JWT, mas com exp no passado (simulado via header)
-            String tokenExpirado = "Bearer eyJhbGciOiJIUzI1NiJ9" +
+            String expiredToken = "Bearer eyJhbGciOiJIUzI1NiJ9" +
                     ".eyJzdWIiOiJhbmFAdWVmcy5iciIsImV4cCI6MX0" +
                     ".assinatura_invalida";
 
             mockMvc.perform(get("/api/dashboard")
-                            .header("Authorization", tokenExpirado))
+                            .header("Authorization", expiredToken))
                     .andExpect(status().isUnauthorized());
         }
 
         @Test
         @DisplayName("US02-I4 — requisição sem token JWT retorna 401 (Unauthorized)")
-        void devRetornar401SemTokenJwt() throws Exception {
+        void shouldReturn401WithoutJwtToken() throws Exception {
             mockMvc.perform(get("/api/dashboard"))
                     .andExpect(status().isUnauthorized());
         }
 
         @Test
         @DisplayName("US02-I5 — erro de login não deve expor stack trace ou informações internas")
-        void erroDeLoginNaoDeveExporInformacoesInternas() throws Exception {
+        void loginErrorShouldNotExposeInternalInformation() throws Exception {
             var loginRequest = new LoginRequest("ana@uefs.br", "senhaErrada");
 
-            when(usuarioService.login(anyString(), anyString()))
-                    .thenThrow(new com.uefs.tfs.avaliasystem.exception.CredenciaisInvalidasException("Credenciais inválidas"));
+            when(userService.login(anyString(), anyString()))
+                    .thenThrow(new InvalidCredentialsException("Credenciais inválidas"));
 
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)

@@ -1,10 +1,10 @@
 package com.uefs.tfs.avaliasystem.US02;
 
 import com.uefs.tfs.avaliasystem.dto.LoginResponse;
-import com.uefs.tfs.avaliasystem.exception.CredenciaisInvalidasException;
-import com.uefs.tfs.avaliasystem.model.Usuario;
-import com.uefs.tfs.avaliasystem.repository.UsuarioRepository;
-import com.uefs.tfs.avaliasystem.service.UsuarioServiceImpl;
+import com.uefs.tfs.avaliasystem.exception.InvalidCredentialsException;
+import com.uefs.tfs.avaliasystem.model.User;
+import com.uefs.tfs.avaliasystem.repository.UserRepository;
+import com.uefs.tfs.avaliasystem.service.UserServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -31,48 +31,48 @@ import static org.mockito.Mockito.when;
  *                       sem expor existência de conta ou vazar informações sensíveis.
  */
 @ExtendWith(MockitoExtension.class)
-@DisplayName("US02 — Testes de Regra de Negócio de Autenticação (UsuarioServiceImpl)")
-class UsuarioServiceLoginTest {
+@DisplayName("US02 — Testes de Regra de Negócio de Autenticação (UserServiceImpl)")
+class UserServiceLoginTest {
 
     @Mock
-    private UsuarioRepository usuarioRepository;
+    private UserRepository userRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
 
     @InjectMocks
-    private UsuarioServiceImpl usuarioService;
+    private UserServiceImpl userService;
 
-    private static final String MENSAGEM_GENERICA = "Credenciais inválidas";
+    private static final String GENERIC_MESSAGE = "Credenciais inválidas";
 
     @Nested
     @DisplayName("Testes de Privacidade e Falhas de Autenticação (CA2)")
-    class TestesDePrivacidade {
+    class PrivacyTests {
 
         @Test
-        @DisplayName("US02-I1 — E-mail inexistente deve lançar CredenciaisInvalidasException sem vazar o e-mail")
-        void emailInexistenteDeveLancarExcecaoGenerica() {
-            String emailInexistente = "naoexiste@uefs.br";
-            when(usuarioRepository.findByEmail(emailInexistente)).thenReturn(Optional.empty());
+        @DisplayName("US02-I1 — E-mail inexistente deve lançar InvalidCredentialsException sem vazar o e-mail")
+        void shouldThrowGenericExceptionForNonExistentEmail() {
+            String nonExistentEmail = "naoexiste@uefs.br";
+            when(userRepository.findByEmail(nonExistentEmail)).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> usuarioService.login(emailInexistente, "qualquerSenha"))
-                    .isInstanceOf(CredenciaisInvalidasException.class)
-                    .hasMessage(MENSAGEM_GENERICA)
-                    .hasMessageNotContaining(emailInexistente);
+            assertThatThrownBy(() -> userService.login(nonExistentEmail, "qualquerSenha"))
+                    .isInstanceOf(InvalidCredentialsException.class)
+                    .hasMessage(GENERIC_MESSAGE)
+                    .hasMessageNotContaining(nonExistentEmail);
         }
 
         @Test
         @DisplayName("US02-I2 — Senha incorreta deve lançar exatamente a mesma mensagem genérica")
-        void senhaIncorretaDeveLancarMesmaMensagemGenerica() {
+        void shouldThrowSameGenericMessageForIncorrectPassword() {
             String email = "marina@uefs.br";
-            Usuario usuario = new Usuario("Marina Souza", email, "$2a$10$hashBCryptArmazenado", "url-foto");
+            User user = new User("Marina Souza", email, "$2a$10$hashBCryptArmazenado", "url-foto");
 
-            when(usuarioRepository.findByEmail(email)).thenReturn(Optional.of(usuario));
-            when(passwordEncoder.matches("senhaIncorreta", usuario.getSenha())).thenReturn(false);
+            when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+            when(passwordEncoder.matches("senhaIncorreta", user.getPassword())).thenReturn(false);
 
-            assertThatThrownBy(() -> usuarioService.login(email, "senhaIncorreta"))
-                    .isInstanceOf(CredenciaisInvalidasException.class)
-                    .hasMessage(MENSAGEM_GENERICA)
+            assertThatThrownBy(() -> userService.login(email, "senhaIncorreta"))
+                    .isInstanceOf(InvalidCredentialsException.class)
+                    .hasMessage(GENERIC_MESSAGE)
                     .hasMessageNotContaining("senha");
         }
     }

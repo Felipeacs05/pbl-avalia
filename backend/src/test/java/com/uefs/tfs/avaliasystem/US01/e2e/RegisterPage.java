@@ -12,7 +12,7 @@ import java.time.Duration;
  * Page Object Model (POM) para a página de Cadastro de Usuário (US01).
  * Encapsula seletores, interações e esperas explícitas (Explicit Waits).
  */
-public class CadastroPage {
+public class RegisterPage {
 
     private final WebDriver driver;
     private final WebDriverWait wait;
@@ -27,16 +27,16 @@ public class CadastroPage {
     private final By successMessage = By.id("mensagem-sucesso");
     private final By photoErrorMessage = By.id("erro-foto-obrigatoria");
 
-    public CadastroPage(WebDriver driver) {
+    public RegisterPage(WebDriver driver) {
         this.driver = driver;
         this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
     }
 
-    public void navigateTo(String baseUrl) {
+    public void accessUrl(String baseUrl) {
         driver.get(baseUrl + "/cadastro");
     }
 
-    public void fillForm(String name, String email, String password) {
+    public void fillOutForm(String name, String email, String password) {
         driver.findElement(nameInput).clear();
         driver.findElement(nameInput).sendKeys(name);
         driver.findElement(emailInput).clear();
@@ -59,7 +59,7 @@ public class CadastroPage {
      * Aguarda explicitamente o componente de loading (spinner/barra de progresso)
      * ficar visível durante a requisição de upload.
      */
-    public boolean waitForLoadingAppearance() {
+    public boolean waitForLoadingToAppear() {
         try {
             WebElement spinner = wait.until(ExpectedConditions.visibilityOfElementLocated(spinnerLoading));
             return spinner.isDisplayed();
@@ -71,7 +71,7 @@ public class CadastroPage {
     /**
      * Aguarda o componente de loading desaparecer após a conclusão da resposta.
      */
-    public boolean waitForLoadingDisappearance() {
+    public boolean waitForLoadingToDisappear() {
         return wait.until(ExpectedConditions.invisibilityOfElementLocated(spinnerLoading));
     }
 
@@ -80,7 +80,7 @@ public class CadastroPage {
         return msg.isDisplayed();
     }
 
-    public boolean isPhotoRequiredErrorVisible() {
+    public boolean isMandatoryPhotoErrorVisible() {
         WebElement error = wait.until(ExpectedConditions.visibilityOfElementLocated(photoErrorMessage));
         return error.isDisplayed();
     }
