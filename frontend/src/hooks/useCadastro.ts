@@ -1,5 +1,5 @@
-// src/hooks/useCadastro.ts
 import { useState } from "react";
+import { useRouter } from "next/navigation"; // 1. Importação obrigatória no Next.js
 import { cadastroService } from "../services/cadastroService";
 
 type ToastState = { message: string; type: "success" | "error" } | null;
@@ -10,9 +10,10 @@ export function useCadastro() {
   const [senha, setSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [imagem, setImagem] = useState<File | null>(null);
-  
   const [toast, setToast] = useState<ToastState>(null);
   const [loading, setLoading] = useState(false);
+
+  const router = useRouter(); // 2. Inicialização do router
 
   const mostrarToast = (message: string, type: "success" | "error" = "error") => {
     setToast({ message, type });
@@ -35,24 +36,21 @@ export function useCadastro() {
     e.preventDefault();
     setToast(null);
 
-    // 1. Validações Locais
     if (!nome || !email || !senha || !confirmarSenha) return mostrarToast("Preencha todos os campos obrigatórios.");
     if (senha !== confirmarSenha) return mostrarToast("As senhas não coincidem.");
     if (!imagem) return mostrarToast("A foto de perfil é obrigatória.");
 
     setLoading(true);
     try {
-      // 2. Chama o Service (Toda a lógica de API está isolada lá)
       await cadastroService.criarConta({ nome, email, senha, imagem });
-      
-      // 3. Lida com o Sucesso
       mostrarToast("Conta criada com sucesso! Redirecionando...", "success");
+      
       setTimeout(() => {
-        window.location.href = "/";
+        router.push("/"); // 3. Correção: Substitui o window.location.href
       }, 2000);
 
     } catch (error) {
-      // 4. Lida com o Erro 400 (se o Service falhar)
+      console.error(error); // 4. Correção: Usamos a variável 'error' para log no terminal
       mostrarToast("Erro 400: Falha ao enviar os dados.");
     } finally {
       setLoading(false);

@@ -1,8 +1,6 @@
-// src/components/ui/Input.tsx
 import React from "react";
 
-// Herdamos todas as propriedades padrão de um input HTML (type, placeholder, onChange, etc)
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+type InputProps = React.InputHTMLAttributes<HTMLInputElement>;
 
 export function Input(props: InputProps) {
     return (
