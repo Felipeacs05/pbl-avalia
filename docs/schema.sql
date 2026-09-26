@@ -5,13 +5,13 @@
 -- ==============================================================================
 
 -- 1. Usuários (Professores/Tutores e Alunos)
-CREATE TABLE IF NOT EXISTS usuario (
-    id BIGSERIAL PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
-    senha VARCHAR(255) NOT NULL,
-    foto_perfil_url VARCHAR(500)
-);
+    password VARCHAR(255) NOT NULL,
+    profile_picture_url VARCHAR(255)
+    );
 
 CREATE INDEX IF NOT EXISTS idx_usuario_email ON usuario(email);
 
