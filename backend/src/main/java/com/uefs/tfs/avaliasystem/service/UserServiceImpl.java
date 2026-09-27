@@ -99,7 +99,7 @@ public class UserServiceImpl implements UserService {
      * consultar as salas onde ele é Tutor (criador) e as salas onde é Aluno
      * (inscrito via código) e retornar um {@link DashboardResponse} com as
      * duas listas separadas. Lançar
-     * {@link com.uefs.tfs.avaliasystem.exception.UsuarioNaoEncontradoException}
+     * {@link com.uefs.tfs.avaliasystem.exception.UserNotFoundException}
      * se o ID não existir.
      */
 

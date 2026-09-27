@@ -5,6 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonAlias;
+import lombok.AllArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
 
@@ -16,25 +19,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DashboardResponse {
-    @JsonAlias("roomsAsTutor")
-    private List<RoomDto> salasComoTutor;
 
-    @JsonAlias("roomsAsStudent")
-    private List<RoomDto> salasComoAluno;
+    private List<RoomDto> roomsAsTutor = List.of();
 
-    public List<RoomDto> getRoomsAsTutor() {
-        return salasComoTutor;
-    }
+    private List<RoomDto> roomsAsStudent = List.of();
 
-    public void setRoomsAsTutor(List<RoomDto> roomsAsTutor) {
-        this.salasComoTutor = roomsAsTutor;
-    }
-
-    public List<RoomDto> getRoomsAsStudent() {
-        return salasComoAluno;
-    }
-
-    public void setRoomsAsStudent(List<RoomDto> roomsAsStudent) {
-        this.salasComoAluno = roomsAsStudent;
-    }
 }

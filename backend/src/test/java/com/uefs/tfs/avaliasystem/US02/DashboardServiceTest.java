@@ -3,16 +3,25 @@ package com.uefs.tfs.avaliasystem.US02;
 import com.uefs.tfs.avaliasystem.dto.DashboardResponse;
 import com.uefs.tfs.avaliasystem.dto.RoomDto;
 import com.uefs.tfs.avaliasystem.exception.UserNotFoundException;
+import com.uefs.tfs.avaliasystem.model.Room;
+import com.uefs.tfs.avaliasystem.model.User;
+import com.uefs.tfs.avaliasystem.repository.RoomRepository;
+import com.uefs.tfs.avaliasystem.repository.UserRepository;
+import com.uefs.tfs.avaliasystem.service.RoomService;
+import com.uefs.tfs.avaliasystem.service.RoomServiceImpl;
 import com.uefs.tfs.avaliasystem.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -38,8 +47,18 @@ class DashboardServiceTest {
     @Mock
     private UserService userService;
 
-    private static final Long VALID_USER_ID = 1L;
-    private static final Long INVALID_USER_ID = 999L;
+    @Mock
+    private RoomRepository roomRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @InjectMocks
+    private RoomServiceImpl roomService;
+
+    private static final UUID VALID_USER_ID = UUID.randomUUID();
+    private static final UUID INVALID_USER_ID = UUID.randomUUID();
+    private static final UUID OTHER_TUTOR_ID = UUID.randomUUID();
 
     // ────────────────────────────────────────────────────────────────────────
     //  TESTES VÁLIDOS
@@ -52,18 +71,21 @@ class DashboardServiceTest {
         @Test
         @DisplayName("US02-V4 — dashboard deve retornar abas separadas: salasComoTutor e salasComoAluno")
         void shouldContainBothListsSeparated() {
+            var user = new User(VALID_USER_ID, "Usuário", "usuario@example.com", "senha", null);
+            var otherTutor = new User(OTHER_TUTOR_ID, "Outro tutor", "tutor@example.com", "senha", null);
             var tutorRooms = List.of(
-                    new RoomDto(10L, "Algoritmos Avançados", "ALGO-001"),
-                    new RoomDto(11L, "Estruturas de Dados", "ED-002")
+                    new Room(10L, "Algoritmos Avançados", "ALGO-001", user, OffsetDateTime.now()),
+                    new Room(11L, "Estruturas de Dados", "ED-002", user, OffsetDateTime.now())
             );
             var studentRooms = List.of(
-                    new RoomDto(20L, "Cálculo I", "CALC-001")
+                    new Room(20L, "Cálculo I", "CALC-001", otherTutor, OffsetDateTime.now())
             );
 
-            var dashboard = new DashboardResponse(tutorRooms, studentRooms);
-            when(userService.getDashboard(VALID_USER_ID)).thenReturn(dashboard);
+            when(userRepository.existsById(VALID_USER_ID)).thenReturn(true);
+            when(roomRepository.findByTutorId(VALID_USER_ID)).thenReturn(tutorRooms);
+            when(roomRepository.findRoomsByParticipantId(VALID_USER_ID)).thenReturn(studentRooms);
 
-            DashboardResponse result = userService.getDashboard(VALID_USER_ID);
+            DashboardResponse result = roomService.getDashboardByUser(VALID_USER_ID);
 
             // Ambas as seções devem existir e não serem nulas
             assertThat(result.getRoomsAsTutor())
@@ -77,17 +99,20 @@ class DashboardServiceTest {
         @Test
         @DisplayName("US02-V5 — salas criadas pelo usuário aparecem apenas na aba Tutor")
         void tutorRoomsShouldOnlyBelongToTutor() {
+            var user = new User(VALID_USER_ID, "Usuário", "usuario@example.com", "senha", null);
+            var otherTutor = new User(OTHER_TUTOR_ID, "Outro tutor", "tutor@example.com", "senha", null);
             var tutorRooms = List.of(
-                    new RoomDto(10L, "Algoritmos Avançados", "ALGO-001")
+                    new Room(10L, "Algoritmos Avançados", "ALGO-001", user, OffsetDateTime.now())
             );
             var studentRooms = List.of(
-                    new RoomDto(20L, "Cálculo I", "CALC-001")
+                    new Room(20L, "Cálculo I", "CALC-001", otherTutor, OffsetDateTime.now())
             );
 
-            var dashboard = new DashboardResponse(tutorRooms, studentRooms);
-            when(userService.getDashboard(VALID_USER_ID)).thenReturn(dashboard);
+            when(userRepository.existsById(VALID_USER_ID)).thenReturn(true);
+            when(roomRepository.findByTutorId(VALID_USER_ID)).thenReturn(tutorRooms);
+            when(roomRepository.findRoomsByParticipantId(VALID_USER_ID)).thenReturn(studentRooms);
 
-            DashboardResponse result = userService.getDashboard(VALID_USER_ID);
+            DashboardResponse result = roomService.getDashboardByUser(VALID_USER_ID);
 
             // A sala de Tutor não deve aparecer na lista de Aluno
             var studentRoomIds = result.getRoomsAsStudent()
@@ -104,17 +129,20 @@ class DashboardServiceTest {
         @Test
         @DisplayName("US02-V6 — salas acessadas via código aparecem apenas na aba Aluno")
         void studentRoomsShouldOnlyBelongToStudent() {
+            var user = new User(VALID_USER_ID, "Usuário", "usuario@example.com", "senha", null);
+            var otherTutor = new User(OTHER_TUTOR_ID, "Outro tutor", "tutor@example.com", "senha", null);
             var tutorRooms = List.of(
-                    new RoomDto(10L, "Algoritmos Avançados", "ALGO-001")
+                    new Room(10L, "Algoritmos Avançados", "ALGO-001", user, OffsetDateTime.now())
             );
             var studentRooms = List.of(
-                    new RoomDto(20L, "Cálculo I", "CALC-001")
+                    new Room(20L, "Cálculo I", "CALC-001", otherTutor, OffsetDateTime.now())
             );
 
-            var dashboard = new DashboardResponse(tutorRooms, studentRooms);
-            when(userService.getDashboard(VALID_USER_ID)).thenReturn(dashboard);
+            when(userRepository.existsById(VALID_USER_ID)).thenReturn(true);
+            when(roomRepository.findByTutorId(VALID_USER_ID)).thenReturn(tutorRooms);
+            when(roomRepository.findRoomsByParticipantId(VALID_USER_ID)).thenReturn(studentRooms);
 
-            DashboardResponse result = userService.getDashboard(VALID_USER_ID);
+            DashboardResponse result = roomService.getDashboardByUser(VALID_USER_ID);
 
             var tutorRoomIds = result.getRoomsAsTutor()
                     .stream().map(RoomDto::getId).toList();
@@ -139,10 +167,11 @@ class DashboardServiceTest {
         @Test
         @DisplayName("US02-I6 — usuário sem salas deve receber listas vazias (não nulas) no dashboard")
         void userWithoutRoomsShouldReceiveEmptyLists() {
-            var dashboard = new DashboardResponse(List.of(), List.of());
-            when(userService.getDashboard(VALID_USER_ID)).thenReturn(dashboard);
+            when(userRepository.existsById(VALID_USER_ID)).thenReturn(true);
+            when(roomRepository.findByTutorId(VALID_USER_ID)).thenReturn(List.of());
+            when(roomRepository.findRoomsByParticipantId(VALID_USER_ID)).thenReturn(List.of());
 
-            DashboardResponse result = userService.getDashboard(VALID_USER_ID);
+            DashboardResponse result = roomService.getDashboardByUser(VALID_USER_ID);
 
             assertThat(result.getRoomsAsTutor())
                     .as("Lista de salas Tutor deve ser vazia, nunca nula")
@@ -158,12 +187,11 @@ class DashboardServiceTest {
         @Test
         @DisplayName("US02-I7 — acesso ao dashboard com ID de usuário inválido deve lançar exceção")
         void accessWithInvalidIdShouldThrowException() {
-            when(userService.getDashboard(INVALID_USER_ID))
-                    .thenThrow(new UserNotFoundException("Usuário não encontrado: " + INVALID_USER_ID));
+            when(userRepository.existsById(INVALID_USER_ID)).thenReturn(false);
 
-            assertThatThrownBy(() -> userService.getDashboard(INVALID_USER_ID))
+            assertThatThrownBy(() -> roomService.getDashboardByUser(INVALID_USER_ID))
                     .isInstanceOf(UserNotFoundException.class)
-                    .hasMessageContaining("Usuário não encontrado");
+                    .hasMessageContaining("User not found");
         }
     }
 }

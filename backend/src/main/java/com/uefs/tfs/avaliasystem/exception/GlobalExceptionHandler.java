@@ -19,100 +19,124 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    //esse global exception handler captura todos os erros do controller, assim a gnt n tem q ficar colocando 2000 try catchs nos controllers
-
-    //esse aq captura todos os credenciais invalidas Exception(pro login)
-    @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<Map<String, String>> handleCredenciaisInvalidas(
-            InvalidCredentialsException exception
-    ) {
-        return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of(
-                        "message",
-                        "Credenciais inválidas"
-                ));
-    }
-
-
-    // e esse todos os cadastroInvalidoException( pro cadastro, em caso de alguem enviar algum dado incorreto )
     @ExceptionHandler(InvalidRegisterException.class)
-    public ResponseEntity<Map<String, String>> handleInvalidRegister(
-            InvalidRegisterException exception
+    public ResponseEntity<Map<String, Object>> handleInvalidRegisterException(
+            InvalidRegisterException ex
     ) {
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(Map.of(
-                        "message",
-                        "Não foi possível concluir o cadastro"
-                ));
+        log.warn("Invalid registration: {}", ex.getMessage());
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
+                "Não foi possível concluir o cadastro"
+        );
     }
 
-    //e esse capturaria o erros na foto(tipo ou tamanho)
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(IllegalArgumentException ex) {
+    public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(
+            IllegalArgumentException ex
+    ) {
         log.warn("Validation/Illegal argument error: {}", ex.getMessage());
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
+    public ResponseEntity<Map<String, Object>> handleMethodArgumentNotValidException(
+            MethodArgumentNotValidException ex
+    ) {
         Map<String, String> errors = new HashMap<>();
+
         for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
             errors.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
+
         log.warn("Bean Validation error: {}", errors);
+
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.BAD_REQUEST.value());
         body.put("error", "Bad Request");
         body.put("message", "Validation failed");
         body.put("errors", errors);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(body);
     }
 
     @ExceptionHandler(MissingServletRequestPartException.class)
-    public ResponseEntity<Map<String, Object>> handleMissingServletRequestPartException(MissingServletRequestPartException ex) {
+    public ResponseEntity<Map<String, Object>> handleMissingServletRequestPartException(
+            MissingServletRequestPartException ex
+    ) {
         log.warn("Missing request part: {}", ex.getRequestPartName());
-        return buildResponse(HttpStatus.BAD_REQUEST, "Required request part '" + ex.getRequestPartName() + "' is not present");
+
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
+                "Required request part '" + ex.getRequestPartName()
+                        + "' is not present"
+        );
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<Map<String, Object>> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex) {
+    public ResponseEntity<Map<String, Object>> handleMaxUploadSizeExceededException(
+            MaxUploadSizeExceededException ex
+    ) {
         log.warn("File size limit exceeded: {}", ex.getMessage());
-        return buildResponse(HttpStatus.BAD_REQUEST, "File exceeds maximum upload limit of 5MB");
+
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
+                "File exceeds maximum upload limit of 5MB"
+        );
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<Map<String, Object>> handleInvalidCredentialsException(InvalidCredentialsException ex) {
+    public ResponseEntity<Map<String, Object>> handleInvalidCredentialsException(
+            InvalidCredentialsException ex
+    ) {
         log.warn("Invalid credentials attempt: {}", ex.getMessage());
         return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
 
     @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleUserNotFoundException(UserNotFoundException ex) {
+    public ResponseEntity<Map<String, Object>> handleUserNotFoundException(
+            UserNotFoundException ex
+    ) {
         log.warn("User not found: {}", ex.getMessage());
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(IOException.class)
-    public ResponseEntity<Map<String, Object>> handleIOException(IOException ex) {
+    public ResponseEntity<Map<String, Object>> handleIOException(
+            IOException ex
+    ) {
         log.error("I/O error during file processing: ", ex);
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error processing uploaded file");
+
+        return buildResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Error processing uploaded file"
+        );
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGeneralException(Exception ex) {
+    public ResponseEntity<Map<String, Object>> handleGeneralException(
+            Exception ex
+    ) {
         log.error("Unhandled server exception: ", ex);
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
+
+        return buildResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "An unexpected error occurred"
+        );
     }
 
-    private ResponseEntity<Map<String, Object>> buildResponse(HttpStatus status, String message) {
+    private ResponseEntity<Map<String, Object>> buildResponse(
+            HttpStatus status,
+            String message
+    ) {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", status.value());
         body.put("error", status.getReasonPhrase());
         body.put("message", message);
+
         return ResponseEntity.status(status).body(body);
     }
 }

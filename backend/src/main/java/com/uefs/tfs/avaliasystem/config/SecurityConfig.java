@@ -25,6 +25,9 @@ import java.util.Base64;
 @Configuration
 public class SecurityConfig {
 
+
+
+    //faz com q qualquer rota alem de register e login sejam bloqueadas por usuários não logados.
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
