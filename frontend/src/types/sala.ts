@@ -3,4 +3,7 @@ export interface Sala {
   nome: string;
   codigo: string;
   semestre: string;
+  // ====== ALTERADO POR CLAUDE ======
+  tutor?: string;
+  tutorFoto?: string;
 }
