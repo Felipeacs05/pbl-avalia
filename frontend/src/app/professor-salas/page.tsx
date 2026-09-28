@@ -4,9 +4,9 @@ import React, { useState } from "react";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { Plus } from "lucide-react";
 import { useSalas } from "../../hooks/useSalas";
-import { SalaList } from "../../components/features/salas/SalaList";
+import { SalaList } from "../../components/features/rooms/SalaList";
 import { BottomTabBar } from "../../components/features/navigation/BottomTabBar";
-import { ModalCriarSala } from "../../components/features/salas/ModalCriarSala";
+import { ModalCriarSala } from "../../components/features/rooms/ModalCriarSala";
 
 export default function Home() {
   const { salas, isLoading } = useSalas();
