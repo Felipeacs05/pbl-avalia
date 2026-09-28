@@ -21,4 +21,3 @@ export function LoginButton({texto, onClick, type = 'submit', disabled}:LoginBut
         </button>
     )
 }
-

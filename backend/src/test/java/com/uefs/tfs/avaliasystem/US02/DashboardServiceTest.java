@@ -1,8 +1,9 @@
 package com.uefs.tfs.avaliasystem.US02;
 
 import com.uefs.tfs.avaliasystem.dto.DashboardResponse;
-import com.uefs.tfs.avaliasystem.dto.SalaDto;
-import com.uefs.tfs.avaliasystem.service.UsuarioService;
+import com.uefs.tfs.avaliasystem.dto.RoomDto;
+import com.uefs.tfs.avaliasystem.exception.UserNotFoundException;
+import com.uefs.tfs.avaliasystem.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -35,10 +36,10 @@ import static org.mockito.Mockito.when;
 class DashboardServiceTest {
 
     @Mock
-    private UsuarioService usuarioService;
+    private UserService userService;
 
-    private static final Long USUARIO_ID_VALIDO = 1L;
-    private static final Long USUARIO_ID_INVALIDO = 999L;
+    private static final Long VALID_USER_ID = 1L;
+    private static final Long INVALID_USER_ID = 999L;
 
     // ────────────────────────────────────────────────────────────────────────
     //  TESTES VÁLIDOS
@@ -46,82 +47,82 @@ class DashboardServiceTest {
 
     @Nested
     @DisplayName("Testes Válidos — Dashboard separado por papel")
-    class TestesValidos {
+    class ValidTests {
 
         @Test
         @DisplayName("US02-V4 — dashboard deve retornar abas separadas: salasComoTutor e salasComoAluno")
-        void dashboardDeveConterAmbasAsListasSeparadas() {
-            var salasTutor = List.of(
-                    new SalaDto(10L, "Algoritmos Avançados", "ALGO-001"),
-                    new SalaDto(11L, "Estruturas de Dados", "ED-002")
+        void shouldContainBothListsSeparated() {
+            var tutorRooms = List.of(
+                    new RoomDto(10L, "Algoritmos Avançados", "ALGO-001"),
+                    new RoomDto(11L, "Estruturas de Dados", "ED-002")
             );
-            var salasAluno = List.of(
-                    new SalaDto(20L, "Cálculo I", "CALC-001")
+            var studentRooms = List.of(
+                    new RoomDto(20L, "Cálculo I", "CALC-001")
             );
 
-            var dashboard = new DashboardResponse(salasTutor, salasAluno);
-            when(usuarioService.obterDashboard(USUARIO_ID_VALIDO)).thenReturn(dashboard);
+            var dashboard = new DashboardResponse(tutorRooms, studentRooms);
+            when(userService.getDashboard(VALID_USER_ID)).thenReturn(dashboard);
 
-            DashboardResponse resultado = usuarioService.obterDashboard(USUARIO_ID_VALIDO);
+            DashboardResponse result = userService.getDashboard(VALID_USER_ID);
 
             // Ambas as seções devem existir e não serem nulas
-            assertThat(resultado.getSalasComoTutor())
+            assertThat(result.getRoomsAsTutor())
                     .as("A aba 'Salas que administro (Tutor)' deve existir no dashboard")
                     .isNotNull();
-            assertThat(resultado.getSalasComoAluno())
+            assertThat(result.getRoomsAsStudent())
                     .as("A aba 'Salas que participo (Aluno)' deve existir no dashboard")
                     .isNotNull();
         }
 
         @Test
         @DisplayName("US02-V5 — salas criadas pelo usuário aparecem apenas na aba Tutor")
-        void salasComoTutorDevemApenasPertencerAoTutor() {
-            var salasTutor = List.of(
-                    new SalaDto(10L, "Algoritmos Avançados", "ALGO-001")
+        void tutorRoomsShouldOnlyBelongToTutor() {
+            var tutorRooms = List.of(
+                    new RoomDto(10L, "Algoritmos Avançados", "ALGO-001")
             );
-            var salasAluno = List.of(
-                    new SalaDto(20L, "Cálculo I", "CALC-001")
+            var studentRooms = List.of(
+                    new RoomDto(20L, "Cálculo I", "CALC-001")
             );
 
-            var dashboard = new DashboardResponse(salasTutor, salasAluno);
-            when(usuarioService.obterDashboard(USUARIO_ID_VALIDO)).thenReturn(dashboard);
+            var dashboard = new DashboardResponse(tutorRooms, studentRooms);
+            when(userService.getDashboard(VALID_USER_ID)).thenReturn(dashboard);
 
-            DashboardResponse resultado = usuarioService.obterDashboard(USUARIO_ID_VALIDO);
+            DashboardResponse result = userService.getDashboard(VALID_USER_ID);
 
             // A sala de Tutor não deve aparecer na lista de Aluno
-            var idsSalasAluno = resultado.getSalasComoAluno()
-                    .stream().map(SalaDto::getId).toList();
+            var studentRoomIds = result.getRoomsAsStudent()
+                    .stream().map(RoomDto::getId).toList();
 
-            assertThat(resultado.getSalasComoTutor()).hasSize(1);
-            assertThat(resultado.getSalasComoTutor().get(0).getNome())
+            assertThat(result.getRoomsAsTutor()).hasSize(1);
+            assertThat(result.getRoomsAsTutor().get(0).getName())
                     .isEqualTo("Algoritmos Avançados");
-            assertThat(idsSalasAluno)
+            assertThat(studentRoomIds)
                     .as("Uma sala de Tutor não deve aparecer também na aba de Aluno")
                     .doesNotContain(10L);
         }
 
         @Test
         @DisplayName("US02-V6 — salas acessadas via código aparecem apenas na aba Aluno")
-        void salasComoAlunoDevemApenasPertencerAoAluno() {
-            var salasTutor = List.of(
-                    new SalaDto(10L, "Algoritmos Avançados", "ALGO-001")
+        void studentRoomsShouldOnlyBelongToStudent() {
+            var tutorRooms = List.of(
+                    new RoomDto(10L, "Algoritmos Avançados", "ALGO-001")
             );
-            var salasAluno = List.of(
-                    new SalaDto(20L, "Cálculo I", "CALC-001")
+            var studentRooms = List.of(
+                    new RoomDto(20L, "Cálculo I", "CALC-001")
             );
 
-            var dashboard = new DashboardResponse(salasTutor, salasAluno);
-            when(usuarioService.obterDashboard(USUARIO_ID_VALIDO)).thenReturn(dashboard);
+            var dashboard = new DashboardResponse(tutorRooms, studentRooms);
+            when(userService.getDashboard(VALID_USER_ID)).thenReturn(dashboard);
 
-            DashboardResponse resultado = usuarioService.obterDashboard(USUARIO_ID_VALIDO);
+            DashboardResponse result = userService.getDashboard(VALID_USER_ID);
 
-            var idsSalasTutor = resultado.getSalasComoTutor()
-                    .stream().map(SalaDto::getId).toList();
+            var tutorRoomIds = result.getRoomsAsTutor()
+                    .stream().map(RoomDto::getId).toList();
 
-            assertThat(resultado.getSalasComoAluno()).hasSize(1);
-            assertThat(resultado.getSalasComoAluno().get(0).getNome())
+            assertThat(result.getRoomsAsStudent()).hasSize(1);
+            assertThat(result.getRoomsAsStudent().get(0).getName())
                     .isEqualTo("Cálculo I");
-            assertThat(idsSalasTutor)
+            assertThat(tutorRoomIds)
                     .as("Uma sala de Aluno não deve aparecer também na aba de Tutor")
                     .doesNotContain(20L);
         }
@@ -133,22 +134,22 @@ class DashboardServiceTest {
 
     @Nested
     @DisplayName("Testes Inválidos — Dashboard com dados ausentes ou acesso indevido")
-    class TestesInvalidos {
+    class InvalidTests {
 
         @Test
         @DisplayName("US02-I6 — usuário sem salas deve receber listas vazias (não nulas) no dashboard")
-        void usuarioSemSalasDeveReceberListasVazias() {
+        void userWithoutRoomsShouldReceiveEmptyLists() {
             var dashboard = new DashboardResponse(List.of(), List.of());
-            when(usuarioService.obterDashboard(USUARIO_ID_VALIDO)).thenReturn(dashboard);
+            when(userService.getDashboard(VALID_USER_ID)).thenReturn(dashboard);
 
-            DashboardResponse resultado = usuarioService.obterDashboard(USUARIO_ID_VALIDO);
+            DashboardResponse result = userService.getDashboard(VALID_USER_ID);
 
-            assertThat(resultado.getSalasComoTutor())
+            assertThat(result.getRoomsAsTutor())
                     .as("Lista de salas Tutor deve ser vazia, nunca nula")
                     .isNotNull()
                     .isEmpty();
 
-            assertThat(resultado.getSalasComoAluno())
+            assertThat(result.getRoomsAsStudent())
                     .as("Lista de salas Aluno deve ser vazia, nunca nula")
                     .isNotNull()
                     .isEmpty();
@@ -156,13 +157,12 @@ class DashboardServiceTest {
 
         @Test
         @DisplayName("US02-I7 — acesso ao dashboard com ID de usuário inválido deve lançar exceção")
-        void acessoComIdInvalidoDeveLancarExcecao() {
-            when(usuarioService.obterDashboard(USUARIO_ID_INVALIDO))
-                    .thenThrow(new com.uefs.tfs.avaliasystem.exception.UsuarioNaoEncontradoException(
-                            "Usuário não encontrado: " + USUARIO_ID_INVALIDO));
+        void accessWithInvalidIdShouldThrowException() {
+            when(userService.getDashboard(INVALID_USER_ID))
+                    .thenThrow(new UserNotFoundException("Usuário não encontrado: " + INVALID_USER_ID));
 
-            assertThatThrownBy(() -> usuarioService.obterDashboard(USUARIO_ID_INVALIDO))
-                    .isInstanceOf(com.uefs.tfs.avaliasystem.exception.UsuarioNaoEncontradoException.class)
+            assertThatThrownBy(() -> userService.getDashboard(INVALID_USER_ID))
+                    .isInstanceOf(UserNotFoundException.class)
                     .hasMessageContaining("Usuário não encontrado");
         }
     }

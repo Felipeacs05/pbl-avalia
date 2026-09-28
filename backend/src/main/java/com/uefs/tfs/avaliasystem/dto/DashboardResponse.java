@@ -1,28 +1,40 @@
 package com.uefs.tfs.avaliasystem.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
 
 /**
- * DTO de resposta do dashboard do usuário (US02).
- *
- * Separação visual/lógica entre os dois papéis:
- *   • salasComoTutor  — salas criadas pelo usuário (ele é administrador/Tutor).
- *   • salasComoAluno  — salas em que o usuário entrou via código (ele é Aluno).
- *
- * Ambas as listas são sempre inicializadas (nunca null) para facilitar
- * a renderização da UI sem verificações extras.
+ * Dashboard response DTO (US02).
  */
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class DashboardResponse {
-    /** Aba "Salas que administro (Tutor)". */
-    private List<SalaDto> salasComoTutor;
+    @JsonAlias("roomsAsTutor")
+    private List<RoomDto> salasComoTutor;
 
-    /** Aba "Salas que participo (Aluno)". */
-    private List<SalaDto> salasComoAluno;
+    @JsonAlias("roomsAsStudent")
+    private List<RoomDto> salasComoAluno;
+
+    public List<RoomDto> getRoomsAsTutor() {
+        return salasComoTutor;
+    }
+
+    public void setRoomsAsTutor(List<RoomDto> roomsAsTutor) {
+        this.salasComoTutor = roomsAsTutor;
+    }
+
+    public List<RoomDto> getRoomsAsStudent() {
+        return salasComoAluno;
+    }
+
+    public void setRoomsAsStudent(List<RoomDto> roomsAsStudent) {
+        this.salasComoAluno = roomsAsStudent;
+    }
 }
