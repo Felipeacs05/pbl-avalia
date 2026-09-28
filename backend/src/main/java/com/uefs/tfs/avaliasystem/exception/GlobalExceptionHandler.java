@@ -19,6 +19,12 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<Map<String, Object>> handleSecurityException(SecurityException ex) {
+        log.warn("Access denied: {}", ex.getMessage());
+        return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(IllegalArgumentException ex) {
         log.warn("Validation/Illegal argument error: {}", ex.getMessage());
