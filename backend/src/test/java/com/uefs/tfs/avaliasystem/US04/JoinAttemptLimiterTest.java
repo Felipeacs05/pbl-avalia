@@ -2,7 +2,7 @@ package com.uefs.tfs.avaliasystem.US04;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
+import com.uefs.tfs.avaliasystem.service.JoinAttemptLimiter;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
 
 class JoinAttemptLimiterTest {
 
