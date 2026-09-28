@@ -14,20 +14,26 @@ export function useAuth() {
     setCarregando(true);
 
     try {
-      // O 'await' FAZ O CODIGO ESPERAR o resultado da Promise do authService
       const data = await authService.login(credentials);
 
-      // Se a senha for '123456', o authService dá resolve e o código CONTINUA aqui:
       if (typeof window !== 'undefined') {
         localStorage.setItem('token', data.token);
       }
 
       router.push('/professor-salas');
-    } catch (err: any) {
-      // Se a senha for diferente, o authService dá reject e o código PULA para cá:
-      const mensagem =
-        err.response?.data?.message ||
-        'Erro ao realizar login. Verifique seus dados de acesso.';
+    } catch (err: unknown) {
+      // Trata o tipo unknown de forma segura sem usar 'any'
+      let mensagem = 'Erro ao realizar login. Verifique seus dados de acesso.';
+
+      if (
+        typeof err === 'object' &&
+        err !== null &&
+        'response' in err &&
+        typeof (err as { response?: { data?: { message?: string } } }).response?.data?.message === 'string'
+      ) {
+        mensagem = (err as { response: { data: { message: string } } }).response.data.message;
+      }
+
       setErro(mensagem);
     } finally {
       setCarregando(false);
