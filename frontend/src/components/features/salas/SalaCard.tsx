@@ -14,7 +14,7 @@ export function SalaCard({ sala, onEntrar, onEditar, onCompartilhar }: SalaCardP
   return (
     <div 
       onClick={onEntrar} // Torna o card inteiro clicável
-      className="bg-[#4354A0] text-white p-5 rounded-[1.5rem] shadow-md relative cursor-pointer hover:bg-[#3b4b8f] transition-all active:scale-[0.98]"
+      className="bg-[#4354A0] text-white p-5 rounded-3xl shadow-md relative cursor-pointer hover:bg-[#3b4b8f] transition-all active:scale-[0.98]"
     >
       <h2 className="text-xl font-bold mb-1 tracking-wide">{sala.nome}</h2>
       
