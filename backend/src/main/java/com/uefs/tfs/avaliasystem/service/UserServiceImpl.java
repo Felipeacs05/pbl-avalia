@@ -7,7 +7,6 @@ import com.uefs.tfs.avaliasystem.exception.InvalidCredentialsException;
 import com.uefs.tfs.avaliasystem.exception.InvalidRegisterException;
 import com.uefs.tfs.avaliasystem.model.User;
 import com.uefs.tfs.avaliasystem.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,7 +15,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.Set;
 
 @Service
-@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;

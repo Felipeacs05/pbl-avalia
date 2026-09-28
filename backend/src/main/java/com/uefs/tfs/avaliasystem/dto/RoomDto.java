@@ -9,6 +9,7 @@ import lombok.Setter;
 import java.util.UUID;
 
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class RoomDto {
@@ -28,5 +29,6 @@ public class RoomDto {
                 room.getAccessCode(),
                 tutorId
         );
+    }
 }
 
