@@ -11,16 +11,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 
-/*
-CREATE TABLE IF NOT EXISTS sala_aluno (
-    sala_id BIGINT NOT NULL,
-    aluno_id UUID NOT NULL,
-    inscrito_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (sala_id, aluno_id),
-    CONSTRAINT fk_sala_aluno_sala FOREIGN KEY (sala_id) REFERENCES sala(id) ON DELETE CASCADE,
-    CONSTRAINT fk_sala_aluno_aluno FOREIGN KEY (aluno_id) REFERENCES usuario(id) ON DELETE CASCADE
-);
-*/
+
 @Repository
 public interface RoomRepository extends JpaRepository<Room, Long> {
     List<Room> findByTutorId(UUID TutorId);
@@ -43,4 +34,14 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
             nativeQuery = true
     )
     List<Room> findRoomsByParticipantId(@Param("userId") UUID userId);
+  
+  
+    boolean existsByAccessCode(String accessCode);
+
+    Optional<Room> findByAccessCode(String accessCode);
+
+    @Query("SELECT DISTINCT r FROM Room r " +
+            "LEFT JOIN RoomMember rm ON rm.room = r " +
+            "WHERE r.tutor.id = :userId OR (rm.user.id = :userId AND rm.active = true)")
+    List<Room> findAllByTutorOrActiveMember(@Param("userId") java.util.UUID userId);
 }

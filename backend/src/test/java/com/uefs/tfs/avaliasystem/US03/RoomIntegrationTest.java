@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Principal;
 import java.time.Instant;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase.Replace;
@@ -65,6 +66,8 @@ class RoomIntegrationTest {
     void setUp() {
         tutor = new User();
         tutor.setName("Tutora Integração");
+        tutor.setEmail("tutora.int_" + UUID.randomUUID().toString().substring(0, 6) + "@teste.com");
+        tutor.setPassword("senha123");
         tutor = userRepository.save(tutor);
     }
 
@@ -87,7 +90,7 @@ class RoomIntegrationTest {
         RoomRequest request = new RoomRequest("Sala de Integração Full Stack");
 
         String responseBody = mockMvc.perform(post("/api/v1/rooms")
-                        .with(authenticatedAs(tutor.getId()))
+                        .with(authenticatedAs(tutor.getId().toString()))
                         .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -110,7 +113,7 @@ class RoomIntegrationTest {
         RoomRequest updateRequest = new RoomRequest("Nome Atualizado via Integração");
 
         mockMvc.perform(put("/api/v1/rooms/{id}", room.getId())
-                        .with(authenticatedAs(tutor.getId()))
+                        .with(authenticatedAs(tutor.getId().toString()))
                         .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk());
@@ -133,7 +136,7 @@ class RoomIntegrationTest {
         // pelo Service, conforme RoomServiceTest) para HTTP 403 Forbidden. Caso o
         // handler global ainda não exista, este teste serve como especificação TDD dele.
         mockMvc.perform(put("/api/v1/rooms/{id}", room.getId())
-                        .with(authenticatedAs(outroUsuario.getId()))
+                        .with(authenticatedAs(outroUsuario.getId().toString()))
                         .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isForbidden());
@@ -151,7 +154,7 @@ class RoomIntegrationTest {
         Room room = persistRoom("INT03", "Sala a Excluir");
 
         mockMvc.perform(delete("/api/v1/rooms/{id}", room.getId())
-                        .with(authenticatedAs(tutor.getId())))
+                        .with(authenticatedAs(tutor.getId().toString())))
                 .andExpect(status().isNoContent());
 
         entityManager.flush();
@@ -177,23 +180,23 @@ class RoomIntegrationTest {
         User semVinculo = persistUser("Sem Vínculo");
 
         // Tutor vê a sala
-        mockMvc.perform(get("/api/v1/rooms").with(authenticatedAs(tutor.getId())))
+        mockMvc.perform(get("/api/v1/rooms").with(authenticatedAs(tutor.getId().toString())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value(roomDoTutor.getId()));
+                .andExpect(jsonPath("$[0].id").value(roomDoTutor.getId().toString()));
 
         // Membro ativo vê a sala
-        mockMvc.perform(get("/api/v1/rooms").with(authenticatedAs(alunoAtivo.getId())))
+        mockMvc.perform(get("/api/v1/rooms").with(authenticatedAs(alunoAtivo.getId().toString())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1));
 
         // Ex-membro (soft delete) não vê
-        mockMvc.perform(get("/api/v1/rooms").with(authenticatedAs(exAluno.getId())))
+        mockMvc.perform(get("/api/v1/rooms").with(authenticatedAs(exAluno.getId().toString())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
 
         // Usuário sem vínculo não vê
-        mockMvc.perform(get("/api/v1/rooms").with(authenticatedAs(semVinculo.getId())))
+        mockMvc.perform(get("/api/v1/rooms").with(authenticatedAs(semVinculo.getId().toString())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }
@@ -203,6 +206,8 @@ class RoomIntegrationTest {
     private User persistUser(String name) {
         User user = new User();
         user.setName(name);
+        user.setEmail(name.replaceAll("\\s+", "").toLowerCase() + "_" + UUID.randomUUID().toString().substring(0, 6) + "@teste.com");
+        user.setPassword("senha123");
         return userRepository.save(user);
     }
 

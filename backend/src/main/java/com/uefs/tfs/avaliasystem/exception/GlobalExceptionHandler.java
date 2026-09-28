@@ -28,6 +28,11 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST,
                 "Não foi possível concluir o cadastro"
         );
+
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<Map<String, Object>> handleSecurityException(SecurityException ex) {
+        log.warn("Access denied: {}", ex.getMessage());
+        return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

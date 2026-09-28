@@ -9,49 +9,32 @@ import lombok.Setter;
 
 import java.time.OffsetDateTime;
 
-/*
-id BIGSERIAL PRIMARY KEY,
-nome VARCHAR(255) NOT NULL,
-codigo_acesso VARCHAR(50) NOT NULL UNIQUE,
-tutor_id UUID NOT NULL,
-criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-CONSTRAINT fk_sala_tutor
-    FOREIGN KEY (tutor_id)
-    REFERENCES usuario(id)
-    ON DELETE RESTRICT
-*/
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
-@Entity
-@Table(name = "sala")
-@Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter
+@Entity
+@Table(name = "rooms")
 public class Room {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
 
-    @Column(name = "nome", nullable = false)
+    @Column(nullable = false)
     private String name;
 
-    @Column(name = "codigo_acesso", nullable = false, unique = true)
+    @Column(unique = true, nullable = false)
     private String accessCode;
 
-    @ManyToOne
+    private String inviteLink;
+
+    @ManyToOne(optional = false)
     @JoinColumn(name = "tutor_id", nullable = false)
     private User tutor;
 
-    @Column(name = "criado_em", nullable = false)
-    private OffsetDateTime createdAt;
-
-    public Room(String name, String accessCode, User tutor) {
-        this.name = name;
-        this.accessCode = accessCode;
-        this.tutor = tutor;
-        this.createdAt = OffsetDateTime.now();
-    }
-
 
 }
+
