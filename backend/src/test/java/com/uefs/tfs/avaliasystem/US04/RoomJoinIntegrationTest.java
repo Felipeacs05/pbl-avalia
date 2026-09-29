@@ -15,16 +15,16 @@ import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
+import com.uefs.tfs.avaliasystem.TestConfig;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.Principal;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase.Replace;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * O limiter é singleton: cada teste usa um IP exclusivo.
  */
 @SpringBootTest
-@ActiveProfiles("test")
+@TestConfig
 @AutoConfigureMockMvc
 @AutoConfigureTestDatabase(replace = Replace.ANY)
 @Transactional
@@ -60,8 +60,9 @@ class RoomJoinIntegrationTest {
         room = roomRepository.save(room);
     }
 
+    // JWT simulado: o "sub" vira principal.getName() no controller.
     private RequestPostProcessor as(String userId) {
-        return request -> { request.setUserPrincipal((Principal) () -> userId); return request; };
+        return jwt().jwt(j -> j.subject(userId));
     }
 
     private void joinByCode(String code, String ip, int expectedStatus) throws Exception {

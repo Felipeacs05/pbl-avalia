@@ -7,8 +7,6 @@ import com.uefs.tfs.avaliasystem.model.RoomMember;
 import com.uefs.tfs.avaliasystem.model.User;
 import com.uefs.tfs.avaliasystem.repository.RoomRepository;
 import com.uefs.tfs.avaliasystem.repository.UserRepository;
-import org.springframework.test.context.ActiveProfiles;
-import tools.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,30 +14,37 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import com.uefs.tfs.avaliasystem.TestConfig;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
-import java.security.Principal;
 import java.time.Instant;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase.Replace;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 // NÍVEL: INTEGRAÇÃO (meio da pirâmide).
 // Diferente do RoomControllerTest (@WebMvcTest, Service mockado) e do RoomServiceTest
 // (Mockito, Repository mockado), aqui SOBE O CONTEXTO SPRING INTEIRO: Controller real,
-// Service real e Repository real conversando com um banco H2 físico via MockMvc.
+// Service real e Repository real conversando com um banco H2 via MockMvc.
 // Objetivo: pegar bugs de "colagem" entre camadas que os testes isolados não veem
 // (ex.: mapeamento de exceção -> status HTTP, serialização real do DTO, transação
 // atravessando as três camadas).
 @SpringBootTest
-@ActiveProfiles("test")
+@TestConfig
 @AutoConfigureMockMvc
 @AutoConfigureTestDatabase(replace = Replace.ANY) // força H2 em memória, independente do datasource de produção
 @Transactional // cada teste roda em transação própria com rollback automático (isolamento)
@@ -73,15 +78,11 @@ class RoomIntegrationTest {
         tutor = userRepository.save(tutor);
     }
 
-    // Injeta um Principal diretamente na requisição do MockMvc, sem depender de login
-    // real (JWT) nem de mocks do Service. Suficiente aqui porque o objetivo deste
-    // nível é validar a colaboração Controller->Service->Repository->DB, não o
-    // mecanismo de autenticação em si (isso cabe ao teste E2E / a testes de segurança dedicados).
+    // Autentica a requisição com um JWT simulado cujo "sub" é o id do usuário. O filtro de
+    // segurança real (SecurityConfig) continua ativo; o que é dispensado aqui é apenas a
+    // assinatura do token, pois o foco é a colaboração Controller->Service->Repository->DB.
     private RequestPostProcessor authenticatedAs(String userId) {
-        return request -> {
-            request.setUserPrincipal((Principal) () -> userId);
-            return request;
-        };
+        return jwt().jwt(j -> j.subject(userId));
     }
 
     // --- CRIAÇÃO PONTA A PONTA (sem nenhum mock) ---
@@ -128,15 +129,14 @@ class RoomIntegrationTest {
     }
 
     @Test
-    @DisplayName("PUT /rooms/{id} por usuário que não é o Tutor deve responder com erro HTTP e não alterar o banco")
+    @DisplayName("PUT /rooms/{id} por usuário que não é o Tutor deve responder 403 e não alterar o banco")
     void updateRoom_ByUnauthorizedUser_ReturnsErrorStatus_AndDoesNotPersistChange() throws Exception {
         Room room = persistRoom("INT02", "Nome Protegido");
         User outroUsuario = persistUser("Invasor");
         RoomRequest updateRequest = new RoomRequest("Nome Hackeado");
 
-        // ASSUNÇÃO: espera-se um @ControllerAdvice mapeando SecurityException (lançada
-        // pelo Service, conforme RoomServiceTest) para HTTP 403 Forbidden. Caso o
-        // handler global ainda não exista, este teste serve como especificação TDD dele.
+        // O usuário está autenticado (JWT válido), mas não é o Tutor: o Service lança
+        // ForbiddenOperationException, que o GlobalExceptionHandler mapeia para 403.
         mockMvc.perform(put("/api/v1/rooms/{id}", room.getId())
                         .with(authenticatedAs(outroUsuario.getId().toString()))
                         .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
