@@ -11,10 +11,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -22,12 +19,13 @@ import java.net.URI;
 
 @RestController
 @AllArgsConstructor
+@RequestMapping("/api/v1/auth")
 public class AuthController {
 
     private final UserService userService;
 
     @PostMapping(
-            value = "/v1/auth/register",
+            value = "/register",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public ResponseEntity<UserResponse> register(
@@ -49,7 +47,7 @@ public class AuthController {
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentContextPath()
-                .path("/v1/users/{id}")
+                .path("/api/v1/users/{id}")
                 .buildAndExpand(user.getId())
                 .toUri();
 
@@ -57,7 +55,7 @@ public class AuthController {
     }
 
     @PostMapping(
-            value = "/api/auth/login",
+            value = "/login",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
