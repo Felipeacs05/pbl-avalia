@@ -77,6 +77,11 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage());
     }
 
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<String> handleSecurityException(SecurityException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+    }
+
     @ExceptionHandler(IOException.class)
     public ResponseEntity<Map<String, Object>> handleIOException(IOException ex) {
         log.error("I/O error during file processing: ", ex);

@@ -29,8 +29,8 @@ public class AuthController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public ResponseEntity<UserResponse> register(
-            @Valid @RequestPart("dados") RegisterUserRequest request,
-            @RequestPart(value = "foto", required = true) MultipartFile photo
+            @Valid @RequestPart("data") RegisterUserRequest request,
+            @RequestPart(value = "photo") MultipartFile photo
     ) {
         if (photo.isEmpty()) {
             return ResponseEntity.badRequest().build();
