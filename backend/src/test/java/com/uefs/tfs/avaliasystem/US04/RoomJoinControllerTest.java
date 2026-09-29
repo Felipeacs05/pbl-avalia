@@ -1,5 +1,6 @@
 package com.uefs.tfs.avaliasystem.US04;
 
+import com.uefs.tfs.avaliasystem.config.SecurityConfig;
 import com.uefs.tfs.avaliasystem.controller.RoomController;
 import com.uefs.tfs.avaliasystem.dto.RoomResponse;
 import com.uefs.tfs.avaliasystem.exception.InvalidAccessCodeException;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -35,6 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Os handlers 404/429 devem estar no GlobalExceptionHandler (@WebMvcTest carrega o @RestControllerAdvice).
  */
 @WebMvcTest(RoomController.class)
+@Import(SecurityConfig.class)
 class RoomJoinControllerTest {
 
     private static final String IP = "192.168.1.1";

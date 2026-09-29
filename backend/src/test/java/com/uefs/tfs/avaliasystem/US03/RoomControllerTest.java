@@ -1,5 +1,7 @@
 package com.uefs.tfs.avaliasystem.US03;
 
+import com.uefs.tfs.avaliasystem.config.SecurityConfig;
+import org.springframework.context.annotation.Import;
 import tools.jackson.databind.ObjectMapper;
 import com.uefs.tfs.avaliasystem.controller.RoomController;
 import com.uefs.tfs.avaliasystem.dto.RoomRequest;
@@ -30,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // Inicializa apenas a Camada 1 (rotas, serialização JSON e filtros HTTP).
 // Não inicia o banco de dados.
 @WebMvcTest(RoomController.class)
+@Import(SecurityConfig.class)
 class RoomControllerTest {
 
     // Ferramenta que simula requisições web (GET, POST, etc.) na nossa API
