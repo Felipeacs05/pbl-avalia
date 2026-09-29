@@ -4,9 +4,9 @@ import com.uefs.tfs.avaliasystem.dto.RoomRequest;
 import com.uefs.tfs.avaliasystem.dto.RoomResponse;
 import com.uefs.tfs.avaliasystem.model.Room;
 import com.uefs.tfs.avaliasystem.model.User;
+import com.uefs.tfs.avaliasystem.repository.RoomMemberRepository;
 import com.uefs.tfs.avaliasystem.repository.RoomRepository;
 import com.uefs.tfs.avaliasystem.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,13 +17,19 @@ import java.util.stream.Collectors;
 @Service
 public class RoomService {
 
-    private RoomRepository roomRepository;
+    private final RoomRepository roomRepository;
+    private final UserRepository userRepository;
+    private final RoomMemberRepository roomMemberRepository;
+    private final RateLimitingService rateLimitingService;
 
-    private UserRepository userRepository;
-
-    public RoomService(RoomRepository roomRepository, UserRepository userRepository){
+    public RoomService(RoomRepository roomRepository,
+                       UserRepository userRepository,
+                       RoomMemberRepository roomMemberRepository,
+                       RateLimitingService rateLimitingService) {
         this.roomRepository = roomRepository;
         this.userRepository = userRepository;
+        this.roomMemberRepository = roomMemberRepository;
+        this.rateLimitingService = rateLimitingService;
     }
 
     @Transactional
@@ -35,7 +41,6 @@ public class RoomService {
         room.setName(request.getName());
         room.setTutor(tutor);
 
-        // Gera código de acesso único
         String accessCode;
         do {
             accessCode = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
@@ -81,5 +86,10 @@ public class RoomService {
         return roomRepository.findAllByTutorOrActiveMember(UUID.fromString(userId)).stream()
                 .map(room -> new RoomResponse(room.getId(), room.getName(), room.getAccessCode(), room.getInviteLink()))
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public RoomResponse joinRoom(String userId, String accessCode, String ip) {
+        throw new UnsupportedOperationException("joinRoom ainda não implementado — US04 (dev backend)");
     }
 }
