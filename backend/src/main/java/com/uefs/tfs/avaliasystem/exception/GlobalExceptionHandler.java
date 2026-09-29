@@ -77,8 +77,8 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage());
     }
 
-    @ExceptionHandler(SecurityException.class)
-    public ResponseEntity<Map<String, Object>> handleSecurityException(SecurityException ex) {
+    @ExceptionHandler(ForbiddenOperationException.class)
+    public ResponseEntity<Map<String, Object>> handleSecurityException(ForbiddenOperationException ex) {
         log.warn("Unauthenticated user: {}", ex.getMessage());
         return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage());
     }

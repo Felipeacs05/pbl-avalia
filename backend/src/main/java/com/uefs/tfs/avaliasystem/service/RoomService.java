@@ -4,6 +4,7 @@ import com.uefs.tfs.avaliasystem.dto.DashboardResponse;
 import com.uefs.tfs.avaliasystem.dto.RoomDto;
 import com.uefs.tfs.avaliasystem.dto.RoomRequest;
 import com.uefs.tfs.avaliasystem.dto.RoomResponse;
+import com.uefs.tfs.avaliasystem.exception.ForbiddenOperationException;
 import com.uefs.tfs.avaliasystem.exception.InvalidAccessCodeException;
 import com.uefs.tfs.avaliasystem.exception.TooManyAttemptsException;
 import com.uefs.tfs.avaliasystem.exception.UserNotFoundException;
@@ -68,7 +69,7 @@ public class RoomService {
                 .orElseThrow(() -> new IllegalArgumentException("Sala não encontrada"));
 
         if (!room.getTutor().getId().toString().equals(tutorId)) {
-            throw new SecurityException("Apenas o Tutor da sala possui permissão para editá-la.");
+            throw new ForbiddenOperationException("Apenas o Tutor da sala possui permissão para editá-la.");
         }
 
         room.setName(request.getName());

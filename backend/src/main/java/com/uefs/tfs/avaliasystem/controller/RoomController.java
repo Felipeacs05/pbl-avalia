@@ -23,28 +23,24 @@ public class RoomController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public RoomResponse createRoom(@RequestBody @Valid RoomRequest request, Principal principal) {
-        ensureAuthenticated(principal);
         return roomService.createRoom(request, principal.getName());
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public RoomResponse updateRoom(@PathVariable String id, @RequestBody @Valid RoomRequest request, Principal principal) {
-        ensureAuthenticated(principal);
         return roomService.updateRoom(id, request, principal.getName());
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteRoom(@PathVariable String id, Principal principal) {
-        ensureAuthenticated(principal);
         roomService.deleteRoom(id, principal.getName());
     }
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<RoomResponse> listRooms(Principal principal) {
-        ensureAuthenticated(principal);
         return roomService.listRooms(principal.getName());
     }
 
@@ -53,7 +49,6 @@ public class RoomController {
     public RoomResponse joinRoom(@RequestBody @Valid JoinRoomRequest request,
                                  Principal principal,
                                  HttpServletRequest httpRequest) {
-        ensureAuthenticated(principal);
         return roomService.joinRoom(principal.getName(), request.getAccessCode(), resolveClientIp(httpRequest));
     }
 
@@ -62,7 +57,6 @@ public class RoomController {
     public RoomResponse joinRoomByLink(@PathVariable String code,
                                        Principal principal,
                                        HttpServletRequest httpRequest) {
-        ensureAuthenticated(principal);
         return roomService.joinRoom(principal.getName(), code, resolveClientIp(httpRequest));
     }
 
@@ -72,11 +66,5 @@ public class RoomController {
             return forwarded.split(",")[0].trim();
         }
         return request.getRemoteAddr();
-    }
-
-    private void ensureAuthenticated(Principal principal) {
-        if (principal == null || principal.getName() == null || principal.getName().isBlank()) {
-            throw new SecurityException("Acesso não autorizado: credenciais ausentes.");
-        }
     }
 }
