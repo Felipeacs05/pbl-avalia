@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * US02 — Autenticação e Dashboard de Salas.
  *
- * Testa os critérios de aceite relacionados ao login via /api/auth/login:
+ * Testa os critérios de aceite relacionados ao login via /api/v1/auth/login:
  *   • VÁLIDOS : login correto gera token JWT com campo de expiração preenchido.
  *   • INVÁLIDOS: senha/e-mail errado retorna 401 com mensagem genérica
  *               "Credenciais inválidas" (sem vazar se o e-mail existe ou não).
@@ -67,7 +67,7 @@ class DashboardControllerLoggedTest {
                     ".eyJzdWIiOiJhbmFAdWVmcy5iciIsImV4cCI6MX0" +
                     ".assinatura_invalida";
 
-            mockMvc.perform(get("/api/dashboard")
+            mockMvc.perform(get("/api/users/me/rooms")
                             .header("Authorization", expiredToken))
                     .andExpect(status().isUnauthorized());
         }
@@ -75,7 +75,7 @@ class DashboardControllerLoggedTest {
         @Test
         @DisplayName("US02-I4 — requisição sem token JWT retorna 401 (Unauthorized)")
         void shouldReturn401WithoutJwtToken() throws Exception {
-            mockMvc.perform(get("/api/dashboard"))
+            mockMvc.perform(get("/api/users/me/rooms"))
                     .andExpect(status().isUnauthorized());
         }
     }
