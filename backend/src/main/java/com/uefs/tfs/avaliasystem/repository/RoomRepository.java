@@ -13,8 +13,9 @@ import java.util.UUID;
 
 
 @Repository
-public interface RoomRepository extends JpaRepository<Room, Long> {
+public interface RoomRepository extends JpaRepository<Room, String> {
     List<Room> findByTutorId(UUID TutorId);
+
 
 
 
@@ -34,8 +35,8 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
             nativeQuery = true
     )
     List<Room> findRoomsByParticipantId(@Param("userId") UUID userId);
-  
-  
+
+
     boolean existsByAccessCode(String accessCode);
 
     Optional<Room> findByAccessCode(String accessCode);

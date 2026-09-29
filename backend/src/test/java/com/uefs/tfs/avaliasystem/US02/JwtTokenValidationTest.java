@@ -1,5 +1,20 @@
 package com.uefs.tfs.avaliasystem.US02;
 
+import com.uefs.tfs.avaliasystem.dto.LoginResponse;
+import com.uefs.tfs.avaliasystem.dto.RegisterUserRequest;
+import com.uefs.tfs.avaliasystem.model.User;
+import com.uefs.tfs.avaliasystem.service.JwtService;
+import com.uefs.tfs.avaliasystem.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.JwsHeader;
+import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,6 +24,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -20,13 +37,61 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * - Validação de expiração temporal (garante que não há token infinito)
  */
 @DisplayName("US02 - Validação Estrutural e Temporal de Token JWT")
+@SpringBootTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
+@Transactional
 class JwtTokenValidationTest {
 
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private JwtEncoder jwtEncoder;
+
+    @Autowired
+    private JwtService jwtService;
+    private User registeredUser;
+    private LoginResponse loginResponse;
+
+    private String generateExpiredToken(UUID userId) {
+        Instant now = Instant.now();
+
+        JwtClaimsSet claims = JwtClaimsSet.builder()
+                .subject(userId.toString())
+                .issuedAt(now.minusSeconds(7200))
+                .expiresAt(now.minusSeconds(3600))
+                .build();
+
+        JwsHeader header = JwsHeader
+                .with(MacAlgorithm.HS256)
+                .type("JWT")
+                .build();
+
+        return jwtEncoder.encode(
+                JwtEncoderParameters.from(header, claims)
+        ).getTokenValue();
+    }
+
     @BeforeEach
     void setUp() {
         this.objectMapper = new ObjectMapper();
+
+        String email = "ana@uefs.br";
+        String password = "senhaForte123";
+
+        var registration = new RegisterUserRequest("Ana Silva", email, password);
+
+        //
+        var photo = new MockMultipartFile(
+                "photo",
+                "perfil.jpg",
+                "image/jpeg",
+                "conteudo-fake".getBytes(StandardCharsets.UTF_8)
+        );
+
+        this.registeredUser = userService.register(registration, photo);
+        this.loginResponse = userService.login(email, password);
     }
 
     /**
@@ -46,24 +111,12 @@ class JwtTokenValidationTest {
     @Test
     @DisplayName("US02-V1 - Token JWT deve conter claim 'exp' configurada para exatamente 24h à frente de 'iat'")
     void shouldContain24HourExpirationInPayload() throws Exception {
-        long nowSeconds = Instant.now().getEpochSecond();
-        long expiration24hSeconds = Instant.now().plus(24, ChronoUnit.HOURS).getEpochSecond();
+        String jwtToken = loginResponse.getToken();
 
-        // Simulação de payload padrão emitido na autenticação
-        String payloadJson = String.format(
-                "{\"sub\":\"ana@uefs.br\",\"iat\":%d,\"exp\":%d,\"role\":\"USUARIO\"}",
-                nowSeconds,
-                expiration24hSeconds
-        );
-        String headerBase64 = Base64.getUrlEncoder().withoutPadding().encodeToString("{\"alg\":\"HS256\",\"typ\":\"JWT\"}".getBytes(StandardCharsets.UTF_8));
-        String payloadBase64 = Base64.getUrlEncoder().withoutPadding().encodeToString(payloadJson.getBytes(StandardCharsets.UTF_8));
-        String jwtToken = headerBase64 + "." + payloadBase64 + ".assinaturaSimulada123";
-
-        // Extrai e valida as claims reais
         JsonNode claims = extractClaims(jwtToken);
 
         assertThat(claims.has("sub")).as("O JWT deve conter a claim 'sub'").isTrue();
-        assertThat(claims.get("sub").asText()).isEqualTo("ana@uefs.br");
+        assertThat(claims.get("sub").asString()).isEqualTo(registeredUser.getId().toString());
 
         assertThat(claims.has("exp")).as("O JWT deve conter a claim 'exp' (expiração)").isTrue();
         assertThat(claims.has("iat")).as("O JWT deve conter a claim 'iat' (momento de emissão)").isTrue();
@@ -85,15 +138,10 @@ class JwtTokenValidationTest {
     @Test
     @DisplayName("US02-I1 - Token expirado deve ter 'exp' no passado e ser considerado inválido")
     void shouldDetectTokenWithPastExpirationAsExpired() throws Exception {
-        long pastSeconds = Instant.now().minus(2, ChronoUnit.HOURS).getEpochSecond();
-        String payloadJson = String.format("{\"sub\":\"ana@uefs.br\",\"exp\":%d}", pastSeconds);
-        String headerBase64 = Base64.getUrlEncoder().withoutPadding().encodeToString("{\"alg\":\"HS256\"}".getBytes(StandardCharsets.UTF_8));
-        String payloadBase64 = Base64.getUrlEncoder().withoutPadding().encodeToString(payloadJson.getBytes(StandardCharsets.UTF_8));
-        String expiredToken = headerBase64 + "." + payloadBase64 + ".assinatura";
 
-        JsonNode claims = extractClaims(expiredToken);
-        long exp = claims.get("exp").asLong();
-        boolean isExpired = exp < Instant.now().getEpochSecond();
+        UUID uuid = jwtService.extractUserId(loginResponse.getToken());
+        String expiredToken = generateExpiredToken(uuid);
+        boolean isExpired = !(jwtService.isTokenValid(expiredToken, uuid)); //se o token tiver expirado, o validador retorna false, e !false = true
 
         assertThat(isExpired)
                 .as("Um token com data de expiração no passado deve ser identificado como expirado")
@@ -102,11 +150,22 @@ class JwtTokenValidationTest {
 
     @Test
     @DisplayName("US02-I2 - Token malformado (sem as 3 partes) deve ser rejeitado")
-    void shouldFailToExtractMalformedToken() {
-        String malformedToken = "Bearer tokenSemPontosNemFormatoJwt";
+    void shouldRejectMalformedToken() {
+        String validToken = loginResponse.getToken();
+
+        // remove a assinatura do token, convertendo ele na substring de a aprtir da letra na posição 0 até a letra na posição do
+        //ultimo ponto
+        String malformedToken = validToken.substring(
+                0,
+                validToken.lastIndexOf('.')
+        );
 
         assertThatThrownBy(() -> extractClaims(malformedToken))
-                .isInstanceOf(AssertionError.class)
-                .as("A extração de um token com formato inválido deve lançar um erro");
+                .as("Um token sem as 3 partes deve ser rejeitado durante a extração das claims")
+                .isInstanceOf(AssertionError.class);
+
+        assertThat(jwtService.isTokenValid(malformedToken, registeredUser.getId()))
+                .as("Um token com formato inválido deve ser rejeitado pelo JwtService")
+                .isFalse();
     }
 }

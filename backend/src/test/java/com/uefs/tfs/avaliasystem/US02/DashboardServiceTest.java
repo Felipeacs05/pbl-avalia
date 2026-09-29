@@ -8,9 +8,7 @@ import com.uefs.tfs.avaliasystem.model.User;
 import com.uefs.tfs.avaliasystem.repository.RoomRepository;
 import com.uefs.tfs.avaliasystem.repository.UserRepository;
 import com.uefs.tfs.avaliasystem.service.RoomService;
-import com.uefs.tfs.avaliasystem.service.RoomServiceImpl;
 import com.uefs.tfs.avaliasystem.service.UserService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -19,7 +17,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -54,7 +51,7 @@ class DashboardServiceTest {
     private UserRepository userRepository;
 
     @InjectMocks
-    private RoomServiceImpl roomService;
+    private RoomService roomService;
 
     private static final UUID VALID_USER_ID = UUID.randomUUID();
     private static final UUID INVALID_USER_ID = UUID.randomUUID();
@@ -74,11 +71,11 @@ class DashboardServiceTest {
             var user = new User(VALID_USER_ID, "Usuário", "usuario@example.com", "senha", null);
             var otherTutor = new User(OTHER_TUTOR_ID, "Outro tutor", "tutor@example.com", "senha", null);
             var tutorRooms = List.of(
-                    new Room(10L, "Algoritmos Avançados", "ALGO-001", user, OffsetDateTime.now()),
-                    new Room(11L, "Estruturas de Dados", "ED-002", user, OffsetDateTime.now())
+                    room("10", "Algoritmos Avançados", "ALGO-001", user),
+                    room("11", "Estruturas de Dados", "ED-002", user)
             );
             var studentRooms = List.of(
-                    new Room(20L, "Cálculo I", "CALC-001", otherTutor, OffsetDateTime.now())
+                    room("20", "Cálculo I", "CALC-001", otherTutor)
             );
 
             when(userRepository.existsById(VALID_USER_ID)).thenReturn(true);
@@ -102,10 +99,10 @@ class DashboardServiceTest {
             var user = new User(VALID_USER_ID, "Usuário", "usuario@example.com", "senha", null);
             var otherTutor = new User(OTHER_TUTOR_ID, "Outro tutor", "tutor@example.com", "senha", null);
             var tutorRooms = List.of(
-                    new Room(10L, "Algoritmos Avançados", "ALGO-001", user, OffsetDateTime.now())
+                    room("10", "Algoritmos Avançados", "ALGO-001", user)
             );
             var studentRooms = List.of(
-                    new Room(20L, "Cálculo I", "CALC-001", otherTutor, OffsetDateTime.now())
+                    room("20", "Cálculo I", "CALC-001", otherTutor)
             );
 
             when(userRepository.existsById(VALID_USER_ID)).thenReturn(true);
@@ -123,7 +120,7 @@ class DashboardServiceTest {
                     .isEqualTo("Algoritmos Avançados");
             assertThat(studentRoomIds)
                     .as("Uma sala de Tutor não deve aparecer também na aba de Aluno")
-                    .doesNotContain(10L);
+                    .doesNotContain("10");
         }
 
         @Test
@@ -132,10 +129,10 @@ class DashboardServiceTest {
             var user = new User(VALID_USER_ID, "Usuário", "usuario@example.com", "senha", null);
             var otherTutor = new User(OTHER_TUTOR_ID, "Outro tutor", "tutor@example.com", "senha", null);
             var tutorRooms = List.of(
-                    new Room(10L, "Algoritmos Avançados", "ALGO-001", user, OffsetDateTime.now())
+                    room("10", "Algoritmos Avançados", "ALGO-001", user)
             );
             var studentRooms = List.of(
-                    new Room(20L, "Cálculo I", "CALC-001", otherTutor, OffsetDateTime.now())
+                    room("20", "Cálculo I", "CALC-001", otherTutor)
             );
 
             when(userRepository.existsById(VALID_USER_ID)).thenReturn(true);
@@ -152,7 +149,7 @@ class DashboardServiceTest {
                     .isEqualTo("Cálculo I");
             assertThat(tutorRoomIds)
                     .as("Uma sala de Aluno não deve aparecer também na aba de Tutor")
-                    .doesNotContain(20L);
+                    .doesNotContain("20");
         }
     }
 
@@ -193,5 +190,14 @@ class DashboardServiceTest {
                     .isInstanceOf(UserNotFoundException.class)
                     .hasMessageContaining("User not found");
         }
+    }
+
+    private static Room room(String id, String name, String accessCode, User tutor) {
+        Room room = new Room();
+        room.setId(id);
+        room.setName(name);
+        room.setAccessCode(accessCode);
+        room.setTutor(tutor);
+        return room;
     }
 }

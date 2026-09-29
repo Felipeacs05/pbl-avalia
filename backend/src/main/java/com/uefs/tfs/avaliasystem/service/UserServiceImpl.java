@@ -36,6 +36,7 @@ public class UserServiceImpl implements UserService {
         this.jwtService = jwtService;
     }
 
+    //pra um teste funcionar
     public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this(userRepository, passwordEncoder, null);
     }

@@ -13,7 +13,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RoomDto {
-    private Long id;
+    private String id;
     private String name;
     private String accessCode;
     private UUID tutorId;
