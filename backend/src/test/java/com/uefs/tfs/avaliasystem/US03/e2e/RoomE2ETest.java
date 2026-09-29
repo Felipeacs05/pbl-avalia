@@ -8,6 +8,7 @@ import com.uefs.tfs.avaliasystem.model.RoomMember;
 import com.uefs.tfs.avaliasystem.model.User;
 import com.uefs.tfs.avaliasystem.repository.RoomRepository;
 import com.uefs.tfs.avaliasystem.repository.UserRepository;
+import com.uefs.tfs.avaliasystem.service.JwtService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.AfterEach;
@@ -17,7 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
+import com.uefs.tfs.avaliasystem.TestConfig;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -38,9 +39,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase.Replace;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@TestConfig
 @AutoConfigureTestDatabase(replace = Replace.ANY)
 @AutoConfigureTestRestTemplate
-@Import(TestAuthenticationConfig.class)
 class RoomE2ETest {
 
     @LocalServerPort
@@ -60,6 +61,9 @@ class RoomE2ETest {
 
     @Autowired
     private PlatformTransactionManager transactionManager;
+
+    @Autowired
+    private JwtService jwtService;
 
     private TransactionTemplate transactionTemplate;
 
@@ -87,13 +91,15 @@ class RoomE2ETest {
         return "http://localhost:" + port + path;
     }
 
-    // Método focado apenas em retornar os headers para evitar ambiguidades no HttpEntity
-    private HttpHeaders headersWithAuth(String userId) {
+    private HttpHeaders getHeadersForUser(User user){
+        // Gera um JWT real usando o mesmo segredo que o servidor de teste está usando!
+        String token = jwtService.generateToken(user.getId());
+
         HttpHeaders headers = new HttpHeaders();
-        headers.set("X-User-Id", userId);
+        headers.set("Content-Type", "application/json");
+        headers.setBearerAuth(token); // Adiciona o cabeçalho Authorization: Bearer <token>
         return headers;
     }
-
     // --- JORNADA 1: ciclo de vida completo de uma Sala, criada por um Tutor real ---
 
     @Test
@@ -104,7 +110,7 @@ class RoomE2ETest {
         ResponseEntity<RoomResponse> createResponse = restTemplate.exchange(
                 url("/api/v1/rooms"),
                 HttpMethod.POST,
-                new HttpEntity<>(createRequest, headersWithAuth(tutor.getId().toString())),
+                new HttpEntity<>(createRequest, getHeadersForUser(tutor)),
                 RoomResponse.class);
 
         assertEquals(HttpStatus.CREATED, createResponse.getStatusCode());
@@ -121,7 +127,7 @@ class RoomE2ETest {
         ResponseEntity<RoomResponse> updateResponse = restTemplate.exchange(
                 url("/api/v1/rooms/" + criada.getId()),
                 HttpMethod.PUT,
-                new HttpEntity<>(updateRequest, headersWithAuth(tutor.getId().toString())),
+                new HttpEntity<>(updateRequest, getHeadersForUser(tutor)),
                 RoomResponse.class);
 
         assertEquals(HttpStatus.OK, updateResponse.getStatusCode());
@@ -133,7 +139,7 @@ class RoomE2ETest {
         ResponseEntity<Void> deleteResponse = restTemplate.exchange(
                 url("/api/v1/rooms/" + criada.getId()),
                 HttpMethod.DELETE,
-                new HttpEntity<>(headersWithAuth(tutor.getId().toString())),
+                new HttpEntity<>(getHeadersForUser(tutor)),
                 Void.class);
 
         assertEquals(HttpStatus.NO_CONTENT, deleteResponse.getStatusCode());
@@ -152,7 +158,7 @@ class RoomE2ETest {
         ResponseEntity<String> updateAttempt = restTemplate.exchange(
                 url("/api/v1/rooms/" + roomDeOutroTutor.getId()),
                 HttpMethod.PUT,
-                new HttpEntity<>(new RoomRequest("Nome Roubado"), headersWithAuth(usuarioMalicioso.getId().toString())),
+                new HttpEntity<>(new RoomRequest("Nome Roubado"), getHeadersForUser(usuarioMalicioso)),
                 String.class);
         assertEquals(HttpStatus.FORBIDDEN, updateAttempt.getStatusCode());
 
@@ -160,7 +166,7 @@ class RoomE2ETest {
         ResponseEntity<String> deleteAttempt = restTemplate.exchange(
                 url("/api/v1/rooms/" + roomDeOutroTutor.getId()),
                 HttpMethod.DELETE,
-                new HttpEntity<>(headersWithAuth(usuarioMalicioso.getId().toString())),
+                new HttpEntity<>(getHeadersForUser(usuarioMalicioso)),
                 String.class);
         assertEquals(HttpStatus.FORBIDDEN, deleteAttempt.getStatusCode());
 
@@ -179,7 +185,7 @@ class RoomE2ETest {
         ResponseEntity<String> response = restTemplate.exchange(
                 url("/api/v1/rooms"),
                 HttpMethod.POST,
-                new HttpEntity<>(new RoomRequest("AB"), headersWithAuth(tutor.getId().toString())),
+                new HttpEntity<>(new RoomRequest("AB"), getHeadersForUser(tutor)),
                 String.class);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
@@ -198,31 +204,31 @@ class RoomE2ETest {
         persistMember(sala, exAluno, false, Instant.now());
         User estranho = persistUser("Estranho E2E");
 
-        assertRoomVisibleTo(tutor.getId().toString(), sala.getId().toString());
-        assertRoomVisibleTo(alunoAtivo.getId().toString(), sala.getId().toString());
-        assertRoomNotVisibleTo(exAluno.getId().toString());
-        assertRoomNotVisibleTo(estranho.getId().toString());
+        assertRoomVisibleTo(tutor, sala.getId());
+        assertRoomVisibleTo(alunoAtivo, sala.getId());
+        assertRoomNotVisibleTo(exAluno);
+        assertRoomNotVisibleTo(estranho);
     }
 
-    private void assertRoomVisibleTo(String userId, String expectedRoomId) {
+    private void assertRoomVisibleTo(User user, String expectedRoomId) {
         ResponseEntity<RoomResponse[]> response = restTemplate.exchange(
                 url("/api/v1/rooms"),
                 HttpMethod.GET,
-                new HttpEntity<>(headersWithAuth(userId)),
+                new HttpEntity<>(getHeadersForUser(user)),
                 RoomResponse[].class);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         RoomResponse[] body = response.getBody();
         assertNotNull(body);
-        assertEquals(1, body.length, "Esperava exatamente uma sala visível para o utilizador " + userId);
+        assertEquals(1, body.length, "Esperava exatamente uma sala visível para o utilizador " + user.getId());
         assertEquals(expectedRoomId, body[0].getId(), "O ID da sala retornada deve coincidir com o esperado");
     }
 
-    private void assertRoomNotVisibleTo(String userId) {
+    private void assertRoomNotVisibleTo(User user) {
         ResponseEntity<RoomResponse[]> response = restTemplate.exchange(
                 url("/api/v1/rooms"),
                 HttpMethod.GET,
-                new HttpEntity<>(headersWithAuth(userId)),
+                new HttpEntity<>(getHeadersForUser(user)),
                 RoomResponse[].class);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
