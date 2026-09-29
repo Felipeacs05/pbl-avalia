@@ -1,5 +1,9 @@
 package com.uefs.tfs.avaliasystem.US01;
 
+import com.uefs.tfs.avaliasystem.AvaliaSystemApplication;
+import com.uefs.tfs.avaliasystem.config.SecurityConfig;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ContextConfiguration;
 import tools.jackson.databind.ObjectMapper;
 import com.uefs.tfs.avaliasystem.controller.AuthController;
 import com.uefs.tfs.avaliasystem.dto.RegisterUserRequest;
@@ -31,6 +35,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *  - CA2 (Sanitização): Nome com tags de script é rejeitado pela validação de entrada (Bean Validation).
  *  - CA4 (Validação): Ausência de foto ou foto vazia rejeitada com HTTP 400.
  */
+
+@Import(SecurityConfig.class)
+@ContextConfiguration(classes = AvaliaSystemApplication.class)
 @WebMvcTest(AuthController.class)
 class AuthControllerRegisterTest {
 

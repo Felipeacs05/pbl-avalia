@@ -1,41 +1,34 @@
 package com.uefs.tfs.avaliasystem.dto;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
+import com.uefs.tfs.avaliasystem.model.Room;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Room DTO (US02).
- */
+import java.util.UUID;
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class RoomDto {
-    private Long id;
+    private String id;
+    private String name;
+    private String accessCode;
+    private UUID tutorId;
 
-    @JsonAlias("name")
-    private String nome;
 
-    /** Short code used by students to join the room. */
-    @JsonAlias("accessCode")
-    private String codigoAcesso;
 
-    public String getName() {
-        return nome;
-    }
+    public static RoomDto from(Room room) {
+        UUID tutorId = room.getTutor().getId();
 
-    public void setName(String name) {
-        this.nome = name;
-    }
-
-    public String getAccessCode() {
-        return codigoAcesso;
-    }
-
-    public void setAccessCode(String accessCode) {
-        this.codigoAcesso = accessCode;
+        return new RoomDto(
+                room.getId(),
+                room.getName(),
+                room.getAccessCode(),
+                tutorId
+        );
     }
 }
+

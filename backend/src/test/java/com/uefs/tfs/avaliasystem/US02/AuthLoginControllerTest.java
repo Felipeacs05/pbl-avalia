@@ -1,5 +1,7 @@
 package com.uefs.tfs.avaliasystem.US02;
 
+import com.uefs.tfs.avaliasystem.config.SecurityConfig;
+import org.springframework.context.annotation.Import;
 import tools.jackson.databind.ObjectMapper;
 import com.uefs.tfs.avaliasystem.controller.AuthController;
 import com.uefs.tfs.avaliasystem.dto.LoginRequest;
@@ -38,6 +40,7 @@ import org.springframework.test.context.ContextConfiguration;
  *               Token expirado (simulado no header) retorna 401.
  */
 @WebMvcTest(AuthController.class)
+@Import(SecurityConfig.class)
 @ContextConfiguration(classes = AvaliaSystemApplication.class)
 class AuthLoginControllerTest {
 
@@ -177,6 +180,11 @@ class AuthLoginControllerTest {
                     .andExpect(content().string(not(containsString("conta inexistente"))));
         }
 
+
+        /*
+        movi esses testes pra DashboardControllerLoggedTest.java
+
+
         @Test
         @DisplayName("US02-I3 — requisição com token JWT expirado retorna 401 (Unauthorized)")
         void shouldReturn401ForExpiredJwtToken() throws Exception {
@@ -197,6 +205,8 @@ class AuthLoginControllerTest {
                     .andExpect(status().isUnauthorized());
         }
 
+
+         */
         @Test
         @DisplayName("US02-I5 — erro de login não deve expor stack trace ou informações internas")
         void loginErrorShouldNotExposeInternalInformation() throws Exception {

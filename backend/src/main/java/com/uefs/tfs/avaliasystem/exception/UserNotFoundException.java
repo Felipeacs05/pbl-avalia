@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
+ * Thrown when the supplied user ID does not match an existing user.
  * Lançada quando o ID de usuário fornecido não corresponde a nenhum registro.
  * Usada, por exemplo, ao tentar acessar o dashboard de um usuário inexistente.
  */

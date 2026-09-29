@@ -1,5 +1,14 @@
 package com.uefs.tfs.avaliasystem.model;
 
+import com.uefs.tfs.avaliasystem.dto.RoomDto;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.time.OffsetDateTime;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,4 +35,6 @@ public class Room {
     @JoinColumn(name = "tutor_id", nullable = false)
     private User tutor;
 
+
 }
+

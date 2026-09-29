@@ -1,7 +1,10 @@
 package com.uefs.tfs.avaliasystem.service;
 
+import com.uefs.tfs.avaliasystem.dto.DashboardResponse;
+import com.uefs.tfs.avaliasystem.dto.RoomDto;
 import com.uefs.tfs.avaliasystem.dto.RoomRequest;
 import com.uefs.tfs.avaliasystem.dto.RoomResponse;
+import com.uefs.tfs.avaliasystem.exception.UserNotFoundException;
 import com.uefs.tfs.avaliasystem.model.Room;
 import com.uefs.tfs.avaliasystem.model.User;
 import com.uefs.tfs.avaliasystem.repository.RoomMemberRepository;
@@ -88,8 +91,24 @@ public class RoomService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public DashboardResponse getDashboardByUser(UUID userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new UserNotFoundException("User not found: " + userId);
+        }
+
+        List<RoomDto> roomsAsTutor = roomRepository.findByTutorId(userId).stream()
+                .map(RoomDto::from)
+                .toList();
+        List<RoomDto> roomsAsStudent = roomRepository.findRoomsByParticipantId(userId).stream()
+                .map(RoomDto::from)
+                .toList();
+
+        return new DashboardResponse(roomsAsTutor, roomsAsStudent);
+    }
     @Transactional
     public RoomResponse joinRoom(String userId, String accessCode, String ip) {
         throw new UnsupportedOperationException("joinRoom ainda não implementado — US04 (dev backend)");
     }
 }
+
