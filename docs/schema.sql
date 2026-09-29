@@ -1,10 +1,10 @@
 -- ==============================================================================
--- Schema do Banco de Dados Relacional - Avalia-system (PostgreSQL)
--- Arquitetura em Cascata para o Modelo PBL:
--- Salas -> Problemas -> Sessões -> Registros/Chamadas & Avaliações
+-- Relational Database Schema - Avalia-system (PostgreSQL)
+-- Cascading architecture for the PBL model:
+-- Rooms -> Problems -> Sessions -> Attendance Records & Evaluations
 -- ==============================================================================
 
--- 1. Usuários (Professores/Tutores e Alunos)
+-- 1. Users (Teachers/Tutors and Students)
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -13,76 +13,76 @@ CREATE TABLE IF NOT EXISTS users (
     profile_picture_url VARCHAR(255)
     );
 
-CREATE INDEX IF NOT EXISTS idx_usuario_email ON usuario(email);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
--- 2. Salas de Tutoria PBL
-CREATE TABLE IF NOT EXISTS sala (
+-- 2. PBL Tutoring Rooms
+CREATE TABLE IF NOT EXISTS room (
     id BIGSERIAL PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-    codigo_acesso VARCHAR(50) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    access_code VARCHAR(50) NOT NULL UNIQUE,
     tutor_id BIGINT NOT NULL,
-    criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_sala_tutor FOREIGN KEY (tutor_id) REFERENCES usuario(id) ON DELETE RESTRICT
-);
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_room_tutor FOREIGN KEY (tutor_id) REFERENCES users(id) ON DELETE RESTRICT
+    );
 
-CREATE INDEX IF NOT EXISTS idx_sala_tutor ON sala(tutor_id);
+CREATE INDEX IF NOT EXISTS idx_room_tutor ON room(tutor_id);
 
--- 3. Associação de Alunos à Sala (Muitos-para-Muitos)
-CREATE TABLE IF NOT EXISTS sala_aluno (
-    sala_id BIGINT NOT NULL,
-    aluno_id BIGINT NOT NULL,
-    inscrito_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (sala_id, aluno_id),
-    CONSTRAINT fk_sala_aluno_sala FOREIGN KEY (sala_id) REFERENCES sala(id) ON DELETE CASCADE,
-    CONSTRAINT fk_sala_aluno_aluno FOREIGN KEY (aluno_id) REFERENCES usuario(id) ON DELETE CASCADE
-);
+-- 3. Student-Room Association (Many-to-Many)
+CREATE TABLE IF NOT EXISTS room_student (
+    room_id BIGINT NOT NULL,
+    student_id BIGINT NOT NULL,
+    enrolled_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (room_id, student_id),
+    CONSTRAINT fk_room_student_room FOREIGN KEY (room_id) REFERENCES room(id) ON DELETE CASCADE,
+    CONSTRAINT fk_room_student_student FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
+    );
 
--- 4. Problemas (pertencem a uma Sala)
-CREATE TABLE IF NOT EXISTS problema (
+-- 4. Problems (belong to a Room)
+CREATE TABLE IF NOT EXISTS problem (
     id BIGSERIAL PRIMARY KEY,
-    sala_id BIGINT NOT NULL,
-    titulo VARCHAR(255) NOT NULL,
-    descricao TEXT,
-    ordem INT NOT NULL DEFAULT 1,
-    CONSTRAINT fk_problema_sala FOREIGN KEY (sala_id) REFERENCES sala(id) ON DELETE CASCADE
-);
+    room_id BIGINT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    display_order INT NOT NULL DEFAULT 1,
+    CONSTRAINT fk_problem_room FOREIGN KEY (room_id) REFERENCES room(id) ON DELETE CASCADE
+    );
 
-CREATE INDEX IF NOT EXISTS idx_problema_sala ON problema(sala_id);
+CREATE INDEX IF NOT EXISTS idx_problem_room ON problem(room_id);
 
--- 5. Sessões de Tutoria (Abertura / Fechamento do Problema)
-CREATE TABLE IF NOT EXISTS sessao (
+-- 5. Tutoring Sessions (Problem opening / closing)
+CREATE TABLE IF NOT EXISTS session (
     id BIGSERIAL PRIMARY KEY,
-    problema_id BIGINT NOT NULL,
-    numero_sessao INT NOT NULL DEFAULT 1,
-    data_sessao DATE NOT NULL DEFAULT CURRENT_DATE,
-    status VARCHAR(50) NOT NULL DEFAULT 'ABERTA', -- ABERTA, FINALIZADA
-    CONSTRAINT fk_sessao_problema FOREIGN KEY (problema_id) REFERENCES problema(id) ON DELETE CASCADE
-);
+    problem_id BIGINT NOT NULL,
+    session_number INT NOT NULL DEFAULT 1,
+    session_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    status VARCHAR(50) NOT NULL DEFAULT 'OPEN', -- OPEN, FINISHED
+    CONSTRAINT fk_session_problem FOREIGN KEY (problem_id) REFERENCES problem(id) ON DELETE CASCADE
+    );
 
-CREATE INDEX IF NOT EXISTS idx_sessao_problema ON sessao(problema_id);
+CREATE INDEX IF NOT EXISTS idx_session_problem ON session(problem_id);
 
--- 6. Registros de Chamada / Frequência por Sessão
-CREATE TABLE IF NOT EXISTS registro_chamada (
+-- 6. Attendance Records per Session
+CREATE TABLE IF NOT EXISTS attendance_record (
     id BIGSERIAL PRIMARY KEY,
-    sessao_id BIGINT NOT NULL,
-    aluno_id BIGINT NOT NULL,
-    presente BOOLEAN NOT NULL DEFAULT TRUE,
-    justificativa VARCHAR(255),
-    CONSTRAINT uk_sessao_aluno_chamada UNIQUE (sessao_id, aluno_id),
-    CONSTRAINT fk_chamada_sessao FOREIGN KEY (sessao_id) REFERENCES sessao(id) ON DELETE CASCADE,
-    CONSTRAINT fk_chamada_aluno FOREIGN KEY (aluno_id) REFERENCES usuario(id) ON DELETE CASCADE
-);
+    session_id BIGINT NOT NULL,
+    student_id BIGINT NOT NULL,
+    present BOOLEAN NOT NULL DEFAULT TRUE,
+    justification VARCHAR(255),
+    CONSTRAINT uk_session_student_attendance UNIQUE (session_id, student_id),
+    CONSTRAINT fk_attendance_session FOREIGN KEY (session_id) REFERENCES session(id) ON DELETE CASCADE,
+    CONSTRAINT fk_attendance_student FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
+    );
 
--- 7. Registros de Avaliações / Notas por Sessão (Elimina notas órfãs)
-CREATE TABLE IF NOT EXISTS avaliacao (
+-- 7. Evaluation / Grade Records per Session (Eliminates orphan grades)
+CREATE TABLE IF NOT EXISTS evaluation (
     id BIGSERIAL PRIMARY KEY,
-    sessao_id BIGINT NOT NULL,
-    aluno_id BIGINT NOT NULL,
-    avaliador_id BIGINT NOT NULL,
-    nota_desempenho NUMERIC(4, 2) CHECK (nota_desempenho >= 0 AND nota_desempenho <= 10),
-    observacoes TEXT,
-    criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_avaliacao_sessao FOREIGN KEY (sessao_id) REFERENCES sessao(id) ON DELETE CASCADE,
-    CONSTRAINT fk_avaliacao_aluno FOREIGN KEY (aluno_id) REFERENCES usuario(id) ON DELETE CASCADE,
-    CONSTRAINT fk_avaliacao_avaliador FOREIGN KEY (avaliador_id) REFERENCES usuario(id) ON DELETE RESTRICT
-);
+    session_id BIGINT NOT NULL,
+    student_id BIGINT NOT NULL,
+    evaluator_id BIGINT NOT NULL,
+    performance_score NUMERIC(4, 2) CHECK (performance_score >= 0 AND performance_score <= 10),
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_evaluation_session FOREIGN KEY (session_id) REFERENCES session(id) ON DELETE CASCADE,
+    CONSTRAINT fk_evaluation_student FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_evaluation_evaluator FOREIGN KEY (evaluator_id) REFERENCES users(id) ON DELETE RESTRICT
+    );

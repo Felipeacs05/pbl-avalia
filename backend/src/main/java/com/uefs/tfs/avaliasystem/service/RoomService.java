@@ -4,8 +4,12 @@ import com.uefs.tfs.avaliasystem.dto.DashboardResponse;
 import com.uefs.tfs.avaliasystem.dto.RoomDto;
 import com.uefs.tfs.avaliasystem.dto.RoomRequest;
 import com.uefs.tfs.avaliasystem.dto.RoomResponse;
+import com.uefs.tfs.avaliasystem.exception.InvalidAccessCodeException;
+import com.uefs.tfs.avaliasystem.exception.TooManyAttemptsException;
 import com.uefs.tfs.avaliasystem.exception.UserNotFoundException;
+import com.uefs.tfs.avaliasystem.model.Role;
 import com.uefs.tfs.avaliasystem.model.Room;
+import com.uefs.tfs.avaliasystem.model.RoomMember;
 import com.uefs.tfs.avaliasystem.model.User;
 import com.uefs.tfs.avaliasystem.repository.RoomMemberRepository;
 import com.uefs.tfs.avaliasystem.repository.RoomRepository;
@@ -14,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -106,9 +111,52 @@ public class RoomService {
 
         return new DashboardResponse(roomsAsTutor, roomsAsStudent);
     }
+
     @Transactional
     public RoomResponse joinRoom(String userId, String accessCode, String ip) {
-        throw new UnsupportedOperationException("joinRoom ainda não implementado — US04 (dev backend)");
+        if (rateLimitingService.isIpBlocked(ip)) {
+            throw new TooManyAttemptsException("IP bloqueado temporariamente por excesso de tentativas");
+        }
+
+        if (accessCode == null || accessCode.trim().isEmpty()){
+            throw new InvalidAccessCodeException("Código de acesso não pode estar vazio");
+        }
+
+        Room room = roomRepository.findByAccessCode(accessCode.trim().toUpperCase()).orElseThrow(() -> {
+            rateLimitingService.registerFailedAttempt(ip);
+            return new InvalidAccessCodeException("Código de acesso inválido");
+        });
+
+        UUID userUuid = UUID.fromString(userId);
+
+        User student = userRepository.findById(userUuid).orElseThrow(() ->
+                new IllegalArgumentException("Usuário não encontrado"));
+        if (room.getTutor() != null && room.getTutor().getId().equals(userUuid)){
+            throw new IllegalArgumentException("Tutor não pode ingressar como aluno na prórpia sala");
+        }
+
+        Optional<RoomMember> existingMemberOpt = roomMemberRepository.findByRoomIdAndUserId(room.getId(), userUuid);
+
+        if (existingMemberOpt.isPresent()) {
+            RoomMember member = existingMemberOpt.get();
+            if (!member.isActive()) {
+                member.setActive(true);
+                member.setUnlinkedAt(null);
+                roomMemberRepository.save(member);
+            }
+        } else {
+            RoomMember newMember = new RoomMember();
+            newMember.setRoom(room);
+            newMember.setUser(student);
+            newMember.setRole(Role.STUDENT);
+            newMember.setActive(true);
+            newMember.setUnlinkedAt(null);
+            roomMemberRepository.save(newMember);
+        }
+
+        rateLimitingService.resetFailedAttempts(ip);
+
+        return new RoomResponse(room.getId(), room.getName(), room.getAccessCode(), room.getInviteLink());
     }
 }
 

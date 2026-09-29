@@ -1,8 +1,10 @@
 package com.uefs.tfs.avaliasystem.controller;
 
+import com.uefs.tfs.avaliasystem.dto.JoinRoomRequest;
 import com.uefs.tfs.avaliasystem.dto.RoomRequest;
 import com.uefs.tfs.avaliasystem.dto.RoomResponse;
 import com.uefs.tfs.avaliasystem.service.RoomService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -44,6 +46,32 @@ public class RoomController {
     public List<RoomResponse> listRooms(Principal principal) {
         ensureAuthenticated(principal);
         return roomService.listRooms(principal.getName());
+    }
+
+    @PostMapping("/join")
+    @ResponseStatus(HttpStatus.OK)
+    public RoomResponse joinRoom(@RequestBody @Valid JoinRoomRequest request,
+                                 Principal principal,
+                                 HttpServletRequest httpRequest) {
+        ensureAuthenticated(principal);
+        return roomService.joinRoom(principal.getName(), request.getAccessCode(), resolveClientIp(httpRequest));
+    }
+
+    @PostMapping("/join/{code}")
+    @ResponseStatus(HttpStatus.OK)
+    public RoomResponse joinRoomByLink(@PathVariable String code,
+                                       Principal principal,
+                                       HttpServletRequest httpRequest) {
+        ensureAuthenticated(principal);
+        return roomService.joinRoom(principal.getName(), code, resolveClientIp(httpRequest));
+    }
+
+    private String resolveClientIp(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            return forwarded.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 
     private void ensureAuthenticated(Principal principal) {
