@@ -1,7 +1,10 @@
 package com.uefs.tfs.avaliasystem.controller;
 
+import com.uefs.tfs.avaliasystem.dto.LoginRequest;
+import com.uefs.tfs.avaliasystem.dto.LoginResponse;
 import com.uefs.tfs.avaliasystem.dto.RegisterUserRequest;
 import com.uefs.tfs.avaliasystem.dto.UserResponse;
+import com.uefs.tfs.avaliasystem.exception.InvalidRegisterException;
 import com.uefs.tfs.avaliasystem.model.User;
 import com.uefs.tfs.avaliasystem.service.UserService;
 import jakarta.validation.Valid;
@@ -15,29 +18,55 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 
 @RestController
-@RequestMapping("/v1/auth")
 @AllArgsConstructor
+@RequestMapping("/api/v1/auth")
 public class AuthController {
 
     private final UserService userService;
 
-    @PostMapping(value = "/register", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    @PostMapping(
+            value = "/register",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
     public ResponseEntity<UserResponse> register(
-            @Valid @RequestPart("dados") RegisterUserRequest request,
-            @RequestPart(value = "foto", required = true) MultipartFile photo) {
-
+            @Valid @RequestPart("data") RegisterUserRequest request,
+            @RequestPart(value = "photo") MultipartFile photo
+    ) {
         if (photo.isEmpty()) {
             return ResponseEntity.badRequest().build();
+        }
+
+        if (request.getName() != null
+                && (request.getName().contains("<")
+                || request.getName().contains(">"))) {
+            throw new InvalidRegisterException();
         }
 
         User user = userService.register(request, photo);
         UserResponse response = UserResponse.fromUser(user);
 
-        URI location = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/v1/users/{id}")
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentContextPath()
+                .path("/api/v1/users/{id}")
                 .buildAndExpand(user.getId())
                 .toUri();
 
         return ResponseEntity.created(location).body(response);
+    }
+
+    @PostMapping(
+            value = "/login",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<LoginResponse> login(
+            @RequestBody LoginRequest request
+    ) {
+        LoginResponse response = userService.login(
+                request.getEmail(),
+                request.getPassword()
+        );
+
+        return ResponseEntity.ok(response);
     }
 }
