@@ -79,7 +79,7 @@ function AlunoConteudo() {
 
             <h3 className="text-base font-bold text-gray-900 mb-1">Código errado</h3>
             <p className="text-xs text-gray-500 mb-5 leading-relaxed">
-              O código <span className="font-semibold text-gray-700">"{codigoTentado}"</span> não corresponde a nenhuma sala ativa. Verifique com seu professor e tente novamente.
+              O código <span className="font-semibold text-gray-700">“{codigoTentado}”</span> não corresponde a nenhuma sala ativa. Verifique com seu professor e tente novamente.
             </p>
 
             <div className="flex gap-2 w-full">
