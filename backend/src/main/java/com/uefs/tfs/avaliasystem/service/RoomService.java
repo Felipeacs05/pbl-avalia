@@ -106,10 +106,9 @@ public class RoomService {
 
         return new DashboardResponse(roomsAsTutor, roomsAsStudent);
     }
-  
-}
     @Transactional
     public RoomResponse joinRoom(String userId, String accessCode, String ip) {
         throw new UnsupportedOperationException("joinRoom ainda não implementado — US04 (dev backend)");
     }
 }
+
