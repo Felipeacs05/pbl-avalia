@@ -1,4 +1,4 @@
-  name: Backend CI
+name: Backend CI
 
 on:
   push:
@@ -66,7 +66,7 @@ jobs:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/tfs_test
           SPRING_DATASOURCE_USERNAME: tfs_user
           SPRING_DATASOURCE_PASSWORD: tfs_pass
-          JWT_SECRET_KEY: MChaveFalsaParaTestesBackendSomenteCI1234567890AB
+          JWT_SECRET_KEY: ChaveFalsaParaTestesBackendSomenteCI1234567890AB
 
       - name: Publicar relatório de testes JUnit
         if: always()
