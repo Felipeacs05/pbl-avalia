@@ -6,11 +6,13 @@ export const salasMock: Sala[] = [
     nome: "Circuitos Digitais",
     codigo: "TEC498",
     semestre: "2026.2",
+    tutor: "Roberto Oliveira", // ====== ALTERADO POR CLAUDE ======
   },
   {
     id: 2,
     nome: "Sistemas Digitais",
     codigo: "TEC499",
     semestre: "2026.2",
+    tutor: "André Silva", // ====== ALTERADO POR CLAUDE ======
   },
 ];
