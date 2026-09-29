@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, FormEvent } from "react";
+import React, { useState, SubmitEvent } from "react";
 import { LoginButton } from "@/components/ui/LoginButton";
 import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
@@ -12,7 +12,7 @@ export function LoginAuth() {
   // Pega a função de login, o estado de carregando e o erro do Hook
   const { login, carregando, erro } = useAuth();
 
-  function handleSubmit(e: FormEvent) {
+  function handleSubmit(e: SubmitEvent) {
     e.preventDefault(); // Impede a tela de recarregar
     login({ email, senha });
   }
