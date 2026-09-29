@@ -39,15 +39,9 @@ export default function Home() {
 
       {/* Container Fixo Único no Rodapé */}
       <div className="fixed bottom-0 left-0 right-0 z-50 flex flex-col">
-        {/* O botão flutua em cima da navbar */}
-        <div className="px-4 pb-3">
-          <PrimaryButton icon={<Plus size={20} strokeWidth={3} />} onClick={() => setModalAberto(true)}>
-            Criar nova sala
-          </PrimaryButton>
-        </div>
 
         {/* NavBar limpa */}
-        <BottomTabBar />
+        <BottomTabBar onCriarSala={() => setModalAberto(true)} />
       </div>
 
       {/* Modal de Criação de Sala */}
