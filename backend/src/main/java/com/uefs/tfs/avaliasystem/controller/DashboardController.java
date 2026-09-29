@@ -9,6 +9,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Objects;
 import java.util.UUID;
 
 @RestController
@@ -20,7 +21,7 @@ public class DashboardController {
 
     @GetMapping(value = "/api/dashboard")
     public ResponseEntity<DashboardResponse> getDashboard(@AuthenticationPrincipal Jwt jwt) {
-        DashboardResponse dashboardResponse = roomService.getDashboardByUser(UUID.fromString(jwt.getSubject()));
+        DashboardResponse dashboardResponse = roomService.getDashboardByUser(UUID.fromString(Objects.requireNonNull(jwt.getSubject())));
         return ResponseEntity.ok(dashboardResponse);
     }
 }

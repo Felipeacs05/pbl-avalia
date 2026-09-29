@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -55,7 +56,7 @@ public class JwtService {
     }
 
     public UUID extractUserId(String token) {
-        return UUID.fromString(jwtDecoder.decode(token).getSubject());
+        return UUID.fromString(Objects.requireNonNull(jwtDecoder.decode(token).getSubject()));
     }
 
     public boolean isTokenValid(String token, UUID expectedId) {
