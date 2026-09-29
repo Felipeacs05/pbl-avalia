@@ -63,7 +63,7 @@ class AuthControllerRegisterTest {
 
         when(userService.register(any(), any())).thenReturn(createdUser);
 
-        mockMvc.perform(multipart("/v1/auth/register")
+        mockMvc.perform(multipart("/api/v1/auth/register")
                         .file(dataPart)
                         .file(photoPart))
                 .andExpect(status().isCreated())
@@ -79,7 +79,7 @@ class AuthControllerRegisterTest {
         var dataPart = new MockMultipartFile(
                 "dados", "", "application/json", objectMapper.writeValueAsBytes(requestData));
 
-        mockMvc.perform(multipart("/v1/auth/register").file(dataPart))
+        mockMvc.perform(multipart("/api/v1/auth/register").file(dataPart))
                 .andExpect(status().isBadRequest());
     }
 
@@ -92,7 +92,7 @@ class AuthControllerRegisterTest {
         var emptyPhoto = new MockMultipartFile(
                 "foto", "vazia.jpg", "image/jpeg", new byte[0]);
 
-        mockMvc.perform(multipart("/v1/auth/register")
+        mockMvc.perform(multipart("/api/v1/auth/register")
                         .file(dataPart)
                         .file(emptyPhoto))
                 .andExpect(status().isBadRequest());
@@ -107,7 +107,7 @@ class AuthControllerRegisterTest {
         var photoPart = new MockMultipartFile(
                 "foto", "perfil.jpg", "image/jpeg", "conteudo-fake".getBytes());
 
-        mockMvc.perform(multipart("/v1/auth/register")
+        mockMvc.perform(multipart("/api/v1/auth/register")
                         .file(dataPart)
                         .file(photoPart))
                 .andExpect(status().isBadRequest());
@@ -132,7 +132,7 @@ class AuthControllerRegisterTest {
             return new User(req.getName(), req.getEmail(), "hash", "url");
         });
 
-        mockMvc.perform(multipart("/v1/auth/register")
+        mockMvc.perform(multipart("/api/v1/auth/register")
                         .file(dataPart)
                         .file(photoPart))
                 .andExpect(status().isCreated());

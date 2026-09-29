@@ -33,7 +33,7 @@ import org.springframework.test.context.ContextConfiguration;
 /**
  * US02 — Autenticação e Dashboard de Salas.
  *
- * Testa os critérios de aceite relacionados ao login via /api/auth/login:
+ * Testa os critérios de aceite relacionados ao login via /api/v1/auth/login:
  *   • VÁLIDOS : login correto gera token JWT com campo de expiração preenchido.
  *   • INVÁLIDOS: senha/e-mail errado retorna 401 com mensagem genérica
  *               "Credenciais inválidas" (sem vazar se o e-mail existe ou não).
@@ -75,7 +75,7 @@ class AuthLoginControllerTest {
 
             when(userService.login(anyString(), anyString())).thenReturn(response);
 
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(loginRequest)))
                     .andExpect(status().isOk())
@@ -99,7 +99,7 @@ class AuthLoginControllerTest {
 
             when(userService.login(anyString(), anyString())).thenReturn(response);
 
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(loginRequest)))
                     .andExpect(status().isOk())
@@ -123,7 +123,7 @@ class AuthLoginControllerTest {
 
             when(userService.login(anyString(), anyString())).thenReturn(response);
 
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(loginRequest)))
                     .andExpect(status().isOk())
@@ -148,7 +148,7 @@ class AuthLoginControllerTest {
             when(userService.login("ana@uefs.br", "senhaErrada"))
                     .thenThrow(new InvalidCredentialsException("Credenciais inválidas"));
 
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(loginRequest)))
                     .andExpect(status().isUnauthorized())
@@ -169,7 +169,7 @@ class AuthLoginControllerTest {
             when(userService.login("naoexiste@uefs.br", "qualquerSenha"))
                     .thenThrow(new InvalidCredentialsException("Credenciais inválidas"));
 
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(loginRequest)))
                     .andExpect(status().isUnauthorized())
@@ -193,7 +193,7 @@ class AuthLoginControllerTest {
                     ".eyJzdWIiOiJhbmFAdWVmcy5iciIsImV4cCI6MX0" +
                     ".assinatura_invalida";
 
-            mockMvc.perform(get("/api/dashboard")
+            mockMvc.perform(get("/api/users/me/rooms")
                             .header("Authorization", expiredToken))
                     .andExpect(status().isUnauthorized());
         }
@@ -201,7 +201,7 @@ class AuthLoginControllerTest {
         @Test
         @DisplayName("US02-I4 — requisição sem token JWT retorna 401 (Unauthorized)")
         void shouldReturn401WithoutJwtToken() throws Exception {
-            mockMvc.perform(get("/api/dashboard"))
+            mockMvc.perform(get("/api/users/me/rooms"))
                     .andExpect(status().isUnauthorized());
         }
 
@@ -215,7 +215,7 @@ class AuthLoginControllerTest {
             when(userService.login(anyString(), anyString()))
                     .thenThrow(new InvalidCredentialsException("Credenciais inválidas"));
 
-            mockMvc.perform(post("/api/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(loginRequest)))
                     .andExpect(status().isUnauthorized())
