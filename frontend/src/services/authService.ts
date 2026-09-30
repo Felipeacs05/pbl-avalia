@@ -11,7 +11,7 @@ export const authService = {
     if (USE_MOCK) {
       return new Promise((resolve, reject) => {
         setTimeout(() => {
-          if (credentials.senha === '123456') {
+          if (credentials.password === '123456') {
             resolve(authMockSuccess);
           } else {
             reject({

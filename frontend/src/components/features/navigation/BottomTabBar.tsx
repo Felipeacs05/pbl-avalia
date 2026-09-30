@@ -4,27 +4,27 @@ import { PrimaryButton } from "../../ui/PrimaryButton";
 import Link from "next/link";
 
 interface BottomTabBarProps {
-  onCriarSala: () => void;
+  onCreateRoom: () => void;
   
-  abaAtiva?: "professor" | "aluno";
+  activeTab?: "teacher" | "student";
 }
 
-export function BottomTabBar({ onCriarSala, abaAtiva = "professor" }: BottomTabBarProps) {
-  const isAluno = abaAtiva === "aluno";
+export function BottomTabBar({ onCreateRoom, activeTab = "teacher" }: BottomTabBarProps) {
+  const isStudent = activeTab === "student";
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 pt-3 pb-4 px-4 z-50">
       
       <div className="mb-3">
-        <PrimaryButton icon={isAluno ? undefined : <Plus size={20} strokeWidth={3} />} onClick={onCriarSala}>
-          {isAluno ? "Entrar em sala" : "Criar nova sala"}
+        <PrimaryButton icon={isStudent ? undefined : <Plus size={20} strokeWidth={3} />} onClick={onCreateRoom}>
+          {isStudent ? "Entrar em sala" : "Criar nova sala"}
         </PrimaryButton>
       </div>
 
       <div className="grid grid-cols-3 text-center">
-        {isAluno ? (
+        {isStudent ? (
           <Link
-            href="/professor-salas"
+            href="/teacher-rooms"
             className="flex flex-col items-center justify-center text-gray-400 hover:text-[#757DC3] transition-colors"
           >
             <Presentation size={20} className="mb-1" />
@@ -39,7 +39,7 @@ export function BottomTabBar({ onCriarSala, abaAtiva = "professor" }: BottomTabB
           </button>
         )}
 
-        {isAluno ? (
+        {isStudent ? (
           <button className="flex flex-col items-center justify-center text-[#4354A0]">
             <div className="w-10 h-7 bg-[#CDD3EE] rounded-full flex items-center justify-center mb-0.5">
               <GraduationCap size={16} />
@@ -48,7 +48,7 @@ export function BottomTabBar({ onCriarSala, abaAtiva = "professor" }: BottomTabB
           </button>
         ) : (
           <Link
-            href="/aluno"
+            href="/student-rooms"
             className="flex flex-col items-center justify-center text-gray-400 hover:text-[#757DC3] transition-colors"
           >
             <GraduationCap size={20} className="mb-1" />

@@ -1,0 +1,18 @@
+import { Room } from "../types/room";
+
+export const roomsMock: Room[] = [
+  {
+    id: 1,
+    name: "Circuitos Digitais",
+    code: "TEC498",
+    semester: "2026.2",
+    tutor: "Roberto Oliveira",
+  },
+  {
+    id: 2,
+    name: "Sistemas Digitais",
+    code: "TEC499",
+    semester: "2026.2",
+    tutor: "André Silva",
+  },
+];

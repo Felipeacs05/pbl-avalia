@@ -1,11 +1,11 @@
 import React from "react";
 import { X } from "lucide-react";
 
-interface ModalCriarSalaProps {
+interface CreateRoomModalProps {
   onClose: () => void;
 }
 
-export function ModalCriarSala({ onClose }: ModalCriarSalaProps) {
+export function CreateRoomModal({ onClose }: CreateRoomModalProps) {
   return (
     // 1. O Filtro Escuro (Overlay)
     <div className="absolute inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">

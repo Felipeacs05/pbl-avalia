@@ -5,13 +5,13 @@ import { authService } from '@/services/authService';
 import { LoginCredentials } from '@/types/login';
 
 export function useAuth() {
-  const [carregando, setCarregando] = useState(false);
-  const [erro, setErro] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   async function login(credentials: LoginCredentials) {
-    setErro(null);
-    setCarregando(true);
+    setError(null);
+    setIsLoading(true);
 
     try {
       const data = await authService.login(credentials);
@@ -20,10 +20,10 @@ export function useAuth() {
         localStorage.setItem('token', data.token);
       }
 
-      router.push('/professor-salas');
+      router.push('/teacher-rooms');
     } catch (err: unknown) {
       // Trata o tipo unknown de forma segura sem usar 'any'
-      let mensagem = 'Erro ao realizar login. Verifique seus dados de acesso.';
+      let message = 'Erro ao realizar login. Verifique seus dados de acesso.';
 
       if (
         typeof err === 'object' &&
@@ -31,12 +31,12 @@ export function useAuth() {
         'response' in err &&
         typeof (err as { response?: { data?: { message?: string } } }).response?.data?.message === 'string'
       ) {
-        mensagem = (err as { response: { data: { message: string } } }).response.data.message;
+        message = (err as { response: { data: { message: string } } }).response.data.message;
       }
 
-      setErro(mensagem);
+      setError(message);
     } finally {
-      setCarregando(false);
+      setIsLoading(false);
     }
   }
 
@@ -47,5 +47,5 @@ export function useAuth() {
     }
   }
 
-  return { login, logout, carregando, erro };
+  return { login, logout, isLoading, error };
 }

@@ -1,21 +1,21 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation"; // 1. Importação obrigatória no Next.js
-import { cadastroService } from "../services/cadastroService";
+import { registrationService } from "../services/registrationService";
 
 type ToastState = { message: string; type: "success" | "error" } | null;
 
-export function useCadastro() {
-  const [nome, setNome] = useState("");
+export function useRegistration() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
-  const [confirmarSenha, setConfirmarSenha] = useState("");
-  const [imagem, setImagem] = useState<File | null>(null);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [image, setImage] = useState<File | null>(null);
   const [toast, setToast] = useState<ToastState>(null);
   const [loading, setLoading] = useState(false);
 
   const router = useRouter(); // 2. Inicialização do router
 
-  const mostrarToast = (message: string, type: "success" | "error" = "error") => {
+  const showToast = (message: string, type: "success" | "error" = "error") => {
     setToast({ message, type });
   };
 
@@ -23,12 +23,12 @@ export function useCadastro() {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        mostrarToast("A imagem selecionada excede o limite de 5MB.");
-        setImagem(null);
+        showToast("A imagem selecionada excede o limite de 5MB.");
+        setImage(null);
         e.target.value = "";
         return;
       }
-      setImagem(file);
+      setImage(file);
     }
   };
 
@@ -36,14 +36,14 @@ export function useCadastro() {
     e.preventDefault();
     setToast(null);
 
-    if (!nome || !email || !senha || !confirmarSenha) return mostrarToast("Preencha todos os campos obrigatórios.");
-    if (senha !== confirmarSenha) return mostrarToast("As senhas não coincidem.");
-    if (!imagem) return mostrarToast("A foto de perfil é obrigatória.");
+    if (!name || !email || !password || !confirmPassword) return showToast("Preencha todos os campos obrigatórios.");
+    if (password !== confirmPassword) return showToast("As senhas não coincidem.");
+    if (!image) return showToast("A foto de perfil é obrigatória.");
 
     setLoading(true);
     try {
-      await cadastroService.criarConta({ nome, email, senha, imagem });
-      mostrarToast("Conta criada com sucesso! Redirecionando...", "success");
+      await registrationService.createAccount({ name, email, password, image });
+      showToast("Conta criada com sucesso! Redirecionando...", "success");
       
       setTimeout(() => {
         router.push("/"); // 3. Correção: Substitui o window.location.href
@@ -51,15 +51,15 @@ export function useCadastro() {
 
     } catch (error) {
       console.error(error); // 4. Correção: Usamos a variável 'error' para log no terminal
-      mostrarToast("Erro 400: Falha ao enviar os dados.");
+      showToast("Erro 400: Falha ao enviar os dados.");
     } finally {
       setLoading(false);
     }
   };
 
   return {
-    nome, setNome, email, setEmail, senha, setSenha,
-    confirmarSenha, setConfirmarSenha, imagem, toast, setToast, loading,
+    name, setName, email, setEmail, password, setPassword,
+    confirmPassword, setConfirmPassword, image, toast, setToast, loading,
     handleImageChange, handleSubmit
   };
 }

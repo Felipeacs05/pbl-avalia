@@ -1,15 +1,15 @@
 "use client";
 
 import React from "react";
-import { useSalas } from "../../hooks/useSalas";
+import { useRooms } from "../../hooks/useRooms";
 import { BottomTabBar } from "../../components/features/navigation/BottomTabBar";
-import { SalaCardAluno } from "../../components/features/salas/SalaCardAluno";
+import { StudentRoomCard } from "../../components/features/rooms-student/StudentRoomCard";
 
 export default function AlunoPage() {
-  const { salas, isLoading } = useSalas();
+  const { rooms, isLoading } = useRooms();
 
-  const handleEntrar = (nome: string) => alert(`Entrando na sala: ${nome}`);
-  const handleEntrarEmSala = () => alert("Entrar em sala");
+  const handleEnter = (name: string) => alert(`Entrando na sala: ${name}`);
+  const handleEnterRoom = () => alert("Entrar em sala");
 
   return (
     <main className="w-full min-h-screen bg-[#F8F9FA] font-sans relative flex flex-col">
@@ -23,19 +23,19 @@ export default function AlunoPage() {
           <p className="mt-10 text-center text-sm text-gray-500 animate-pulse">Carregando salas...</p>
         ) : (
           <div className="space-y-4">
-            {salas.map((sala, indice) => (
-              <SalaCardAluno
-                key={sala.id}
-                sala={sala}
-                indice={indice}
-                onEntrar={() => handleEntrar(sala.nome)}
+            {rooms.map((room, index) => (
+              <StudentRoomCard
+                key={room.id}
+                room={room}
+                index={index}
+                onEnter={() => handleEnter(room.name)}
               />
             ))}
           </div>
         )}
       </div>
 
-      <BottomTabBar abaAtiva="aluno" onCriarSala={handleEntrarEmSala} />
+      <BottomTabBar activeTab="student" onCreateRoom={handleEnterRoom} />
       
     </main>
   );
