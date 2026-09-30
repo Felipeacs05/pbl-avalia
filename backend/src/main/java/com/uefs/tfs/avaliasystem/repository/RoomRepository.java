@@ -39,7 +39,7 @@ public interface RoomRepository extends JpaRepository<Room, String> {
     boolean existsByAccessCode(String accessCode);
 
 
-    boolean existsByIdAndTutorId(UUID RoomId,UUID TutorId);
+    boolean existsByIdAndTutorId(String roomId, UUID tutorId);
 
 
     Optional<Room> findByAccessCode(String accessCode);

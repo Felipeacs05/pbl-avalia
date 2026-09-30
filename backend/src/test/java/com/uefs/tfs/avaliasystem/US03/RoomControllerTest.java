@@ -1,5 +1,6 @@
 package com.uefs.tfs.avaliasystem.US03;
 
+import com.uefs.tfs.avaliasystem.Security.RoomSecurity;
 import com.uefs.tfs.avaliasystem.config.SecurityConfig;
 import com.uefs.tfs.avaliasystem.controller.RoomController;
 import com.uefs.tfs.avaliasystem.dto.RoomRequest;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
 import com.uefs.tfs.avaliasystem.TestConfig;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -48,7 +50,11 @@ class RoomControllerTest {
     @MockitoBean
     private RoomService roomService;
 
+    @MockitoBean(name = "roomSecurity")
+    private RoomSecurity roomSecurity;
+
     private final String TUTOR_UUID = "123e4567-e89b-12d3-a456-426614174000";
+    private final String OTHER_USER_UUID = "123e4567-e89b-12d3-a456-426614174001";
     private final String ROOM_UUID = "987e6543-e21b-12d3-a456-426614174000";
 
     // --- TESTES DE CRIAÇÃO (POST) ---
@@ -136,16 +142,18 @@ class RoomControllerTest {
     // --- TESTES DE EDIÇÃO (PUT) ---
 
     @Test
-    @DisplayName("Deve receber requisição PUT, validar os dados e encaminhar edição para o Service")
+    @DisplayName("Tutor deve poder editar a sala protegida por @PreAuthorize")
     void updateRoom_WithValidData_ForwardsToService() throws Exception {
         RoomRequest updateRequest = new RoomRequest("Módulo Atualizado");
         RoomResponse expectedResponse = new RoomResponse("A1B2C", "app/join/A1B2C");
 
-        // Ensina o mock a devolver a mesma sala, já com o novo estado
+        Mockito.when(roomSecurity.isOwner(eq(ROOM_UUID), any(Authentication.class)))
+                .thenReturn(true);
+
         Mockito.when(roomService.updateRoom(eq(ROOM_UUID), any(RoomRequest.class), eq(TUTOR_UUID)))
                 .thenReturn(expectedResponse);
 
-        // Dispara uma chamada simulada na rota dinâmica com variável de ID
+        // Dispara uma chamada simulada na rotagi com variável de ID
         mockMvc.perform(put("/api/v1/rooms/{id}", ROOM_UUID)
                         .with(jwt().jwt(j -> j.subject(TUTOR_UUID)))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -154,6 +162,24 @@ class RoomControllerTest {
                 .andExpect(jsonPath("$.joinLink").value("app/join/A1B2C"));
 
         verify(roomService, Mockito.times(1)).updateRoom(eq(ROOM_UUID), any(RoomRequest.class), eq(TUTOR_UUID));
+        verify(roomSecurity).isOwner(eq(ROOM_UUID), any(Authentication.class));
+    }
+
+    @Test
+    @DisplayName("Usuário que não é tutor deve receber 403 ao tentar editar a sala")
+    void updateRoom_UserIsNotTutor_Returns403AndDoesNotCallService() throws Exception {
+        RoomRequest updateRequest = new RoomRequest("Tentativa de alteração");
+        Mockito.when(roomSecurity.isOwner(eq(ROOM_UUID), any(Authentication.class)))
+                .thenReturn(false);
+
+        mockMvc.perform(put("/api/v1/rooms/{id}", ROOM_UUID)
+                        .with(jwt().jwt(j -> j.subject(OTHER_USER_UUID)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isForbidden());
+
+        verify(roomSecurity).isOwner(eq(ROOM_UUID), any(Authentication.class));
+        verify(roomService, never()).updateRoom(any(), any(), any());
     }
 
     @Test
@@ -173,12 +199,30 @@ class RoomControllerTest {
     // --- TESTES DE EXCLUSÃO (DELETE) ---
 
     @Test
-    @DisplayName("Deve receber requisição DELETE e encaminhar exclusão para o Service")
+    @DisplayName("Tutor deve poder excluir a sala protegida por @PreAuthorize")
     void deleteRoom_WithValidId_ForwardsToService() throws Exception {
+        Mockito.when(roomSecurity.isOwner(eq(ROOM_UUID), any(Authentication.class)))
+                .thenReturn(true);
+
         mockMvc.perform(delete("/api/v1/rooms/{id}", ROOM_UUID)
                         .with(jwt().jwt(j -> j.subject(TUTOR_UUID))))
                 .andExpect(status().isNoContent()); // Espera-se 204 No Content para exclusões com sucesso
 
         verify(roomService, Mockito.times(1)).deleteRoom(eq(ROOM_UUID), eq(TUTOR_UUID));
+        verify(roomSecurity).isOwner(eq(ROOM_UUID), any(Authentication.class));
+    }
+
+    @Test
+    @DisplayName("Usuário que não é tutor deve receber 403 ao tentar excluir a sala")
+    void deleteRoom_UserIsNotTutor_Returns403AndDoesNotCallService() throws Exception {
+        Mockito.when(roomSecurity.isOwner(eq(ROOM_UUID), any(Authentication.class)))
+                .thenReturn(false);
+
+        mockMvc.perform(delete("/api/v1/rooms/{id}", ROOM_UUID)
+                        .with(jwt().jwt(j -> j.subject(OTHER_USER_UUID))))
+                .andExpect(status().isForbidden());
+
+        verify(roomSecurity).isOwner(eq(ROOM_UUID), any(Authentication.class));
+        verify(roomService, never()).deleteRoom(any(), any());
     }
 }
