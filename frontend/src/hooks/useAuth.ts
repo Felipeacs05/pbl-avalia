@@ -43,7 +43,7 @@ export function useAuth() {
   function logout() {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('token');
-      router.push('/');
+      router.push('/login'); // ====== ALTERADO POR CLAUDE ====== (login movido para /login)
     }
   }
 
