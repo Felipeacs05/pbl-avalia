@@ -13,6 +13,7 @@ import com.uefs.tfs.avaliasystem.repository.PerformanceTableRepository;
 import com.uefs.tfs.avaliasystem.repository.RoomRepository;
 import com.uefs.tfs.avaliasystem.service.PerformanceTableService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +29,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -72,6 +74,10 @@ class PerformanceTableServiceTest {
         performanceTable.setRoom(room);
         performanceTable.setCriteriaList(new ArrayList<>());
     }
+
+    // =========================================================================
+    // TESTES EXISTENTES (PRESERVADOS CONFORME REGRAS)
+    // =========================================================================
 
     @Test
     @DisplayName("Deve criar tabela de desempenho e associar critérios vinculados à sala do tutor")
@@ -178,5 +184,204 @@ class PerformanceTableServiceTest {
         assertThrows(IllegalArgumentException.class, () ->
                 performanceTableService.deleteCriterion(TABLE_UUID, "crit-01", TUTOR_UUID)
         );
+    }
+
+    // =========================================================================
+    // NOVOS TESTES: AUTORIZAÇÃO (ITEM C)
+    // =========================================================================
+
+    @Test
+    @DisplayName("Deve lançar SecurityException ao tentar adicionar critério por usuário que não é tutor da sala")
+    void addCriterion_WhenUserIsNotRoomTutor_ThrowsSecurityException() {
+        // Arrange (Preparar)
+        CriterionRequest request = new CriterionRequest("Comunicação", "Expressão oral", 2.0);
+        Mockito.when(performanceTableRepository.findById(TABLE_UUID)).thenReturn(Optional.of(performanceTable));
+
+        // Act & Assert (Executar e Validar)
+        SecurityException ex = assertThrows(SecurityException.class, () ->
+                performanceTableService.addCriterion(TABLE_UUID, request, OTHER_USER_UUID)
+        );
+        assertEquals("Apenas o tutor responsável pela sala pode gerenciar critérios.", ex.getMessage());
+        verify(criterionRepository, never()).save(any(Criterion.class));
+    }
+
+    @Test
+    @DisplayName("Deve lançar SecurityException ao tentar remover critério por usuário que não é tutor da sala")
+    void deleteCriterion_WhenUserIsNotRoomTutor_ThrowsSecurityException() {
+        // Arrange (Preparar)
+        Mockito.when(performanceTableRepository.findById(TABLE_UUID)).thenReturn(Optional.of(performanceTable));
+
+        // Act & Assert (Executar e Validar)
+        SecurityException ex = assertThrows(SecurityException.class, () ->
+                performanceTableService.deleteCriterion(TABLE_UUID, "crit-01", OTHER_USER_UUID)
+        );
+        assertEquals("Apenas o tutor responsável pela sala pode remover critérios.", ex.getMessage());
+        verify(criterionRepository, never()).delete(any(Criterion.class));
+    }
+
+    // =========================================================================
+    // NOVOS TESTES: BORDAS DE NEGÓCIO E LIMITES (ITEM D)
+    // =========================================================================
+
+    @Test
+    @DisplayName("Deve lançar IllegalArgumentException ao tentar adicionar critério em tabela inexistente")
+    void addCriterion_WhenTableNotFound_ThrowsException() {
+        // Arrange (Preparar)
+        CriterionRequest request = new CriterionRequest("Liderança", "Proatividade", 1.0);
+        Mockito.when(performanceTableRepository.findById("tabela-inexistente")).thenReturn(Optional.empty());
+
+        // Act & Assert (Executar e Validar)
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                performanceTableService.addCriterion("tabela-inexistente", request, TUTOR_UUID)
+        );
+        assertTrue(ex.getMessage().contains("Tabela de desempenho não encontrada"));
+        verify(criterionRepository, never()).save(any(Criterion.class));
+    }
+
+    @Test
+    @DisplayName("Deve lançar IllegalArgumentException ao tentar remover critério de tabela inexistente")
+    void deleteCriterion_WhenTableNotFound_ThrowsException() {
+        // Arrange (Preparar)
+        Mockito.when(performanceTableRepository.findById("tabela-inexistente")).thenReturn(Optional.empty());
+
+        // Act & Assert (Executar e Validar)
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                performanceTableService.deleteCriterion("tabela-inexistente", "crit-01", TUTOR_UUID)
+        );
+        assertTrue(ex.getMessage().contains("Tabela de desempenho não encontrada"));
+        verify(criterionRepository, never()).delete(any(Criterion.class));
+    }
+
+    @Test
+    @DisplayName("Deve lançar IllegalArgumentException ao tentar remover critério inexistente no repositório")
+    void deleteCriterion_WhenCriterionNotFound_ThrowsException() {
+        // Arrange (Preparar)
+        Mockito.when(performanceTableRepository.findById(TABLE_UUID)).thenReturn(Optional.of(performanceTable));
+        Mockito.when(criterionRepository.findById("crit-inexistente")).thenReturn(Optional.empty());
+
+        // Act & Assert (Executar e Validar)
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                performanceTableService.deleteCriterion(TABLE_UUID, "crit-inexistente", TUTOR_UUID)
+        );
+        assertTrue(ex.getMessage().contains("Critério não encontrado"));
+        verify(criterionRepository, never()).delete(any(Criterion.class));
+    }
+
+    @Test
+    @DisplayName("Deve permitir inclusão de critério com peso zero (valor mínimo positivo ou nulo)")
+    void addCriterion_WhenWeightIsZero_AddsSuccessfully() {
+        // Arrange (Preparar)
+        CriterionRequest request = new CriterionRequest("Participação Opcional", "Feedback formativo sem nota", 0.0);
+        Criterion saved = new Criterion();
+        saved.setId("crit-zero");
+        saved.setName("Participação Opcional");
+        saved.setWeight(0.0);
+        saved.setPerformanceTable(performanceTable);
+
+        Mockito.when(performanceTableRepository.findById(TABLE_UUID)).thenReturn(Optional.of(performanceTable));
+        Mockito.when(criterionRepository.save(any(Criterion.class))).thenReturn(saved);
+
+        // Act (Executar)
+        CriterionResponse response = performanceTableService.addCriterion(TABLE_UUID, request, TUTOR_UUID);
+
+        // Assert (Validar)
+        assertNotNull(response);
+        assertEquals(0.0, response.getCriteriaWeight());
+        verify(criterionRepository).save(any(Criterion.class));
+    }
+
+    @Test
+    @DisplayName("Deve atribuir peso default 1.0 quando o peso do critério for omitido (nulo)")
+    void addCriterion_WhenWeightIsOmitted_DefaultsToOne() {
+        // Arrange (Preparar)
+        CriterionRequest request = new CriterionRequest("Pontualidade", "Chegada no horário", null);
+        Criterion saved = new Criterion();
+        saved.setId("crit-default");
+        saved.setName("Pontualidade");
+        saved.setWeight(1.0);
+        saved.setPerformanceTable(performanceTable);
+
+        Mockito.when(performanceTableRepository.findById(TABLE_UUID)).thenReturn(Optional.of(performanceTable));
+        Mockito.when(criterionRepository.save(any(Criterion.class))).thenAnswer(invocation -> {
+            Criterion c = invocation.getArgument(0);
+            assertEquals(1.0, c.getWeight(), "O peso omitido deve assumir o default 1.0");
+            c.setId("crit-default");
+            return c;
+        });
+
+        // Act (Executar)
+        CriterionResponse response = performanceTableService.addCriterion(TABLE_UUID, request, TUTOR_UUID);
+
+        // Assert (Validar)
+        assertNotNull(response);
+        assertEquals(1.0, response.getCriteriaWeight());
+    }
+
+    @Test
+    @DisplayName("Deve aceitar critério composto exclusivamente por hífens respeitando regex e não-vazio")
+    void addCriterion_WhenNameHasOnlyHyphens_AddsSuccessfully() {
+        // Arrange (Preparar)
+        CriterionRequest request = new CriterionRequest("---", "Critério demarcador", 1.0);
+        Criterion saved = new Criterion();
+        saved.setId("crit-hyphens");
+        saved.setName("---");
+        saved.setWeight(1.0);
+        saved.setPerformanceTable(performanceTable);
+
+        Mockito.when(performanceTableRepository.findById(TABLE_UUID)).thenReturn(Optional.of(performanceTable));
+        Mockito.when(criterionRepository.save(any(Criterion.class))).thenReturn(saved);
+
+        // Act (Executar)
+        CriterionResponse response = performanceTableService.addCriterion(TABLE_UUID, request, TUTOR_UUID);
+
+        // Assert (Validar)
+        assertNotNull(response);
+        assertEquals("---", response.getCriteriaName());
+        verify(criterionRepository).save(any(Criterion.class));
+    }
+
+    @Test
+    @DisplayName("Deve aceitar critério com caracteres acentuados da língua portuguesa")
+    void addCriterion_WhenNameHasAccents_AddsSuccessfully() {
+        // Arrange (Preparar)
+        CriterionRequest request = new CriterionRequest("Raciocínio Lógico & Atenção", "Capacidade analítica", 3.5);
+        // Observação: "&" é especial, mas acentuação como "Raciocínio Lógico" deve ser plenamente aceita
+        CriterionRequest requestWithAccents = new CriterionRequest("Raciocínio Lógico de Atenção", "Capacidade analítica", 3.5);
+        Criterion saved = new Criterion();
+        saved.setId("crit-accent");
+        saved.setName("Raciocínio Lógico de Atenção");
+        saved.setWeight(3.5);
+        saved.setPerformanceTable(performanceTable);
+
+        Mockito.when(performanceTableRepository.findById(TABLE_UUID)).thenReturn(Optional.of(performanceTable));
+        Mockito.when(criterionRepository.save(any(Criterion.class))).thenReturn(saved);
+
+        // Act (Executar)
+        CriterionResponse response = performanceTableService.addCriterion(TABLE_UUID, requestWithAccents, TUTOR_UUID);
+
+        // Assert (Validar)
+        assertNotNull(response);
+        assertEquals("Raciocínio Lógico de Atenção", response.getCriteriaName());
+        verify(criterionRepository).save(any(Criterion.class));
+    }
+
+    // =========================================================================
+    // ITENS E & F: LACUNAS DE NEGÓCIO NÃO IMPLEMENTADAS (@Disabled)
+    // =========================================================================
+
+    @Test
+    @Disabled("US07 - funcionalidade não implementada: edição de tabelas e critérios (PUT/PATCH)")
+    @DisplayName("Contrato esperado: Deve atualizar nome e dados cadastrais da tabela de desempenho existente via PUT")
+    void updatePerformanceTable_WhenFeatureNotImplemented_ExpectContract() {
+        // Contrato esperado: PUT /api/v1/performance-tables/{id} atualizando nome da tabela
+        fail("Funcionalidade de edição de tabela não implementada no service.");
+    }
+
+    @Test
+    @Disabled("US07 - funcionalidade não implementada: seleção/ativação de critérios")
+    @DisplayName("Contrato esperado: Deve ativar ou desativar critério para definir quais serão usados na avaliação")
+    void toggleCriterionActiveStatus_WhenFeatureNotImplemented_ExpectContract() {
+        // Contrato esperado: PATCH /api/v1/performance-tables/{tableId}/criteria/{criterionId}/status alterando status
+        fail("Funcionalidade de seleção/ativação de critérios não implementada no service.");
     }
 }

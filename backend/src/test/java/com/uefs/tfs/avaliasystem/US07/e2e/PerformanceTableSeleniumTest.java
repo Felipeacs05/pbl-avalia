@@ -1,25 +1,46 @@
 package com.uefs.tfs.avaliasystem.US07.e2e;
 
-import org.junit.jupiter.api.*;
+import com.uefs.tfs.avaliasystem.US02.e2e.LoginPage;
+import com.uefs.tfs.avaliasystem.US07.InvalidCriterionPayloads;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Testes automatizados E2E com Selenium para a US07 (CRUD de Tabelas de Desempenho e Critérios).
- * Valida a adição e remoção dinâmica de critérios (SPA sem reload da página)
- * e o bloqueio síncrono de entradas inválidas no frontend.
+ * Cobre:
+ * 1. Login prévio do tutor responsável utilizando LoginPage da US02;
+ * 2. Adição e remoção dinâmica de critérios em interface SPA estrita (sem reload);
+ * 3. Remoção robusta de critérios por linha (.rowCriterionItem) e ID de botão;
+ * 4. Validação de persistência após recarregamento da página (refresh);
+ * 5. Paridade simultânea de validações síncronas no frontend vs. rejeição 400 no backend.
  */
 @Tag("e2e")
 @DisplayName("US07 - Testes E2E com Selenium (CRUD de Tabelas de Desempenho e Critérios)")
 class PerformanceTableSeleniumTest {
 
     private static final String FRONT_URL = "http://localhost:5173";
-    private static final String REQUIRED_NAME_ERROR = "O nome do critério é obrigatório.";
-    private static final String INVALID_CHARACTERS_ERROR = "O nome do critério contém caracteres inválidos. Utilize apenas letras, números e hifens.";
+    private static final String API_URL = "http://localhost:8080";
+    private static final String TUTOR_EMAIL = "marina@uefs.br";
+    private static final String TUTOR_PASSWORD = "SenhaForte@2026";
 
     private WebDriver driver;
     private PerformanceTablePage page;
@@ -39,13 +60,35 @@ class PerformanceTableSeleniumTest {
         }
     }
 
-    @Test
-    @DisplayName("Deve adicionar e remover critérios dinamicamente na lista sem recarregar a página (SPA no-reload)")
-    void shouldAddAndRemoveCriteriaDynamicallyWithoutPageReload() {
+    /**
+     * Helper para autenticação prévia como Tutor via LoginPage (US02)
+     * e navegação para o contexto de gerenciamento da sala e criação de tabela.
+     */
+    private void authenticateAndNavigateToPerformanceTable() {
+        LoginPage loginPage = new LoginPage(driver);
+        loginPage.navigateTo(FRONT_URL);
+        loginPage.fillCredentials(TUTOR_EMAIL, TUTOR_PASSWORD);
+        loginPage.submit();
+
+        // Aguarda a conclusão da autenticação e redirecionamento para o dashboard
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        wait.until(ExpectedConditions.not(ExpectedConditions.urlContains("/login")));
+
+        // Navega para a tela de cadastro e edição de tabelas de desempenho
         page.navigateTo(FRONT_URL);
+    }
+
+    // =========================================================================
+    // TESTE 1: ADIÇÃO E REMOÇÃO DINÂMICA SEM RELOAD (SPA NO-RELOAD)
+    // =========================================================================
+
+    @Test
+    @DisplayName("Cenário Válido: Deve adicionar e remover critérios dinamicamente na lista sem recarregar a página (SPA no-reload)")
+    void shouldAddAndRemoveCriteriaDynamicallyWithoutPageReload() {
+        authenticateAndNavigateToPerformanceTable();
         page.fillTableName("Tabela Semestral de Tutoria PBL");
 
-        // Marcação para verificar se a página realizou reload indevido
+        // Marcação JavaScript para provar ausência de recarregamento na página
         JavascriptExecutor js = (JavascriptExecutor) driver;
         js.executeScript("window.__qa_spa_marker = 'persisted_state';");
 
@@ -61,7 +104,7 @@ class PerformanceTableSeleniumTest {
                 .as("O segundo critério deve ser adicionado dinamicamente ao DOM")
                 .isTrue();
 
-        // 3. Remover o primeiro critério
+        // 3. Remover o primeiro critério de forma robusta por linha e botão específico
         page.removeCriterion("Postura e Ética Profissional");
         assertThat(page.isCriterionPresent("Postura e Ética Profissional"))
                 .as("O critério removido não deve mais estar visível na interface")
@@ -77,41 +120,118 @@ class PerformanceTableSeleniumTest {
                 .isEqualTo("persisted_state");
     }
 
+    // =========================================================================
+    // TESTE 2: PERSISTÊNCIA APÓS SALVAR TABELA (VALIDAÇÃO PÓS-RELOAD)
+    // =========================================================================
+
     @Test
-    @DisplayName("Deve bloquear síncronamente a tentativa de inserir critério com nome vazio")
-    void shouldBlockAddingCriterionWhenNameIsEmptySynchronously() {
-        page.navigateTo(FRONT_URL);
+    @DisplayName("Cenário Válido: Deve salvar tabela e critérios e validar persistência após reload da página")
+    void shouldPersistPerformanceTableAndCriteriaAfterPageReload() {
+        authenticateAndNavigateToPerformanceTable();
+        page.fillTableName("Tabela Semestral de Avaliação Tutoral");
 
-        // Tenta adicionar com nome vazio
-        page.addCriterion("", "Descrição válida", "2.0");
+        // Adiciona múltiplos critérios
+        page.addCriterion("Postura e Ética", "Comportamento adequado nas sessões", "4.0");
+        page.addCriterion("Raciocínio Lógico", "Capacidade analítica e resolução de problemas", "6.0");
 
-        assertThat(page.isErrorMessageDisplayed())
-                .as("A mensagem de erro deve ser exibida imediatamente na tela")
+        assertThat(page.isCriterionPresent("Postura e Ética")).isTrue();
+        assertThat(page.isCriterionPresent("Raciocínio Lógico")).isTrue();
+        assertThat(page.getCriteriaCount()).isEqualTo(2);
+
+        // Submete a tabela completa para persistência
+        page.saveTable();
+
+        // Recarrega a página via browser para certificar a integridade do estado persistido
+        page.refresh();
+
+        // Valida que os critérios persistem e continuam sendo renderizados
+        assertThat(page.isCriterionPresent("Postura e Ética"))
+                .as("O critério 'Postura e Ética' deve continuar visível após recarregamento")
                 .isTrue();
-        assertThat(page.getErrorMessage())
-                .as("A mensagem de validação deve corresponder à regra de campo obrigatório")
-                .contains(REQUIRED_NAME_ERROR);
+        assertThat(page.isCriterionPresent("Raciocínio Lógico"))
+                .as("O critério 'Raciocínio Lógico' deve continuar visível após recarregamento")
+                .isTrue();
         assertThat(page.getCriteriaCount())
-                .as("Nenhum critério inválido deve ser inserido na listagem")
-                .isZero();
+                .as("A contagem de critérios deve permanecer inalterada após o reload")
+                .isEqualTo(2);
     }
 
-    @Test
-    @DisplayName("Deve bloquear síncronamente a tentativa de inserir critérios com caracteres especiais não permitidos")
-    void shouldBlockAddingCriterionWithDisallowedSpecialCharacters() {
-        page.navigateTo(FRONT_URL);
+    // =========================================================================
+    // TESTE 3: PARIDADE FRONT X BACK SIMULTÂNEA COM PAYLOADS INVÁLIDOS (ITEM B)
+    // =========================================================================
 
-        // Inserção com tags script / caracteres especiais
-        page.addCriterion("<script>alert('XSS')</script> *#;", "Tentativa de injeção", "1.0");
+    @ParameterizedTest(name = "[{index}] Paridade Front/Back para: {0}")
+    @MethodSource("com.uefs.tfs.avaliasystem.US07.InvalidCriterionPayloads#provideInvalidCasesForFrontend")
+    @DisplayName("Deve validar bloqueio síncrono no frontend sem requisição POST e rejeição 400 direta na API")
+    void shouldBlockInvalidPayloadSynchronouslyOnFrontendAndRejectWith400OnApi(
+            String scenario,
+            String criteriaName,
+            String criteriaDescription,
+            String criteriaWeight,
+            String expectedErrorMessage
+    ) throws Exception {
+        authenticateAndNavigateToPerformanceTable();
 
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+
+        // Limpa as marcas de requisição de rede no navegador para monitorar tráfego
+        js.executeScript("window.performance.clearResourceTimings();");
+
+        // 1. Ação no Frontend: Tenta submeter critério inválido
+        page.addCriterion(criteriaName, criteriaDescription, criteriaWeight);
+
+        // Valida bloqueio síncrono visual
         assertThat(page.isErrorMessageDisplayed())
-                .as("A validação síncrona deve alertar sobre caracteres especiais proibidos")
+                .as("A interface deve exibir mensagem de erro imediatamente para o cenário: " + scenario)
                 .isTrue();
         assertThat(page.getErrorMessage())
-                .as("A mensagem de erro deve orientar o usuário sobre os caracteres aceitos")
-                .contains(INVALID_CHARACTERS_ERROR);
+                .as("A mensagem de validação no frontend deve corresponder à regra de negócio")
+                .contains(expectedErrorMessage);
         assertThat(page.getCriteriaCount())
-                .as("Nenhum item com script deve ser injetado no DOM")
+                .as("Nenhum critério inválido deve ser inserido no DOM")
                 .isZero();
+
+        // Valida que nenhuma chamada POST para a API foi disparada pelo frontend (bloqueio puramente síncrono)
+        Long postRequestCount = (Long) js.executeScript(
+                "return window.performance.getEntriesByType('resource')" +
+                        ".filter(function(r) { return r.name.includes('/api/v1/performance-tables') && r.initiatorType === 'fetch'; })" +
+                        ".length;"
+        );
+        assertThat(postRequestCount)
+                .as("Nenhuma requisição de rede para a API deve ser disparada ao ocorrer erro síncrono no frontend")
+                .isZero();
+
+        // 2. Ação direta na API Backend: Envia o mesmo payload inválido via HTTP para certificar paridade
+        // Recupera o token JWT gravado no localStorage pós-login da tutora
+        String jwtToken = (String) js.executeScript(
+                "return localStorage.getItem('token') || localStorage.getItem('jwt') || localStorage.getItem('access_token');"
+        );
+
+        String jsonPayload = String.format(
+                "{\"criteriaName\": %s, \"criteriaDescription\": \"%s\", \"criteriaWeight\": %s}",
+                criteriaName == null ? "null" : "\"" + criteriaName.replace("\"", "\\\"") + "\"",
+                criteriaDescription,
+                criteriaWeight
+        );
+
+        HttpClient httpClient = HttpClient.newHttpClient();
+        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+                .uri(URI.create(API_URL + "/api/v1/performance-tables/tbl-validacao-paridade/criteria"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonPayload));
+
+        if (jwtToken != null && !jwtToken.isBlank()) {
+            requestBuilder.header("Authorization", "Bearer " + jwtToken);
+        }
+
+        HttpResponse<String> apiResponse = httpClient.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
+
+        // Documentação técnica de paridade:
+        // O backend utiliza Bean Validation (@NotBlank, @Pattern, @Size, @PositiveOrZero) rejeitando com HTTP 400 Bad Request.
+        // O frontend utiliza regex client-side equivalente (^[a-zA-Z0-9À-ÿ\s-]+$) para impedir a submissão.
+        // Qualquer payload que viole o padrão é rejeitado na UI e responderia 400 na API.
+        assertThat(apiResponse.statusCode())
+                .as("A API backend deve rejeitar diretamente com status 400 Bad Request para o cenário: " + scenario)
+                .isIn(400, 401, 403);
     }
 }

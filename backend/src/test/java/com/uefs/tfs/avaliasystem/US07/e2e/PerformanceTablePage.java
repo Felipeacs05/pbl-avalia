@@ -11,7 +11,7 @@ import java.util.List;
 
 /**
  * Page Object Model para a tela de Tabelas de Desempenho e Critérios (US07).
- * Encapsula os seletores de elementos, esperas explícitas e ações de UI.
+ * Encapsula os seletores de elementos, esperas explícitas (WebDriverWait) e ações de UI.
  */
 public class PerformanceTablePage {
 
@@ -66,9 +66,17 @@ public class PerformanceTablePage {
         driver.findElement(addCriterionButton).click();
     }
 
+    /**
+     * Remove um critério localizando robustamente a linha .rowCriterionItem pelo texto do critério
+     * e, dentro da mesma linha, acionando o botão correspondente btnRemoveCriterion_* com WebDriverWait.
+     */
     public void removeCriterion(String criterionName) {
-        By removeBtnSelector = By.xpath("//*[@id='tableCriteriaList']//*[contains(text(), '" + criterionName + "')]/..//button[starts-with(@id, 'btnRemoveCriterion_')]");
-        WebElement removeButton = wait.until(ExpectedConditions.elementToBeClickable(removeBtnSelector));
+        By rowSelector = By.xpath("//*[@id='tableCriteriaList']//*[contains(@class, 'rowCriterionItem') and .//*[contains(text(), '" + criterionName + "')]]");
+        WebElement rowElement = wait.until(ExpectedConditions.visibilityOfElementLocated(rowSelector));
+        
+        WebElement removeButton = wait.until(ExpectedConditions.elementToBeClickable(
+                rowElement.findElement(By.xpath(".//button[starts-with(@id, 'btnRemoveCriterion_')]"))
+        ));
         removeButton.click();
     }
 
@@ -102,5 +110,10 @@ public class PerformanceTablePage {
 
     public void saveTable() {
         wait.until(ExpectedConditions.elementToBeClickable(saveTableButton)).click();
+    }
+
+    public void refresh() {
+        driver.navigate().refresh();
+        wait.until(ExpectedConditions.visibilityOfElementLocated(criteriaListContainer));
     }
 }
