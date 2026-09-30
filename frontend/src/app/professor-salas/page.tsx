@@ -14,7 +14,18 @@ export default function Home() {
 
   const handleEntrar = (nome: string) => alert(`Entrando na sala: ${nome}`);
   const handleEditar = (nome: string) => alert(`Editando: ${nome}`);
-  const handleCompartilhar = (codigo: string) => alert(`Copiado: ${codigo}`);
+  const handleCompartilhar = (codigo: string) => {
+    // window.location.origin é o endereço do site (http://localhost:3000 no teste, o domínio em produção).
+    // encodeURIComponent evita que caracteres especiais do código quebrem a URL.
+    const link = `${window.location.origin}/aluno?codigo=${encodeURIComponent(codigo)}`;
+
+    // writeText devolve uma Promise: só avisa "copiado" se a cópia realmente funcionou.
+    // O navegador só libera essa função em localhost ou em https.
+    navigator.clipboard
+      .writeText(link)
+      .then(() => alert(`Link copiado: ${link}`))
+      .catch(() => alert(`Não foi possível copiar automaticamente. Link: ${link}`));
+  };
 
   return (
     <main className="w-full min-h-screen bg-[#F5F5F5] font-sans relative flex flex-col">

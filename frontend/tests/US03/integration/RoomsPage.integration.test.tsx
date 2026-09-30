@@ -5,6 +5,17 @@ import Home from "@/app/teacher-rooms/page";
 import type { Room } from "@/types/room";
 import { makeRoom, NAME_VALIDATION_MESSAGE, ROOM_ID } from "../fixtures";
 
+// ====== ALTERADO POR CLAUDE ======
+// O componente Home usa hooks internos que dependem do App Router do Next.js.
+// O Vitest roda em ambiente jsdom, sem o router montado, então qualquer
+// chamada a useRouter() quebraria com "invariant expected app router to be mounted".
+// Este mock substitui next/navigation por funções vazias para o teste não depender do router.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
+  useSearchParams: () => ({ get: vi.fn().mockReturnValue(null) }),
+  usePathname: () => "/",
+}));
+
 let rooms: Room[];
 
 function jsonResponse(body: unknown, status: number): Response {
