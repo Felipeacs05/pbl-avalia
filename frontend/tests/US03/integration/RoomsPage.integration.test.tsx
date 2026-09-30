@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import Home from "@/app/page";
+import Home from "@/app/teacher-rooms/page";
 import type { Room } from "@/types/room";
 import { makeRoom, NAME_VALIDATION_MESSAGE, ROOM_ID } from "../fixtures";
 
