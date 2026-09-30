@@ -1,11 +1,8 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
 
-// src/components/features/rooms/CreateRoomModal.tsx
-
 interface CreateRoomModalProps {
   onClose: () => void;
-  // O TESTE EXIGE ISTO: Apenas 1 parâmetro. O campo "Descrição" será ignorado no envio, servindo só para UI.
   onSubmit: (name: string) => Promise<void>; 
 }
 
@@ -18,7 +15,6 @@ export function CreateRoomModal({ onClose, onSubmit }: CreateRoomModalProps) {
   const handleSubmit = async () => {
     const trimmedName = name.trim();
     
-    // Regra TDD: Bloquear < 3 ou > 100 caracteres. (A UI bloqueia em 50, o teste testa até 100).
     if (trimmedName.length < 3 || trimmedName.length > 100) {
       setError("O nome da sala deve ter entre 3 e 100 caracteres.");
       return;
@@ -29,9 +25,8 @@ export function CreateRoomModal({ onClose, onSubmit }: CreateRoomModalProps) {
     
     try {
       await onSubmit(trimmedName);
-      // O teste espera que o modal feche após o sucesso
       onClose();
-    } catch (err) {
+    } catch {
       setError("Erro ao criar a sala. Tente novamente.");
     } finally {
       setIsSubmitting(false);
@@ -56,7 +51,6 @@ export function CreateRoomModal({ onClose, onSubmit }: CreateRoomModalProps) {
           O problema nasce com o preset de critérios, que você ajusta na Tabela de Desempenho.
         </p>
 
-        {/* INJEÇÃO TDD: role="alert" é essencial para o teste ler o erro */}
         {error && (
           <div role="alert" className="mb-4 bg-red-500/20 border border-red-500 text-red-100 p-3 rounded-xl text-sm font-semibold">
             {error}
@@ -66,14 +60,10 @@ export function CreateRoomModal({ onClose, onSubmit }: CreateRoomModalProps) {
         <div className="space-y-4 mb-6">
           <div>
             <div className="flex justify-between mb-1">
-              {/* INJEÇÃO TDD: htmlFor e id conectados, e "Nome da sala" invisível para leitores de tela */}
               <label htmlFor="room-name" className="block text-sm font-semibold">
                 Título
-                {/* Texto oculto apenas para o teste passar no regex /nome da sala/i */}
                 <span className="sr-only">Nome da sala</span>
               </label>
-              
-              {/* A sua UI maravilhosa do contador */}
               <span className={`text-xs font-medium ${name.length > 50 ? 'text-red-400' : 'text-white/50'}`}>
                 {name.length}/50
               </span>
@@ -92,7 +82,6 @@ export function CreateRoomModal({ onClose, onSubmit }: CreateRoomModalProps) {
             />
           </div>
 
-          {/* O seu campo Descrição mantido visualmente perfeito */}
           <div>
             <label className="block text-sm font-semibold mb-1">Descrição</label>
             <textarea 
@@ -106,7 +95,6 @@ export function CreateRoomModal({ onClose, onSubmit }: CreateRoomModalProps) {
           </div>
         </div>
 
-        {/* INJEÇÃO TDD: Botão deve chamar handleSubmit e não onClose */}
         <button 
           onClick={handleSubmit} 
           disabled={isSubmitting}

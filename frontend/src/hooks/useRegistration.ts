@@ -1,10 +1,17 @@
 import { useState } from "react";
-import { useRouter } from "next/navigation"; // 1. Importação obrigatória no Next.js
+import { useRouter } from "next/navigation";
 import { registrationService } from "../services/registrationService";
 
-//src/hooks/useRegistration.ts
-
 type ToastState = { message: string; type: "success" | "error" } | null;
+
+// Criamos uma interface para o Linter não reclamar do 'any'
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+}
 
 export function useRegistration() {
   const [name, setName] = useState("");
@@ -15,7 +22,7 @@ export function useRegistration() {
   const [toast, setToast] = useState<ToastState>(null);
   const [loading, setLoading] = useState(false);
 
-  const router = useRouter(); // 2. Inicialização do router
+  const router = useRouter();
 
   const showToast = (message: string, type: "success" | "error" = "error") => {
     setToast({ message, type });
@@ -48,21 +55,18 @@ export function useRegistration() {
       showToast("Conta criada com sucesso! Redirecionando...", "success");
       
       setTimeout(() => {
-        router.push("/"); // 3. Correção: Substitui o window.location.href
+        router.push("/");
       }, 2000);
 
     } catch (error: unknown) {
       console.error(error);
-      let message = 'Falha ao realizar o cadastro. Tente novamente.';
+      let message = "Falha ao realizar o cadastro. Tente novamente.";
 
-      if (
-        typeof error === 'object' &&
-        error !== null &&
-        'response' in error &&
-        typeof (error as any).response?.data?.message === 'string'
-      ) {
-        message = (error as any).response.data.message;
+      const err = error as ApiError;
+      if (err.response?.data?.message) {
+        message = err.response.data.message;
       }
+      
       showToast(message);
     } finally {
       setLoading(false);

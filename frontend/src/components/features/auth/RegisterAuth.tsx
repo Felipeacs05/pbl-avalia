@@ -46,7 +46,7 @@ export function RegisterAuth() {
             required
             placeholder="Ex: João da Silva"
             disabled={loading}
-            className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#757DC3] disabled:opacity-60 placeholder-gray-400 text-gray-900"
+            className="w-full p-3 border black-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#757DC3] disabled:opacity-60 placeholder-gray-400 text-gray-900"
             />
         </div>
 

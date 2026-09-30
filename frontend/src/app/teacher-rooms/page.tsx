@@ -1,19 +1,15 @@
 "use client";
 
-// src/app/teacher-rooms/page.tsx
-
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRooms } from "../../hooks/useRooms";
 import { useCopyLink } from "../../hooks/useCopyLink"; 
 import { RoomList } from "../../components/features/rooms/RoomList";
 import { BottomTabBar } from "../../components/features/navigation/BottomTabBar";
-import { CreateRoomModal } from "../../components/features/rooms/CreateRoomModal"; // <-- Correção feita aqui!
+import { CreateRoomModal } from "../../components/features/rooms/CreateRoomModal";
 import { Toast } from "../../components/ui/Toast";
-import type { Room } from "../../types/room";
 
 export default function Home() {
   const { rooms, isLoading, createRoom } = useRooms();
-  
   const { copyLink, toast: copyToast } = useCopyLink();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,7 +29,7 @@ export default function Home() {
       await createRoom(name);
       setLocalToast({ message: "Sala criada com sucesso!", type: "success" });
       setIsModalOpen(false); 
-    } catch (error) {
+    } catch {
       setLocalToast({ message: "Falha ao criar a sala.", type: "error" });
     }
   };
