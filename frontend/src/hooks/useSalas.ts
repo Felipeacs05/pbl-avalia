@@ -9,32 +9,31 @@ export function useSalas() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    let montado = true; // Trava de segurança para o celular
+    let montado = true;
 
     async function carregarSalas() {
       try {
         const dados = await salasService.fetchSalas();
-        if (montado) {
-          setSalas(dados);
-        }
+        if (montado) setSalas(dados);
       } catch (error) {
         console.error("Erro ao carregar salas", error);
       } finally {
-        if (montado) {
-          setIsLoading(false);
-        }
+        if (montado) setIsLoading(false);
       }
     }
-    
+  
     carregarSalas();
-
-    return () => {
-      montado = false; // Limpa a memória quando sai da tela
-    };
+    return () => { montado = false; };
   }, []);
+
+  // Mutação segura: Injeta a nova sala no topo do array imutável
+  const adicionarSalaNaLista = (novaSala: Sala) => {
+    setSalas((prevSalas) => [novaSala, ...prevSalas]);
+  };
 
   return {
     salas,
     isLoading,
+    adicionarSalaNaLista, // Exportamos a nova função
   };
 }

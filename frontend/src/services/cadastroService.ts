@@ -1,14 +1,33 @@
-// src/services/cadastroService.ts
+import { api } from './api';
 import { CriarContaParams } from "../types/cadastro";
 
+// Padrão arquitetural mantido: Chave de ambiente
+const USE_MOCK = true;
+
 export const cadastroService = {
-    async criarConta(dados: CriarContaParams): Promise<void> {
-    // Aqui isolamos a simulação do servidor (o "loading" da API)
+async criarConta(dados: CriarContaParams): Promise<void> {
+    if (USE_MOCK) {
     return new Promise((resolve) => {
         setTimeout(() => {
-        console.log("Dados enviados para o backend:", dados);
-        resolve(); // Simula o sucesso da API após 2 segundos
+        console.log("Mock: Simulação de cadastro com sucesso para", dados.email);
+        resolve();
         }, 2000);
     });
+    }
+
+    // Preparação crítica para envio de Arquivos (File)
+    // O backend exige multipart/form-data quando há imagens
+    const formData = new FormData();
+    formData.append('nome', dados.nome);
+    formData.append('email', dados.email);
+    formData.append('senha', dados.senha);
+    formData.append('imagem', dados.imagem);
+
+    // Chamada de API limpa usando o módulo interceptado
+    await api.post('/auth/register', formData, {
+    headers: {
+        'Content-Type': 'multipart/form-data',
     },
+    });
+},
 };

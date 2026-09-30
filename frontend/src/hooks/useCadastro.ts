@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useRouter } from "next/navigation"; // 1. Importação obrigatória no Next.js
+import { useRouter } from "next/navigation";
 import { cadastroService } from "../services/cadastroService";
 
 type ToastState = { message: string; type: "success" | "error" } | null;
@@ -10,10 +10,11 @@ export function useCadastro() {
   const [senha, setSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [imagem, setImagem] = useState<File | null>(null);
+  
   const [toast, setToast] = useState<ToastState>(null);
   const [loading, setLoading] = useState(false);
 
-  const router = useRouter(); // 2. Inicialização do router
+  const router = useRouter();
 
   const mostrarToast = (message: string, type: "success" | "error" = "error") => {
     setToast({ message, type });
@@ -23,7 +24,7 @@ export function useCadastro() {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        mostrarToast("A imagem selecionada excede o limite de 5MB.");
+        mostrarToast("A imagem excede o limite de 5MB.");
         setImagem(null);
         e.target.value = "";
         return;
@@ -46,12 +47,24 @@ export function useCadastro() {
       mostrarToast("Conta criada com sucesso! Redirecionando...", "success");
       
       setTimeout(() => {
-        router.push("/"); // 3. Correção: Substitui o window.location.href
+        router.push("/");
       }, 2000);
 
-    } catch (error) {
-      console.error(error); // 4. Correção: Usamos a variável 'error' para log no terminal
-      mostrarToast("Erro 400: Falha ao enviar os dados.");
+    } catch (err: unknown) {
+      // Padrão rigoroso de extração de erro do Axios (idêntico ao useAuth)
+      let mensagem = 'Erro ao realizar o cadastro. Tente novamente mais tarde.';
+
+      if (
+        typeof err === 'object' &&
+        err !== null &&
+        'response' in err &&
+        typeof (err as { response?: { data?: { message?: string } } }).response?.data?.message === 'string'
+      ) {
+        mensagem = (err as { response: { data: { message: string } } }).response.data.message;
+      }
+
+      console.error("Falha na API de Cadastro:", err);
+      mostrarToast(mensagem);
     } finally {
       setLoading(false);
     }

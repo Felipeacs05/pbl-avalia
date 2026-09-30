@@ -1,65 +1,15 @@
-'use client';
+import React from "react";
+import { FormularioCadastro } from "@/components/features/auth/FormularioCadastro"; 
 
-import React, { useState, FormEvent } from "react";
-import { LoginButton } from "@/components/ui/LoginButton";
-import { useAuth } from "@/hooks/useAuth";
-import Link from "next/link";
-
-export function LoginAuth() {
-  const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
-
-  // Pega a função de login, o estado de carregando e o erro do Hook
-  const { login, carregando, erro } = useAuth();
-
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault(); // Impede a tela de recarregar
-    login({ email, senha });
-  }
-
+export default function CadastroPage() {
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-sm">
-      {/* Exibe a mensagem de erro vermelha se a senha estiver incorreta */}
-      {erro && (
-        <div className="p-3 text-xs text-red-600 bg-red-100 rounded-lg border border-red-200">
-          {erro}
-        </div>
-      )}
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          placeholder="seu@email.com"
-          className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#757DC3]"
-        />
+    <main className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+      <div className="bg-white p-8 rounded-2xl shadow-lg flex flex-col items-center w-full max-w-md">
+        <h1 className="text-2xl font-bold text-gray-800 mb-6">Criar Nova Conta</h1>
+        
+        {/* O componente isolado que contém a UI, os estados e a comunicação com a API */}
+        <FormularioCadastro />
       </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
-        <input
-          type="password"
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-          required
-          placeholder="••••••••"
-          className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#757DC3]"
-        />
-      </div>
-
-      <LoginButton texto={carregando ? "Entrando..." : "Entrar"} type="submit" />
-
-      <div className="text-center pt-2">
-        <p className="text-sm text-gray-600">
-          Não tem uma conta?{" "}
-          <Link href="/cadastro" className="font-semibold text-[#182860] hover:text-[#757DC3] hover:underline">
-            Cadastre-se
-          </Link>
-        </p>
-      </div>
-    </form>
+    </main>
   );
 }
