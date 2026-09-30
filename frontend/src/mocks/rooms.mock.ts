@@ -1,5 +1,7 @@
 import { Room } from "../types/room";
 
+// src/mocks/rooms.mock.ts
+
 export const roomsMock: Room[] = [
   {
     id: 1,

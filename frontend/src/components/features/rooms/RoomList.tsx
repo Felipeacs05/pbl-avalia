@@ -1,6 +1,8 @@
 import { Room } from "../../../types/room";
 import { RoomCard } from "./RoomCard";
 
+// src/components/features/rooms/RoomList.tsx
+
 interface RoomListProps {
     rooms: Room[];
     onEnter: (room: Room) => void;

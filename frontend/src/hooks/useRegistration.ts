@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation"; // 1. Importação obrigatória no Next.js
 import { registrationService } from "../services/registrationService";
 
+//src/hooks/useRegistration.ts
+
 type ToastState = { message: string; type: "success" | "error" } | null;
 
 export function useRegistration() {
@@ -49,9 +51,19 @@ export function useRegistration() {
         router.push("/"); // 3. Correção: Substitui o window.location.href
       }, 2000);
 
-    } catch (error) {
-      console.error(error); // 4. Correção: Usamos a variável 'error' para log no terminal
-      showToast("Erro 400: Falha ao enviar os dados.");
+    } catch (error: unknown) {
+      console.error(error);
+      let message = 'Falha ao realizar o cadastro. Tente novamente.';
+
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error &&
+        typeof (error as any).response?.data?.message === 'string'
+      ) {
+        message = (error as any).response.data.message;
+      }
+      showToast(message);
     } finally {
       setLoading(false);
     }

@@ -3,6 +3,8 @@ import { Room } from "../../../types/room";
 import { IconButton } from "../../ui/IconButton";
 import { Link2, Edit } from "lucide-react";
 
+// src/components/features/rooms/RoomCard.tsx
+
 interface RoomCardProps {
   room: Room;
   onEnter: () => void; // Nova função para clicar no card inteiro

@@ -3,6 +3,8 @@ import { Presentation, GraduationCap, User, Plus } from "lucide-react";
 import { PrimaryButton } from "../../ui/PrimaryButton";
 import Link from "next/link";
 
+// src/components/features/navigation/BottomTabBar.tsx
+
 interface BottomTabBarProps {
   onCreateRoom: () => void;
   

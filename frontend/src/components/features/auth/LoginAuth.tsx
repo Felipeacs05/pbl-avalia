@@ -1,5 +1,7 @@
 'use client';
 
+// src/components/features/auth/LoginAuth.tsx
+
 import React, { useState, SubmitEvent } from "react";
 import { LoginButton } from "@/components/ui/LoginButton";
 import { useAuth } from "@/hooks/useAuth";

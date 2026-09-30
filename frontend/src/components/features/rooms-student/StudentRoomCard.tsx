@@ -1,6 +1,8 @@
 import React from "react";
 import { Room } from "../../../types/room";
 
+// src/components/features/rooms-student/StudentRoomCard.tsx
+
 interface StudentRoomCardProps {
   room: Room;
   index: number; // usado só para variar o tom de azul de cada card

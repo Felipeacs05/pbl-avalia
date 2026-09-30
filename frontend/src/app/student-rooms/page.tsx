@@ -1,42 +1,17 @@
-"use client";
-
 import React from "react";
-import { useRooms } from "../../hooks/useRooms";
-import { BottomTabBar } from "../../components/features/navigation/BottomTabBar";
-import { StudentRoomCard } from "../../components/features/rooms-student/StudentRoomCard";
+import { RegisterAuth } from "@/components/features/auth/RegisterAuth"; 
 
-export default function AlunoPage() {
-  const { rooms, isLoading } = useRooms();
+// src/app/register/page.tsx
 
-  const handleEnter = (name: string) => alert(`Entrando na sala: ${name}`);
-  const handleEnterRoom = () => alert("Entrar em sala");
-
+export default function RegisterPage() {
   return (
-    <main className="w-full min-h-screen bg-[#F8F9FA] font-sans relative flex flex-col">
-      
-      <div className="flex-1 px-5 pt-12 pb-36 overflow-y-auto">
-        <h1 className="text-2xl font-bold text-center text-[#182860] mb-8 tracking-tight">
-          Avalia - Suas Salas
-        </h1>
-
-        {isLoading ? (
-          <p className="mt-10 text-center text-sm text-gray-500 animate-pulse">Carregando salas...</p>
-        ) : (
-          <div className="space-y-4">
-            {rooms.map((room, index) => (
-              <StudentRoomCard
-                key={room.id}
-                room={room}
-                index={index}
-                onEnter={() => handleEnter(room.name)}
-              />
-            ))}
-          </div>
-        )}
+    <main className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+      <div className="bg-white p-8 rounded-2xl shadow-lg flex flex-col items-center w-full max-w-md">
+        <h1 className="text-2xl font-bold text-gray-800 mb-6">Criar Nova Conta</h1>
+        
+        {/* O componente isolado que contém a UI, os estados e a comunicação com a API */}
+        <RegisterAuth />
       </div>
-
-      <BottomTabBar activeTab="student" onCreateRoom={handleEnterRoom} />
-      
     </main>
   );
 }

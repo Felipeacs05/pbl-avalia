@@ -6,6 +6,8 @@ import { AuthResponse } from '@/types/auth';
 // false = backend funcionando true = chamada simulada
 const USE_MOCK = true;
 
+//src/services/authService.ts
+
 export const authService = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     if (USE_MOCK) {

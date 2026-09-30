@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import { authService } from '@/services/authService';
 import { LoginCredentials } from '@/types/login';
 
+//src/hooks/useAuth.ts
+
 export function useAuth() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
