@@ -1,18 +1,18 @@
 import { Room } from "../../../types/room";
 import { RoomCard } from "./RoomCard";
 
-// src/components/features/rooms/RoomList.tsx
-
 interface RoomListProps {
     rooms: Room[];
     onEnter: (room: Room) => void;
     onEdit: (room: Room) => void;
     onShare: (room: Room) => void;
+    onDelete?: (room: Room) => void; // Propagando o onDelete
 }
 
-export function RoomList({ rooms, onEnter, onEdit, onShare }: RoomListProps) {
+export function RoomList({ rooms, onEnter, onEdit, onShare, onDelete }: RoomListProps) {
     return (
-    <div className="space-y-4">
+    // INJEÇÃO TDD: Mudado de <div> para <ul>
+    <ul className="space-y-4 m-0 p-0">
         {rooms.map((room) => (
         <RoomCard
             key={room.id}
@@ -20,8 +20,9 @@ export function RoomList({ rooms, onEnter, onEdit, onShare }: RoomListProps) {
             onEnter={() => onEnter(room)}
             onEdit={() => onEdit(room)}
             onShare={() => onShare(room)}
+            onDelete={() => onDelete && onDelete(room)}
         />
         ))}
-    </div>
+    </ul>
     );
 }
