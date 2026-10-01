@@ -13,8 +13,7 @@ import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -35,6 +34,8 @@ class ProblemRepositoryTest {
     @BeforeEach
     void setUp() {
         tutor = new User();
+        tutor.setEmail("tutor_" + UUID.randomUUID().toString().substring(0, 8) + "@teste.com");
+        tutor.setPassword("senha123");
         tutor.setName("Persisted Tutor");
         tutor = entityManager.persistFlushFind(tutor);
 
@@ -49,9 +50,11 @@ class ProblemRepositoryTest {
         Problem problem = new Problem();
         problem.setTitle("Problem 1");
         problem.setRoom(room);
-        problem.setCreatedAt(Instant.parse("2026-03-01T10:00:00Z"));
+        problem.setCreatedAt((Instant.parse("2026-03-01T10:00:00Z")));
+        problem.setOrderIndex(1);
+        problem.setSelfAssessmentReleased(false);
 
-        String savedId = problemRepository.save(problem).getId();
+        UUID savedId = problemRepository.save(problem).getId();
 
         // Forces the read below to hit the database instead of the persistence context
         entityManager.flush();
@@ -102,7 +105,11 @@ class ProblemRepositoryTest {
         Problem problem = new Problem();
         problem.setTitle(title);
         problem.setRoom(targetRoom);
-        problem.setCreatedAt(createdAt);
+        problem.setCreatedAt((createdAt));
+        problem.setOrderIndex(1);
+        problem.setSelfAssessmentReleased(false);
         return entityManager.persistFlushFind(problem);
     }
 }
+
+

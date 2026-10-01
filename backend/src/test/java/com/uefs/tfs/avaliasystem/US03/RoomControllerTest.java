@@ -19,6 +19,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.UUID;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -53,9 +55,9 @@ class RoomControllerTest {
     @MockitoBean(name = "roomSecurity")
     private RoomSecurity roomSecurity;
 
-    private final String TUTOR_UUID = "123e4567-e89b-12d3-a456-426614174000";
-    private final String OTHER_USER_UUID = "123e4567-e89b-12d3-a456-426614174001";
-    private final String ROOM_UUID = "987e6543-e21b-12d3-a456-426614174000";
+    private final UUID TUTOR_UUID = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+    private final UUID OTHER_USER_UUID = UUID.fromString("123e4567-e89b-12d3-a456-426614174001");
+    private final UUID ROOM_UUID = UUID.fromString("987e6543-e21b-12d3-a456-426614174000");
 
     // --- TESTES DE CRIAÇÃO (POST) ---
 
@@ -71,7 +73,7 @@ class RoomControllerTest {
 
         // Dispara uma chamada simulada (POST /api/v1/rooms)
         mockMvc.perform(post("/api/v1/rooms")
-                        .with(jwt().jwt(j -> j.subject(TUTOR_UUID)))
+                        .with(jwt().jwt(j -> j.subject(TUTOR_UUID.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated()) // Espera código 201 (Sucesso na criação)
@@ -88,7 +90,7 @@ class RoomControllerTest {
         RoomRequest request = new RoomRequest("");
 
         mockMvc.perform(post("/api/v1/rooms")
-                        .with(jwt().jwt(j -> j.subject(TUTOR_UUID)))
+                        .with(jwt().jwt(j -> j.subject(TUTOR_UUID.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest()); // O Controller atua como filtro e barra a entrada
@@ -103,7 +105,7 @@ class RoomControllerTest {
         RoomRequest request = new RoomRequest("AB");
 
         mockMvc.perform(post("/api/v1/rooms")
-                        .with(jwt().jwt(j -> j.subject(TUTOR_UUID)))
+                        .with(jwt().jwt(j -> j.subject(TUTOR_UUID.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest()); // Limite inferior da regra "entre 3 e 100 caracteres"
@@ -118,7 +120,7 @@ class RoomControllerTest {
         RoomRequest request = new RoomRequest(longName);
 
         mockMvc.perform(post("/api/v1/rooms")
-                        .with(jwt().jwt(j -> j.subject(TUTOR_UUID)))
+                        .with(jwt().jwt(j -> j.subject(TUTOR_UUID.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest()); // Limite superior da mesma regra
@@ -155,7 +157,7 @@ class RoomControllerTest {
 
         // Dispara uma chamada simulada na rotagi com variável de ID
         mockMvc.perform(put("/api/v1/rooms/{id}", ROOM_UUID)
-                        .with(jwt().jwt(j -> j.subject(TUTOR_UUID)))
+                        .with(jwt().jwt(j -> j.subject(TUTOR_UUID.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk()) // Espera 200 (OK) para edições
@@ -173,7 +175,7 @@ class RoomControllerTest {
                 .thenReturn(false);
 
         mockMvc.perform(put("/api/v1/rooms/{id}", ROOM_UUID)
-                        .with(jwt().jwt(j -> j.subject(OTHER_USER_UUID)))
+                        .with(jwt().jwt(j -> j.subject(OTHER_USER_UUID.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isForbidden());
@@ -188,7 +190,7 @@ class RoomControllerTest {
         RoomRequest updateRequest = new RoomRequest("AB"); // Menos de 3 caracteres
 
         mockMvc.perform(put("/api/v1/rooms/{id}", ROOM_UUID)
-                        .with(jwt().jwt(j -> j.subject(TUTOR_UUID)))
+                        .with(jwt().jwt(j -> j.subject(TUTOR_UUID.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isBadRequest()); // A validação vale para edição, não só para criação
@@ -205,7 +207,7 @@ class RoomControllerTest {
                 .thenReturn(true);
 
         mockMvc.perform(delete("/api/v1/rooms/{id}", ROOM_UUID)
-                        .with(jwt().jwt(j -> j.subject(TUTOR_UUID))))
+                        .with(jwt().jwt(j -> j.subject(TUTOR_UUID.toString()))))
                 .andExpect(status().isNoContent()); // Espera-se 204 No Content para exclusões com sucesso
 
         verify(roomService, Mockito.times(1)).deleteRoom(eq(ROOM_UUID), eq(TUTOR_UUID));
@@ -219,7 +221,7 @@ class RoomControllerTest {
                 .thenReturn(false);
 
         mockMvc.perform(delete("/api/v1/rooms/{id}", ROOM_UUID)
-                        .with(jwt().jwt(j -> j.subject(OTHER_USER_UUID))))
+                        .with(jwt().jwt(j -> j.subject(OTHER_USER_UUID.toString()))))
                 .andExpect(status().isForbidden());
 
         verify(roomSecurity).isOwner(eq(ROOM_UUID), any(Authentication.class));

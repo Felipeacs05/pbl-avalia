@@ -1,3 +1,4 @@
+
 package com.uefs.tfs.avaliasystem.US04;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -137,3 +138,4 @@ class JoinAttemptLimiterTest {
         assertFalse(limiter.isBlocked(ANOTHER_IP_ADDRESS), "O bloqueio de um IP não deve afetar os restantes");
     }
 }
+

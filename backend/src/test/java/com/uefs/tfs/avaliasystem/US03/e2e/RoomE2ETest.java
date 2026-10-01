@@ -210,7 +210,7 @@ class RoomE2ETest {
         assertRoomNotVisibleTo(estranho);
     }
 
-    private void assertRoomVisibleTo(User user, String expectedRoomId) {
+    private void assertRoomVisibleTo(User user, UUID expectedRoomId) {
         ResponseEntity<RoomResponse[]> response = restTemplate.exchange(
                 url("/api/v1/rooms"),
                 HttpMethod.GET,

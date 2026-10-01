@@ -17,6 +17,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.resttestclient.TestRestTemplate;
@@ -29,6 +30,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -36,21 +40,20 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase.Replace;
 
-// LEVEL: E2E (top of the pyramid - few, slow, expensive tests).
-// Unlike ProblemIntegrationTest (MockMvc, still inside the test JVM), a real Servlet server is
-// started on a random port and called over real HTTP with TestRestTemplate, exactly as an external
-// client would. No layer is mocked; only the physical database is replaced by in-memory H2.
-// Authentication is out of scope: the X-User-Id header is turned into the Principal by the
-// test filter already provided for US03 (TestAuthenticationConfig).
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestDatabase(replace = Replace.ANY)
 @AutoConfigureTestRestTemplate
 @Import(TestAuthenticationConfig.class)
 class ProblemE2ETest {
+
+    @MockitoBean
+    private JwtDecoder jwtDecoder;
 
     @LocalServerPort
     private int port;
@@ -83,10 +86,18 @@ class ProblemE2ETest {
         transactionTemplate = new TransactionTemplate(transactionManager);
         tutor = persistUser("E2E Tutor");
         room = persistRoom("E2E-PRB", "E2E Problems Room");
+
+        // Configura o MockitoBean do JwtDecoder para decodificar dinamicamente qualquer token
+        // extraindo o userId recebido e mapeando no claim 'sub' do JWT.
+        Mockito.when(jwtDecoder.decode(anyString())).thenAnswer(invocation -> {
+            String token = invocation.getArgument(0);
+            return Jwt.withTokenValue(token)
+                    .header("alg", "none")
+                    .claim("sub", token) // Usa o próprio valor do token como userId/sub
+                    .build();
+        });
     }
 
-    // No @Transactional here: the real server handles the request in another thread,
-    // so a test transaction would not cover the HTTP call. Cleanup follows the FK order.
     @AfterEach
     void tearDown() {
         problemRepository.deleteAll();
@@ -103,6 +114,7 @@ class ProblemE2ETest {
     private HttpEntity<Object> authenticatedRequest(Object body, String userId) {
         HttpHeaders headers = new HttpHeaders();
         headers.set("X-User-Id", userId);
+        headers.setBearerAuth(userId); // Injeta o cabeçalho Authorization: Bearer <userId>
         return new HttpEntity<>(body, headers);
     }
 
@@ -114,12 +126,12 @@ class ProblemE2ETest {
         // 1) Creation
         ResponseEntity<ProblemResponse> createResponse = restTemplate.postForEntity(
                 url("/api/v1/rooms/" + room.getId() + "/problems"),
-                authenticatedRequest(new ProblemRequest("Problem 1"), tutor.getId()),
+                authenticatedRequest(new ProblemRequest("Problem 1"), tutor.getId().toString()),
                 ProblemResponse.class);
 
         assertEquals(HttpStatus.CREATED, createResponse.getStatusCode());
         assertNotNull(createResponse.getBody());
-        String problemId = createResponse.getBody().getId();
+        UUID problemId = (UUID) createResponse.getBody().getId();
         assertEquals("Problem 1", createResponse.getBody().getTitle());
 
         Problem created = problemRepository.findById(problemId).orElseThrow();
@@ -129,7 +141,7 @@ class ProblemE2ETest {
         ResponseEntity<ProblemResponse> updateResponse = restTemplate.exchange(
                 url("/api/v1/problems/" + problemId),
                 HttpMethod.PUT,
-                authenticatedRequest(new ProblemRequest("Problem 1 - Revised"), tutor.getId()),
+                authenticatedRequest(new ProblemRequest("Problem 1 - Revised"), tutor.getId().toString()),
                 ProblemResponse.class);
 
         assertEquals(HttpStatus.OK, updateResponse.getStatusCode());
@@ -141,7 +153,7 @@ class ProblemE2ETest {
         ResponseEntity<Void> deleteResponse = restTemplate.exchange(
                 url("/api/v1/problems/" + problemId),
                 HttpMethod.DELETE,
-                authenticatedRequest(null, tutor.getId()),
+                authenticatedRequest(null, tutor.getId().toString()),
                 Void.class);
 
         assertEquals(HttpStatus.NO_CONTENT, deleteResponse.getStatusCode());
@@ -154,31 +166,29 @@ class ProblemE2ETest {
     @DisplayName("[E2E][US05] Tutor of another room cannot create, edit or delete problems of this room")
     void idorJourney_TutorOfAnotherRoomCannotManageProblems() {
         Problem problem = persistProblem(room, "Protected Problem", Instant.parse("2026-03-01T10:00:00Z"));
-        // The intruder is a Tutor too, but of another room: permission must be tied to this specific room
         User intruder = persistUser("E2E Intruder Tutor");
         persistRoom("E2E-INT", "Intruder Own Room", intruder);
 
         ResponseEntity<String> createAttempt = restTemplate.postForEntity(
                 url("/api/v1/rooms/" + room.getId() + "/problems"),
-                authenticatedRequest(new ProblemRequest("Intruder Problem"), intruder.getId()),
+                authenticatedRequest(new ProblemRequest("Intruder Problem"), intruder.getId().toString()),
                 String.class);
         assertEquals(HttpStatus.FORBIDDEN, createAttempt.getStatusCode());
 
         ResponseEntity<String> updateAttempt = restTemplate.exchange(
                 url("/api/v1/problems/" + problem.getId()),
                 HttpMethod.PUT,
-                authenticatedRequest(new ProblemRequest("Hijacked Title"), intruder.getId()),
+                authenticatedRequest(new ProblemRequest("Hijacked Title"), intruder.getId().toString()),
                 String.class);
         assertEquals(HttpStatus.FORBIDDEN, updateAttempt.getStatusCode());
 
         ResponseEntity<String> deleteAttempt = restTemplate.exchange(
                 url("/api/v1/problems/" + problem.getId()),
                 HttpMethod.DELETE,
-                authenticatedRequest(null, intruder.getId()),
+                authenticatedRequest(null, intruder.getId().toString()),
                 String.class);
         assertEquals(HttpStatus.FORBIDDEN, deleteAttempt.getStatusCode());
 
-        // Nothing changed in the database: no new problem, original title kept, row still there
         List<Problem> roomProblems = problemRepository.findAllByRoomIdOrderByCreatedAtAsc(room.getId());
         assertEquals(1, roomProblems.size());
         assertEquals("Protected Problem", roomProblems.get(0).getTitle());
@@ -190,31 +200,29 @@ class ProblemE2ETest {
     @DisplayName("[E2E][US05] Active student member of the room gets 403 on create, edit and delete; nothing changes")
     void qaJourney_ActiveStudentMemberCannotManageProblems() {
         Problem problem = persistProblem(room, "Protected Problem", Instant.parse("2026-03-01T10:00:00Z"));
-        // Belonging to the room is not enough: only its Tutor can create, edit or delete problems
         User student = persistUser("E2E Member Student");
         persistMember(room, student, true, null);
 
         ResponseEntity<String> createAttempt = restTemplate.postForEntity(
                 url("/api/v1/rooms/" + room.getId() + "/problems"),
-                authenticatedRequest(new ProblemRequest("Student Problem"), student.getId()),
+                authenticatedRequest(new ProblemRequest("Student Problem"), student.getId().toString()),
                 String.class);
         assertEquals(HttpStatus.FORBIDDEN, createAttempt.getStatusCode());
 
         ResponseEntity<String> updateAttempt = restTemplate.exchange(
                 url("/api/v1/problems/" + problem.getId()),
                 HttpMethod.PUT,
-                authenticatedRequest(new ProblemRequest("Hijacked Title"), student.getId()),
+                authenticatedRequest(new ProblemRequest("Hijacked Title"), student.getId().toString()),
                 String.class);
         assertEquals(HttpStatus.FORBIDDEN, updateAttempt.getStatusCode());
 
         ResponseEntity<String> deleteAttempt = restTemplate.exchange(
                 url("/api/v1/problems/" + problem.getId()),
                 HttpMethod.DELETE,
-                authenticatedRequest(null, student.getId()),
+                authenticatedRequest(null, student.getId().toString()),
                 String.class);
         assertEquals(HttpStatus.FORBIDDEN, deleteAttempt.getStatusCode());
 
-        // Nothing changed in the database: no new problem, original title kept, row still there
         List<Problem> roomProblems = problemRepository.findAllByRoomIdOrderByCreatedAtAsc(room.getId());
         assertEquals(1, roomProblems.size());
         assertEquals("Protected Problem", roomProblems.get(0).getTitle());
@@ -227,7 +235,6 @@ class ProblemE2ETest {
     void listingJourney_ReturnsRoomProblemsInChronologicalOrder() {
         Instant base = Instant.parse("2026-03-01T10:00:00Z");
 
-        // Inserted out of order on purpose: the order must come from createdAt, not insertion
         persistProblem(room, "Problem 3", base.plus(2, ChronoUnit.DAYS));
         persistProblem(room, "Problem 1", base);
         persistProblem(room, "Problem 2", base.plus(1, ChronoUnit.DAYS));
@@ -238,7 +245,7 @@ class ProblemE2ETest {
         ResponseEntity<ProblemResponse[]> response = restTemplate.exchange(
                 url("/api/v1/rooms/" + room.getId() + "/problems"),
                 HttpMethod.GET,
-                authenticatedRequest(null, tutor.getId()),
+                authenticatedRequest(null, tutor.getId().toString()),
                 ProblemResponse[].class);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -252,6 +259,8 @@ class ProblemE2ETest {
     private User persistUser(String name) {
         User user = new User();
         user.setName(name);
+        user.setEmail(name.toLowerCase().replaceAll("\\s+", "") + "_" + UUID.randomUUID().toString().substring(0, 5) + "@example.com");
+        user.setPassword("password123");
         return userRepository.save(user);
     }
 
@@ -272,7 +281,7 @@ class ProblemE2ETest {
         Problem problem = new Problem();
         problem.setTitle(title);
         problem.setRoom(targetRoom);
-        problem.setCreatedAt(createdAt);
+        problem.setCreatedAt(createdAt != null ? createdAt : Instant.now());
         return problemRepository.save(problem);
     }
 
@@ -283,6 +292,7 @@ class ProblemE2ETest {
         member.setRole(Role.STUDENT);
         member.setActive(active);
         member.setUnlinkedAt(unlinkedAt);
+
         transactionTemplate.executeWithoutResult(status -> {
             entityManager.persist(member);
             entityManager.flush();

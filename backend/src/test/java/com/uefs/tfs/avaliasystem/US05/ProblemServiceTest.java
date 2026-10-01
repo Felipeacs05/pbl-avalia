@@ -1,3 +1,4 @@
+
 package com.uefs.tfs.avaliasystem.US05;
 
 import com.uefs.tfs.avaliasystem.dto.ProblemRequest;
@@ -22,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -46,10 +48,10 @@ class ProblemServiceTest {
     private Room room;
     private Problem existingProblem;
 
-    private final String TUTOR_UUID = "123e4567-e89b-12d3-a456-426614174000";
-    private final String STUDENT_UUID = "999e9999-e99b-99d9-a999-999999999999";
-    private final String ROOM_UUID = "987e6543-e21b-12d3-a456-426614174000";
-    private final String PROBLEM_UUID = "555e5555-e55b-55d5-a555-555555555555";
+    private final UUID TUTOR_UUID = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+    private final UUID STUDENT_UUID = UUID.fromString("999e9999-e99b-99d9-a999-999999999999");
+    private final UUID ROOM_UUID = UUID.fromString("987e6543-e21b-12d3-a456-426614174000");
+    private final UUID PROBLEM_UUID = UUID.fromString("555e5555-e55b-55d5-a555-555555555555");
     private final Instant CREATED_AT = Instant.parse("2026-03-01T10:00:00Z");
 
     @BeforeEach
@@ -191,7 +193,8 @@ class ProblemServiceTest {
     @DisplayName("[US05] Should list the room problems keeping the chronological order from the repository")
     void listProblems_ReturnsProblemsInChronologicalOrder() {
         Problem secondProblem = new Problem();
-        secondProblem.setId("666e6666-e66b-66d6-a666-666666666666");
+        UUID otherId = UUID.fromString("666e6666-e66b-66d6-a666-666666666666");
+        secondProblem.setId(otherId);
         secondProblem.setTitle("Problem 2");
         secondProblem.setRoom(room);
         secondProblem.setCreatedAt(CREATED_AT.plusSeconds(3600));
@@ -202,7 +205,7 @@ class ProblemServiceTest {
         List<ProblemResponse> result = problemService.listProblems(ROOM_UUID);
 
         // Each entity returned by the repository must be mapped to a response, in the same order
-        assertEquals(List.of(PROBLEM_UUID, "666e6666-e66b-66d6-a666-666666666666"),
+        assertEquals(List.of(PROBLEM_UUID, otherId),
                 result.stream().map(ProblemResponse::getId).toList());
         assertEquals(List.of("Problem 1", "Problem 2"),
                 result.stream().map(ProblemResponse::getTitle).toList());

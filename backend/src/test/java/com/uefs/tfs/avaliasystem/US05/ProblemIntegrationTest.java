@@ -24,12 +24,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.Principal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase.Replace;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -71,12 +72,9 @@ class ProblemIntegrationTest {
         room = persistRoom("PRBI1", "Problems Integration Room");
     }
 
-    // Authentication is out of scope: the authenticated user is injected directly as the Principal
+    // Autenticação mockada compatível com o Spring Security JWT
     private RequestPostProcessor authenticatedAs(String userId) {
-        return request -> {
-            request.setUserPrincipal((Principal) () -> userId);
-            return request;
-        };
+        return jwt().jwt(jwtBuilder -> jwtBuilder.subject(userId));
     }
 
     // --- CREATION THROUGH THE FULL STACK ---
@@ -87,7 +85,7 @@ class ProblemIntegrationTest {
         ProblemRequest request = new ProblemRequest("Problem 1");
 
         String responseBody = mockMvc.perform(post("/api/v1/rooms/{roomId}/problems", room.getId())
-                        .with(authenticatedAs(tutor.getId()))
+                        .with(authenticatedAs(String.valueOf(tutor.getId())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -100,7 +98,7 @@ class ProblemIntegrationTest {
         entityManager.clear();
 
         // Proof that the request went through all layers: the returned id is a real row in the database
-        Problem persisted = problemRepository.findById(createdId).orElseThrow();
+        Problem persisted = problemRepository.findById(UUID.fromString(createdId)).orElseThrow();
         assertEquals("Problem 1", persisted.getTitle());
         assertEquals(room.getId(), persisted.getRoom().getId());
         assertNotNull(persisted.getCreatedAt());
@@ -115,7 +113,7 @@ class ProblemIntegrationTest {
         ProblemRequest request = new ProblemRequest("Intruder Problem");
 
         mockMvc.perform(post("/api/v1/rooms/{roomId}/problems", room.getId())
-                        .with(authenticatedAs(intruder.getId()))
+                        .with(authenticatedAs(intruder.getId().toString()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
@@ -134,7 +132,7 @@ class ProblemIntegrationTest {
         ProblemRequest request = new ProblemRequest("Student Problem");
 
         mockMvc.perform(post("/api/v1/rooms/{roomId}/problems", room.getId())
-                        .with(authenticatedAs(student.getId()))
+                        .with(authenticatedAs(student.getId().toString()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
@@ -153,11 +151,11 @@ class ProblemIntegrationTest {
         ProblemRequest request = new ProblemRequest("Problem 1 - Revised");
 
         mockMvc.perform(put("/api/v1/problems/{id}", problem.getId())
-                        .with(authenticatedAs(tutor.getId()))
+                        .with(authenticatedAs(tutor.getId().toString()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(problem.getId()))
+                .andExpect(jsonPath("$.id").value(problem.getId().toString()))
                 .andExpect(jsonPath("$.title").value("Problem 1 - Revised"));
 
         entityManager.flush();
@@ -179,7 +177,7 @@ class ProblemIntegrationTest {
         ProblemRequest request = new ProblemRequest("Hijacked Title");
 
         mockMvc.perform(put("/api/v1/problems/{id}", problem.getId())
-                        .with(authenticatedAs(intruder.getId()))
+                        .with(authenticatedAs(intruder.getId().toString()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
@@ -199,7 +197,7 @@ class ProblemIntegrationTest {
         ProblemRequest request = new ProblemRequest("Hijacked Title");
 
         mockMvc.perform(put("/api/v1/problems/{id}", problem.getId())
-                        .with(authenticatedAs(student.getId()))
+                        .with(authenticatedAs(student.getId().toString()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
@@ -217,7 +215,7 @@ class ProblemIntegrationTest {
         Problem problem = persistProblem(room, "Problem to Delete", Instant.parse("2026-03-01T10:00:00Z"));
 
         mockMvc.perform(delete("/api/v1/problems/{id}", problem.getId())
-                        .with(authenticatedAs(tutor.getId())))
+                        .with(authenticatedAs(tutor.getId().toString())))
                 .andExpect(status().isNoContent());
 
         entityManager.flush();
@@ -234,7 +232,7 @@ class ProblemIntegrationTest {
         persistRoom("PRBI5", "Intruder Own Room", intruder);
 
         mockMvc.perform(delete("/api/v1/problems/{id}", problem.getId())
-                        .with(authenticatedAs(intruder.getId())))
+                        .with(authenticatedAs(intruder.getId().toString())))
                 .andExpect(status().isForbidden());
 
         entityManager.flush();
@@ -251,7 +249,7 @@ class ProblemIntegrationTest {
         persistMember(room, student, true, null);
 
         mockMvc.perform(delete("/api/v1/problems/{id}", problem.getId())
-                        .with(authenticatedAs(student.getId())))
+                        .with(authenticatedAs(student.getId().toString())))
                 .andExpect(status().isForbidden());
 
         entityManager.flush();
@@ -278,7 +276,7 @@ class ProblemIntegrationTest {
         entityManager.clear();
 
         mockMvc.perform(get("/api/v1/rooms/{roomId}/problems", room.getId())
-                        .with(authenticatedAs(tutor.getId())))
+                        .with(authenticatedAs(tutor.getId().toString())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(3))
                 .andExpect(jsonPath("$[0].title").value("Problem 1"))
@@ -286,11 +284,14 @@ class ProblemIntegrationTest {
                 .andExpect(jsonPath("$[2].title").value("Problem 3"));
     }
 
-    // Helpers
+    // --- HELPERS BLINDADOS CONTRA NOT NULL ---
 
     private User persistUser(String name) {
         User user = new User();
         user.setName(name);
+        user.setEmail(name.toLowerCase().replaceAll("\\s+", "") + "@test.com");
+        user.setPassword("password123");
+        user.setProfilePictureUrl("http://example.com/avatar.png");
         return userRepository.save(user);
     }
 
@@ -312,6 +313,8 @@ class ProblemIntegrationTest {
         problem.setTitle(title);
         problem.setRoom(targetRoom);
         problem.setCreatedAt(createdAt);
+        problem.setSelfAssessmentReleased(false);
+        problem.setOrderIndex(1);
         return problemRepository.save(problem);
     }
 

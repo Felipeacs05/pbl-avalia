@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/rooms")
@@ -24,26 +25,27 @@ public class RoomController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public RoomResponse createRoom(@RequestBody @Valid RoomRequest request, Principal principal) {
-        return roomService.createRoom(request, principal.getName());
+        return roomService.createRoom(request, userId(principal));
     }
 
     @PreAuthorize("@roomSecurity.isOwner(#id, authentication)")
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public RoomResponse updateRoom(@PathVariable String id, @RequestBody @Valid RoomRequest request, Principal principal) {
-        return roomService.updateRoom(id, request, principal.getName());
+    public RoomResponse updateRoom(@PathVariable UUID id, @RequestBody @Valid RoomRequest request, Principal principal) {
+        return roomService.updateRoom(id, request, userId(principal));
     }
+
     @PreAuthorize("@roomSecurity.isOwner(#id, authentication)")
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteRoom(@PathVariable String id, Principal principal) {
-        roomService.deleteRoom(id, principal.getName());
+    public void deleteRoom(@PathVariable UUID id, Principal principal) {
+        roomService.deleteRoom(id, userId(principal));
     }
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<RoomResponse> listRooms(Principal principal) {
-        return roomService.listRooms(principal.getName());
+        return roomService.listRooms(userId(principal));
     }
 
     @PostMapping("/join")
@@ -51,7 +53,7 @@ public class RoomController {
     public RoomResponse joinRoom(@RequestBody @Valid JoinRoomRequest request,
                                  Principal principal,
                                  HttpServletRequest httpRequest) {
-        return roomService.joinRoom(principal.getName(), request.getAccessCode(), resolveClientIp(httpRequest));
+        return roomService.joinRoom(userId(principal), request.getAccessCode(), resolveClientIp(httpRequest));
     }
 
     @PostMapping("/join/{code}")
@@ -59,7 +61,11 @@ public class RoomController {
     public RoomResponse joinRoomByLink(@PathVariable String code,
                                        Principal principal,
                                        HttpServletRequest httpRequest) {
-        return roomService.joinRoom(principal.getName(), code, resolveClientIp(httpRequest));
+        return roomService.joinRoom(userId(principal), code, resolveClientIp(httpRequest));
+    }
+
+    private UUID userId(Principal principal) {
+        return UUID.fromString(principal.getName());
     }
 
     private String resolveClientIp(HttpServletRequest request) {
