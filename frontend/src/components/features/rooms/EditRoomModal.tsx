@@ -1,18 +1,22 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
 
+import { Room } from "../../../types/room";
+
 interface EditRoomModalProps {
-  initialName: string;
+  room?: Room;
+  initialName?: string;
   onClose: () => void;
   onSubmit: (name: string) => Promise<void>;
 }
 
 export function EditRoomModal({
+  room,
   initialName,
   onClose,
   onSubmit,
 }: EditRoomModalProps) {
-  const [name, setName] = useState(initialName);
+  const [name, setName] = useState(room?.name ?? initialName ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 

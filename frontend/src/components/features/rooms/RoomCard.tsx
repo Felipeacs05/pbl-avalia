@@ -5,13 +5,15 @@ import { Link2, Edit, Trash2 } from "lucide-react"; // Importei o Trash2
 
 interface RoomCardProps {
   room: Room;
-  onEnter: () => void;
-  onEdit: () => void;
-  onShare: () => void;
-  onDelete?: () => void; // Adicionei onDelete como opcional, já que o teste o procura
+  onEnter?: () => void;
+  onEdit?: () => void;
+  onShare?: () => void;
+  onCopyLink?: () => void;
+  onDelete?: () => void;
 }
 
-export function RoomCard({ room, onEnter, onEdit, onShare, onDelete }: RoomCardProps) {
+export function RoomCard({ room, onEnter, onEdit, onShare, onCopyLink, onDelete }: RoomCardProps) {
+  const handleCopy = onCopyLink || onShare;
   return (
     // INJEÇÃO TDD: Mudado de <div> para <li> com role="listitem"
     <li
@@ -37,7 +39,7 @@ export function RoomCard({ room, onEnter, onEdit, onShare, onDelete }: RoomCardP
             icon={<Link2 size={16} />}
             onClick={(e) => {
               e.stopPropagation();
-              onShare();
+              if (handleCopy) handleCopy();
             }}
           />
           <IconButton
