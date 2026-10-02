@@ -13,7 +13,9 @@ import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -50,7 +52,7 @@ class ProblemRepositoryTest {
         Problem problem = new Problem();
         problem.setTitle("Problem 1");
         problem.setRoom(room);
-        problem.setCreatedAt((Instant.parse("2026-03-01T10:00:00Z")));
+        problem.setCreatedAt(Instant.parse("2026-03-01T10:00:00Z"));
         problem.setOrderIndex(1);
         problem.setSelfAssessmentReleased(false);
 
@@ -105,11 +107,9 @@ class ProblemRepositoryTest {
         Problem problem = new Problem();
         problem.setTitle(title);
         problem.setRoom(targetRoom);
-        problem.setCreatedAt((createdAt));
+        problem.setCreatedAt(createdAt);
         problem.setOrderIndex(1);
         problem.setSelfAssessmentReleased(false);
         return entityManager.persistFlushFind(problem);
     }
 }
-
-

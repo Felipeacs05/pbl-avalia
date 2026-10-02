@@ -46,6 +46,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase.Replace;
 
+// LEVEL: E2E (top of the pyramid - few, slow, expensive tests).
+// Unlike ProblemIntegrationTest (MockMvc, still inside the test JVM), a real Servlet server is
+// started on a random port and called over real HTTP with TestRestTemplate, exactly as an external
+// client would. No layer is mocked; only the physical database is replaced by in-memory H2.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestDatabase(replace = Replace.ANY)
 @AutoConfigureTestRestTemplate
@@ -98,6 +102,8 @@ class ProblemE2ETest {
         });
     }
 
+    // No @Transactional here: the real server handles the request in another thread,
+    // so a test transaction would not cover the HTTP call. Cleanup follows the FK order.
     @AfterEach
     void tearDown() {
         problemRepository.deleteAll();
@@ -131,7 +137,7 @@ class ProblemE2ETest {
 
         assertEquals(HttpStatus.CREATED, createResponse.getStatusCode());
         assertNotNull(createResponse.getBody());
-        UUID problemId = (UUID) createResponse.getBody().getId();
+        UUID problemId = createResponse.getBody().getId();
         assertEquals("Problem 1", createResponse.getBody().getTitle());
 
         Problem created = problemRepository.findById(problemId).orElseThrow();
@@ -166,6 +172,7 @@ class ProblemE2ETest {
     @DisplayName("[E2E][US05] Tutor of another room cannot create, edit or delete problems of this room")
     void idorJourney_TutorOfAnotherRoomCannotManageProblems() {
         Problem problem = persistProblem(room, "Protected Problem", Instant.parse("2026-03-01T10:00:00Z"));
+        // The intruder is a Tutor too, but of another room: permission must be tied to this specific room
         User intruder = persistUser("E2E Intruder Tutor");
         persistRoom("E2E-INT", "Intruder Own Room", intruder);
 
@@ -189,6 +196,7 @@ class ProblemE2ETest {
                 String.class);
         assertEquals(HttpStatus.FORBIDDEN, deleteAttempt.getStatusCode());
 
+        // Nothing changed in the database: no new problem, original title kept, row still there
         List<Problem> roomProblems = problemRepository.findAllByRoomIdOrderByCreatedAtAsc(room.getId());
         assertEquals(1, roomProblems.size());
         assertEquals("Protected Problem", roomProblems.get(0).getTitle());
@@ -200,6 +208,7 @@ class ProblemE2ETest {
     @DisplayName("[E2E][US05] Active student member of the room gets 403 on create, edit and delete; nothing changes")
     void qaJourney_ActiveStudentMemberCannotManageProblems() {
         Problem problem = persistProblem(room, "Protected Problem", Instant.parse("2026-03-01T10:00:00Z"));
+        // Belonging to the room is not enough: only its Tutor can create, edit or delete problems
         User student = persistUser("E2E Member Student");
         persistMember(room, student, true, null);
 
@@ -223,6 +232,7 @@ class ProblemE2ETest {
                 String.class);
         assertEquals(HttpStatus.FORBIDDEN, deleteAttempt.getStatusCode());
 
+        // Nothing changed in the database: no new problem, original title kept, row still there
         List<Problem> roomProblems = problemRepository.findAllByRoomIdOrderByCreatedAtAsc(room.getId());
         assertEquals(1, roomProblems.size());
         assertEquals("Protected Problem", roomProblems.get(0).getTitle());
@@ -235,6 +245,7 @@ class ProblemE2ETest {
     void listingJourney_ReturnsRoomProblemsInChronologicalOrder() {
         Instant base = Instant.parse("2026-03-01T10:00:00Z");
 
+        // Inserted out of order on purpose: the order must come from createdAt, not insertion
         persistProblem(room, "Problem 3", base.plus(2, ChronoUnit.DAYS));
         persistProblem(room, "Problem 1", base);
         persistProblem(room, "Problem 2", base.plus(1, ChronoUnit.DAYS));
