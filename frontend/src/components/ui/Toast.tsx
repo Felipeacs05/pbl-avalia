@@ -2,6 +2,8 @@
 import React, { useEffect } from "react";
 import { AlertCircle, CheckCircle, X } from "lucide-react";
 
+// src/components/ui/Toast.tsx
+
 interface ToastProps {
   message: string;
   type?: "success" | "error";
