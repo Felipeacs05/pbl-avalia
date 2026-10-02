@@ -6,17 +6,17 @@ import { useCopyLink } from "../../hooks/useCopyLink";
 import { RoomList } from "../../components/features/rooms/RoomList";
 import { BottomTabBar } from "../../components/features/navigation/BottomTabBar";
 import { CreateRoomModal } from "../../components/features/rooms/CreateRoomModal";
-import { EditRoomModal } from "../../components/features/rooms/EditRoomModal"; 
+import { EditRoomModal } from "../../components/features/rooms/EditRoomModal"; // ← ADICIONAR IMPORT
 import { Toast } from "../../components/ui/Toast";
-import type { Room } from "../../types/room"; 
+import type { Room } from "../../types/room"; // ← ADICIONAR IMPORT
 
 export default function Home() {
   const { rooms, isLoading, createRoom, updateRoom, deleteRoom } = useRooms();
   const { copyLink, toast: copyToast } = useCopyLink();
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingRoom, setEditingRoom] = useState<Room | null>(null); 
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // ← ADICIONAR
+  const [editingRoom, setEditingRoom] = useState<Room | null>(null); // ← ADICIONAR
   const [localToast, setLocalToast] = useState<{
     message: string;
     type: "success" | "error";
@@ -81,7 +81,7 @@ export default function Home() {
       });
     }
   };
-
+  // ← FIM DAS FUNÇÕES NOVAS
 
   return (
     <main className="w-full min-h-screen bg-[#F5F5F5] font-sans relative flex flex-col">
@@ -108,9 +108,9 @@ export default function Home() {
           <RoomList
             rooms={rooms}
             onEnter={(room) => handleEnter(room.name)}
-            onEdit={handleEdit} 
+            onEdit={handleEdit} // ← MUDAR (era handleEdit(room.name), agora passa room)
             onShare={(room) => handleShare(room.code)}
-            onDelete={handleDelete} 
+            onDelete={handleDelete} // ← ADICIONAR
           />
         )}
       </div>

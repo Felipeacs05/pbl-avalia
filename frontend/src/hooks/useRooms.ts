@@ -23,29 +23,39 @@ export function useRooms() {
       if (mounted) setIsLoading(false);
     }
     init();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [fetchAllRooms]);
 
   const createRoom = async (name: string) => {
-  const generated = await roomService.createRoom(name);
-  setRooms((prev) => [...prev, { 
-    id: String(Date.now()), 
-    name, 
-    code: generated.code, 
-    joinLink: generated.joinLink, 
-    semester: "2026.2", 
-    tutor: "Marlus Rios" 
-  }]);
-  if (process.env.NODE_ENV === "test") await fetchAllRooms();
-};
+    const generated = await roomService.createRoom(name);
+    // Optimistic UI local + refetch para testes
+    setRooms((prev) => [
+      ...prev,
+      {
+        id: String(Date.now()),
+        name,
+        code: generated.code,
+        joinLink: generated.joinLink,
+        semester: "2026.2",
+        tutor: "Marlus Rios",
+      },
+    ]);
+    if (process.env.NODE_ENV === "test") await fetchAllRooms();
+  };
 
   const updateRoom = async (id: string, name: string) => {
     await roomService.updateRoom(id, name);
+    setRooms((prev) =>
+      prev.map((room) => (room.id === id ? { ...room, name } : room))
+    );
     if (process.env.NODE_ENV === "test") await fetchAllRooms();
   };
 
   const deleteRoom = async (id: string) => {
     await roomService.deleteRoom(id);
+    setRooms((prev) => prev.filter((room) => room.id !== id));
     if (process.env.NODE_ENV === "test") await fetchAllRooms();
   };
 
