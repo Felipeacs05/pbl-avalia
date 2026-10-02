@@ -137,7 +137,7 @@ class ProblemE2ETest {
 
         assertEquals(HttpStatus.CREATED, createResponse.getStatusCode());
         assertNotNull(createResponse.getBody());
-        UUID problemId = createResponse.getBody().getId();
+        UUID problemId = UUID.fromString(createResponse.getBody().getId().toString());
         assertEquals("Problem 1", createResponse.getBody().getTitle());
 
         Problem created = problemRepository.findById(problemId).orElseThrow();
