@@ -30,7 +30,9 @@ export function RoomCard({ room, onEnter, onEdit, onShare, onCopyLink, onDelete 
       <hr className="border-t border-white/20 mb-3" />
 
       <div className="flex justify-between items-center text-xs">
-        <span className="text-gray-200">Semestre: {room.semester}</span>
+        <span className="text-gray-200">
+          {room.semester ? `Semestre: ${room.semester}` : ""}
+        </span>
       
         <div className="flex gap-2">
           {/* INJEÇÃO TDD: aria-label mudou de 'Compartilhar' para 'Copiar Link' */}
@@ -47,7 +49,7 @@ export function RoomCard({ room, onEnter, onEdit, onShare, onCopyLink, onDelete 
             icon={<Edit size={16} />}
             onClick={(e) => {
               e.stopPropagation();
-              onEdit();
+              if (onEdit) onEdit();
             }}
           />
           {/* INJEÇÃO TDD: Botão de excluir adicionado para passar no teste */}

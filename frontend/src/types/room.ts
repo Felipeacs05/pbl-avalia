@@ -3,7 +3,7 @@ export interface Room {
   name: string;
   code: string;
   joinLink: string;
-  semester: string;
+  semester?: string;
   tutor?: string;
   tutorPhoto?: string;
 }
