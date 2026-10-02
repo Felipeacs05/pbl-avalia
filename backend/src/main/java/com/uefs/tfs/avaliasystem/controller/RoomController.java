@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -26,12 +27,13 @@ public class RoomController {
         return roomService.createRoom(request, principal.getName());
     }
 
+    @PreAuthorize("@roomSecurity.isOwner(#id, authentication)")
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public RoomResponse updateRoom(@PathVariable String id, @RequestBody @Valid RoomRequest request, Principal principal) {
         return roomService.updateRoom(id, request, principal.getName());
     }
-
+    @PreAuthorize("@roomSecurity.isOwner(#id, authentication)")
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteRoom(@PathVariable String id, Principal principal) {

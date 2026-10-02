@@ -25,19 +25,22 @@ public interface RoomRepository extends JpaRepository<Room, String> {
     // anteriormente
     //nativeQuery pq nao tem a entity sala_aluno aq no sistema (nao sei se é necessário)
     @Query(
-            value =
-        """
-            SELECT s.*
-            FROM sala s
-            JOIN sala_aluno sa ON sa.sala_id = s.id
-            WHERE sa.aluno_id = :userId
-        """,
+            value = """
+        SELECT r.*
+        FROM room r
+        JOIN room_student rs ON rs.room_id = r.id
+        WHERE rs.student_id = :userId
+    """,
             nativeQuery = true
     )
     List<Room> findRoomsByParticipantId(@Param("userId") UUID userId);
 
 
     boolean existsByAccessCode(String accessCode);
+
+
+    boolean existsByIdAndTutorId(String roomId, UUID tutorId);
+
 
     Optional<Room> findByAccessCode(String accessCode);
 
