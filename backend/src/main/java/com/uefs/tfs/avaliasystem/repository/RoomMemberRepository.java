@@ -8,6 +8,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface RoomMemberRepository extends JpaRepository<RoomMember, String> {
-    Optional<RoomMember> findByRoomIdAndUserId(String roomId, UUID userId);
+public interface RoomMemberRepository extends JpaRepository<RoomMember, UUID> {
+    Optional<RoomMember> findByRoomIdAndUserId(UUID roomId, UUID userId);
 }

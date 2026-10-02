@@ -36,7 +36,7 @@ import static org.mockito.Mockito.*;
  * US04 — regras de negócio do ingresso (código digitado e link de convite usam o mesmo joinRoom).
  * Assinatura assumida: RoomResponse joinRoom(String userId, String accessCode, String ip).
  * O papel "Aluno" é o Role.STUDENT do RoomMember (papel é por sala, não do User).
- */
+*/
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("US04 - RoomService.joinRoom")
@@ -44,9 +44,9 @@ class RoomJoinServiceTest {
 
     private static final String IP = "192.168.1.1";
     private static final String CODE = "A1B2C3";
-    private static final String ROOM_ID = "987e6543-e21b-12d3-a456-426614174000";
-    private static final String TUTOR_ID = "123e4567-e89b-12d3-a456-426614174000";
-    private static final String STUDENT_ID = "555e4567-e89b-12d3-a456-426614174000";
+    private static final UUID ROOM_ID = UUID.fromString("987e6543-e21b-12d3-a456-426614174000");
+    private static final UUID TUTOR_ID = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+    private static final UUID STUDENT_ID = UUID.fromString("555e4567-e89b-12d3-a456-426614174000");
 
     @Mock private RoomRepository roomRepository;
     @Mock private UserRepository userRepository;
@@ -63,9 +63,9 @@ class RoomJoinServiceTest {
     @BeforeEach
     void setUp() {
         tutor = new User();
-        tutor.setId(UUID.fromString(TUTOR_ID));
+        tutor.setId((TUTOR_ID));
         student = new User();
-        student.setId(UUID.fromString(STUDENT_ID));
+        student.setId((STUDENT_ID));
 
         room = new Room();
         room.setId(ROOM_ID);
@@ -76,8 +76,8 @@ class RoomJoinServiceTest {
 
         when(rateLimitingService.isIpBlocked(IP)).thenReturn(false);
         when(roomRepository.findByAccessCode(CODE)).thenReturn(Optional.of(room));
-        when(userRepository.findById(UUID.fromString(STUDENT_ID))).thenReturn(Optional.of(student));
-        when(userRepository.findById(UUID.fromString(TUTOR_ID))).thenReturn(Optional.of(tutor));
+        when(userRepository.findById((STUDENT_ID))).thenReturn(Optional.of(student));
+        when(userRepository.findById((TUTOR_ID))).thenReturn(Optional.of(tutor));
         when(roomMemberRepository.findByRoomIdAndUserId(any(), any())).thenReturn(Optional.empty());
         when(roomMemberRepository.save(any(RoomMember.class))).thenAnswer(i -> i.getArgument(0));
     }
@@ -121,7 +121,7 @@ class RoomJoinServiceTest {
         existing.setUser(student);
         existing.setRole(Role.STUDENT);
         existing.setActive(true);
-        when(roomMemberRepository.findByRoomIdAndUserId(ROOM_ID, UUID.fromString(STUDENT_ID)))
+        when(roomMemberRepository.findByRoomIdAndUserId(ROOM_ID, (STUDENT_ID)))
                 .thenReturn(Optional.of(existing));
 
         roomService.joinRoom(STUDENT_ID, CODE, IP);
@@ -138,7 +138,7 @@ class RoomJoinServiceTest {
         inactive.setRole(Role.STUDENT);
         inactive.setActive(false);
         inactive.setUnlinkedAt(Instant.now());
-        when(roomMemberRepository.findByRoomIdAndUserId(ROOM_ID, UUID.fromString(STUDENT_ID)))
+        when(roomMemberRepository.findByRoomIdAndUserId(ROOM_ID, (STUDENT_ID)))
                 .thenReturn(Optional.of(inactive));
 
         roomService.joinRoom(STUDENT_ID, CODE, IP);
@@ -206,11 +206,12 @@ class RoomJoinServiceTest {
     @Test
     @DisplayName("usuário autenticado inexistente não é vinculado")
     void unknownUserIsRejected() {
-        String unknown = "00000000-0000-0000-0000-000000000000";
-        when(userRepository.findById(UUID.fromString(unknown))).thenReturn(Optional.empty());
+        UUID unknown = UUID.fromString("00000000-0000-0000-0000-000000000000");
+        when(userRepository.findById((unknown))).thenReturn(Optional.empty());
 
         assertThrows(IllegalArgumentException.class, () -> roomService.joinRoom(unknown, CODE, IP));
 
         verify(roomMemberRepository, never()).save(any());
     }
 }
+

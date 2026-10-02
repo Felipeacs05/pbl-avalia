@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class PerformanceTableService {
@@ -31,7 +32,7 @@ public class PerformanceTableService {
 
     @Transactional
     public PerformanceTableResponse createPerformanceTable(PerformanceTableRequest request, String tutorId) {
-        Room room = roomRepository.findById(request.getRoomId())
+        Room room = roomRepository.findById(UUID.fromString(request.getRoomId()))
                 .orElseThrow(() -> new IllegalArgumentException("Sala não encontrada com o ID fornecido: " + request.getRoomId()));
 
         if (!room.getTutor().getId().toString().equals(tutorId)) {
@@ -75,7 +76,7 @@ public class PerformanceTableService {
         criterion.setPerformanceTable(table);
 
         Criterion saved = criterionRepository.save(criterion);
-        return new CriterionResponse(saved.getId(), saved.getName(), saved.getDescription(), saved.getWeight(), "ACTIVE");
+        return new CriterionResponse(saved.getId().toString(), saved.getName(), saved.getDescription(), saved.getWeight(), "ACTIVE");
     }
 
     @Transactional
@@ -106,12 +107,12 @@ public class PerformanceTableService {
 
     private PerformanceTableResponse toResponse(PerformanceTable table) {
         List<CriterionResponse> criteriaResponses = table.getCriteriaList().stream()
-                .map(c -> new CriterionResponse(c.getId(), c.getName(), c.getDescription(), c.getWeight(), "ACTIVE"))
+                .map(c -> new CriterionResponse(c.getId().toString(), c.getName(), c.getDescription(), c.getWeight(), "ACTIVE"))
                 .toList();
 
         return new PerformanceTableResponse(
-                table.getId(),
-                table.getRoom().getId(),
+                table.getId().toString(),
+                table.getRoom().getId().toString(),
                 table.getName(),
                 "ACTIVE",
                 criteriaResponses

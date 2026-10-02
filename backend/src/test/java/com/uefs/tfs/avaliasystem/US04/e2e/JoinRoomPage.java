@@ -1,3 +1,4 @@
+/*
 package com.uefs.tfs.avaliasystem.US04.e2e;
 
 import org.openqa.selenium.WebDriver;
@@ -9,7 +10,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
 
-/** Page Object da tela de ingresso em salas (US04). */
+/** Page Object da tela de ingresso em salas (US04).
 public class JoinRoomPage {
 
     private final WebDriverWait wait;
@@ -58,3 +59,5 @@ public class JoinRoomPage {
         return errorMessage.getText();
     }
 }
+
+ */

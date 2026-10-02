@@ -52,7 +52,7 @@ class RoomRepositoryTest {
         room.setTutor(tutor);
 
         Room saved = roomRepository.save(room);
-        String savedId = saved.getId();
+        UUID savedId = saved.getId();
 
         entityManager.flush();
         entityManager.clear();
@@ -69,7 +69,7 @@ class RoomRepositoryTest {
     @DisplayName("save sobre uma Sala já existente e desanexada deve fazer UPDATE, não duplicar a linha")
     void save_OnDetachedExistingRoom_UpdatesInPlace_DoesNotDuplicate() {
         Room room = persistRoom("UPD01", "Nome Antigo");
-        String roomId = room.getId();
+        UUID roomId = room.getId();
 
         entityManager.clear();
         long countBefore = roomRepository.count();

@@ -3,6 +3,7 @@ package com.uefs.tfs.avaliasystem.exception;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -93,7 +94,17 @@ public class GlobalExceptionHandler {
         log.error("Unhandled server exception: ", ex);
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
     }
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleAccessDeniedException(
+            AccessDeniedException ex
+    ) {
+        log.warn("Access denied: {}", ex.getMessage());
 
+        return buildResponse(
+                HttpStatus.FORBIDDEN,
+                "You do not have permission to perform this operation"
+        );
+    }
     private ResponseEntity<Map<String, Object>> buildResponse(HttpStatus status, String message) {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());

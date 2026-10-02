@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * US04 — lógica REAL do rate limiting (sem mocks do próprio serviço).
  * Premissa: RateLimitingService(Clock), MAX_FAILED_ATTEMPTS (5) e BLOCK_DURATION públicos/estáticos.
- */
+*/
 @DisplayName("US04 - RateLimitingService")
 class RateLimitingServiceTest {
 
@@ -140,3 +140,4 @@ class RateLimitingServiceTest {
         @Override public Instant instant() { return now; }
     }
 }
+

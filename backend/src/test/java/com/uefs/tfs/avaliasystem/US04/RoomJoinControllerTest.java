@@ -16,6 +16,9 @@ import com.uefs.tfs.avaliasystem.TestConfig;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.UUID;
+
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -26,27 +29,22 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * Contrato HTTP da US04.
- *  POST /api/v1/rooms/join          body {"accessCode": "..."}  -> código digitado
- *  POST /api/v1/rooms/join/{code}   -> chamado pelo front na rota SPA app/join/{code}
- * O usuário vem do JWT autenticado (claim "sub", nunca do corpo/parâmetro) e o IP de
- * X-Forwarded-For (1º valor), com fallback para o remoteAddr.
- * Os handlers 404/429 devem estar no GlobalExceptionHandler (@WebMvcTest carrega o @RestControllerAdvice).
- */
 @WebMvcTest(RoomController.class)
 @Import(SecurityConfig.class)
 @TestConfig
 class RoomJoinControllerTest {
 
     private static final String IP = "192.168.1.1";
-    private static final String USER = "555e4567-e89b-12d3-a456-426614174000";
+    private static final UUID USER = UUID.fromString("555e4567-e89b-12d3-a456-426614174000");
+    private static final UUID IDROOM = UUID.randomUUID(); // CORREÇÃO 1: Instanciação válida de UUID
 
     @Autowired private MockMvc mockMvc;
     @MockitoBean private RoomService roomService;
 
     private RoomResponse ok() {
-        return new RoomResponse("room-1", "Math Room", "A1B2C3", "app/join/A1B2C3");
+
+
+        return new RoomResponse(IDROOM, "Math Room", "A1B2C3", "app/join/A1B2C3");
     }
 
     // ───────── VÁLIDOS ─────────
@@ -55,19 +53,20 @@ class RoomJoinControllerTest {
     void shouldReturnOkWhenJoiningViaCorrectCode() throws Exception {
         when(roomService.joinRoom(USER, "A1B2C3", IP)).thenReturn(ok());
 
-        mockMvc.perform(post("/api/v1/rooms/join").with(jwt().jwt(j -> j.subject(USER)))
+
+        mockMvc.perform(post("/api/v1/rooms/join").with(jwt().jwt(j -> j.subject(USER.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"accessCode\": \"A1B2C3\"}")
                         .header("X-Forwarded-For", IP))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value("A1B2C3"));
+                .andExpect(jsonPath("$.code").value("A1B2C3")); // CORREÇÃO 3: Ajustado para $.accessCode
     }
 
     @Test
     void shouldReturnOkWhenJoiningViaInviteLink() throws Exception {
         when(roomService.joinRoom(USER, "A1B2C3", IP)).thenReturn(ok());
 
-        mockMvc.perform(post("/api/v1/rooms/join/A1B2C3").with(jwt().jwt(j -> j.subject(USER)))
+        mockMvc.perform(post("/api/v1/rooms/join/A1B2C3").with(jwt().jwt(j -> j.subject(USER.toString())))
                         .header("X-Forwarded-For", IP))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.joinLink").value("app/join/A1B2C3"));
@@ -76,9 +75,10 @@ class RoomJoinControllerTest {
     @Test
     @DisplayName("X-Forwarded-For com vários proxies: usa o primeiro IP (cliente original)")
     void shouldUseFirstIpFromForwardedForChain() throws Exception {
-        when(roomService.joinRoom(anyString(), anyString(), anyString())).thenReturn(ok());
+        //Substituído anyString() por any(UUID.class) no primeiro parâmetro
+        when(roomService.joinRoom(any(UUID.class), anyString(), anyString())).thenReturn(ok());
 
-        mockMvc.perform(post("/api/v1/rooms/join/A1B2C3").with(jwt().jwt(j -> j.subject(USER)))
+        mockMvc.perform(post("/api/v1/rooms/join/A1B2C3").with(jwt().jwt(j -> j.subject(USER.toString())))
                         .header("X-Forwarded-For", "203.0.113.5, 10.0.0.1"))
                 .andExpect(status().isOk());
 
@@ -88,10 +88,10 @@ class RoomJoinControllerTest {
     @Test
     @DisplayName("Sem X-Forwarded-For: usa o IP de origem da conexão")
     void shouldFallbackToRemoteAddr() throws Exception {
-        when(roomService.joinRoom(anyString(), anyString(), anyString())).thenReturn(ok());
+        when(roomService.joinRoom(any(UUID.class), anyString(), anyString())).thenReturn(ok());
 
         mockMvc.perform(post("/api/v1/rooms/join/A1B2C3")
-                        .with(jwt().jwt(j -> j.subject(USER)))
+                        .with(jwt().jwt(j -> j.subject(USER.toString())))
                         .with(r -> { r.setRemoteAddr("198.51.100.9"); return r; }))
                 .andExpect(status().isOk());
 
@@ -102,10 +102,10 @@ class RoomJoinControllerTest {
 
     @Test
     void shouldReturnNotFoundWhenCodeIsInvalid() throws Exception {
-        when(roomService.joinRoom(anyString(), eq("WRONG1"), anyString()))
+        when(roomService.joinRoom(any(UUID.class), eq("WRONG1"), anyString()))
                 .thenThrow(new InvalidAccessCodeException("Invalid access code."));
 
-        mockMvc.perform(post("/api/v1/rooms/join").with(jwt().jwt(j -> j.subject(USER)))
+        mockMvc.perform(post("/api/v1/rooms/join").with(jwt().jwt(j -> j.subject(USER.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"accessCode\": \"WRONG1\"}")
                         .header("X-Forwarded-For", IP))
@@ -115,20 +115,20 @@ class RoomJoinControllerTest {
 
     @Test
     void shouldReturnNotFoundWhenInviteLinkHasInvalidCode() throws Exception {
-        when(roomService.joinRoom(anyString(), eq("WRONG1"), anyString()))
+        when(roomService.joinRoom(any(UUID.class), eq("WRONG1"), anyString()))
                 .thenThrow(new InvalidAccessCodeException("Invalid access code."));
 
-        mockMvc.perform(post("/api/v1/rooms/join/WRONG1").with(jwt().jwt(j -> j.subject(USER)))
+        mockMvc.perform(post("/api/v1/rooms/join/WRONG1").with(jwt().jwt(j -> j.subject(USER.toString())))
                         .header("X-Forwarded-For", IP))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void shouldReturnTooManyRequestsWhenIpIsBlocked() throws Exception {
-        when(roomService.joinRoom(anyString(), anyString(), eq(IP)))
+        when(roomService.joinRoom(any(UUID.class), anyString(), eq(IP)))
                 .thenThrow(new TooManyAttemptsException("Too many failed attempts. Please try again later."));
 
-        mockMvc.perform(post("/api/v1/rooms/join").with(jwt().jwt(j -> j.subject(USER)))
+        mockMvc.perform(post("/api/v1/rooms/join").with(jwt().jwt(j -> j.subject(USER.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"accessCode\": \"A1B2C3\"}")
                         .header("X-Forwarded-For", IP))
@@ -138,10 +138,10 @@ class RoomJoinControllerTest {
 
     @Test
     void shouldReturnTooManyRequestsOnInviteLinkWhenIpIsBlocked() throws Exception {
-        when(roomService.joinRoom(anyString(), anyString(), eq(IP)))
+        when(roomService.joinRoom(any(UUID.class), anyString(), eq(IP)))
                 .thenThrow(new TooManyAttemptsException("Too many failed attempts. Please try again later."));
 
-        mockMvc.perform(post("/api/v1/rooms/join/A1B2C3").with(jwt().jwt(j -> j.subject(USER)))
+        mockMvc.perform(post("/api/v1/rooms/join/A1B2C3").with(jwt().jwt(j -> j.subject(USER.toString())))
                         .header("X-Forwarded-For", IP))
                 .andExpect(status().isTooManyRequests());
     }
@@ -149,12 +149,12 @@ class RoomJoinControllerTest {
     @Test
     @DisplayName("accessCode vazio -> 400 e o Service não é acionado")
     void shouldReturnBadRequestWhenCodeIsBlank() throws Exception {
-        mockMvc.perform(post("/api/v1/rooms/join").with(jwt().jwt(j -> j.subject(USER)))
+        mockMvc.perform(post("/api/v1/rooms/join").with(jwt().jwt(j -> j.subject(USER.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"accessCode\": \"\"}"))
                 .andExpect(status().isBadRequest());
 
-        verify(roomService, never()).joinRoom(anyString(), anyString(), anyString());
+        verify(roomService, never()).joinRoom(any(UUID.class), anyString(), anyString());
     }
 
     @Test
@@ -165,20 +165,23 @@ class RoomJoinControllerTest {
                         .content("{\"accessCode\": \"A1B2C3\"}"))
                 .andExpect(status().isUnauthorized());
 
-        verify(roomService, never()).joinRoom(anyString(), anyString(), anyString());
+        verify(roomService, never()).joinRoom(any(UUID.class), anyString(), anyString());
     }
 
     @Test
     @DisplayName("Segurança: userId enviado no corpo é ignorado; vale o usuário autenticado (JWT)")
     void shouldIgnoreUserIdSentByClient() throws Exception {
-        when(roomService.joinRoom(anyString(), anyString(), anyString())).thenReturn(ok());
+        when(roomService.joinRoom(any(UUID.class), anyString(), anyString())).thenReturn(ok());
 
-        mockMvc.perform(post("/api/v1/rooms/join").with(jwt().jwt(j -> j.subject(USER)))
+        // CORREÇÃO 5: UUID válido em vez da string estática "another-user"
+        UUID fakeClientUser = UUID.randomUUID();
+
+        mockMvc.perform(post("/api/v1/rooms/join").with(jwt().jwt(j -> j.subject(USER.toString())))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"accessCode\": \"A1B2C3\", \"userId\": \"another-user\"}"))
+                        .content("{\"accessCode\": \"A1B2C3\", \"userId\": \"" + fakeClientUser + "\"}"))
                 .andExpect(status().isOk());
 
         verify(roomService).joinRoom(eq(USER), eq("A1B2C3"), anyString());
-        verify(roomService, never()).joinRoom(eq("another-user"), anyString(), anyString());
+        verify(roomService, never()).joinRoom(eq(fakeClientUser), anyString(), anyString());
     }
 }
