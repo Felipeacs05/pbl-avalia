@@ -27,11 +27,17 @@ export function useRooms() {
   }, [fetchAllRooms]);
 
   const createRoom = async (name: string) => {
-    const generated = await roomService.createRoom(name);
-    // Optimistic UI local + refetch para testes
-    setRooms((prev) => [...prev, { id: Date.now(), name, code: generated.code, semester: "2026.2", tutor: "Marlus Rios" }]);
-    if (process.env.NODE_ENV === "test") await fetchAllRooms();
-  };
+  const generated = await roomService.createRoom(name);
+  setRooms((prev) => [...prev, { 
+    id: String(Date.now()), 
+    name, 
+    code: generated.code, 
+    joinLink: generated.joinLink, 
+    semester: "2026.2", 
+    tutor: "Marlus Rios" 
+  }]);
+  if (process.env.NODE_ENV === "test") await fetchAllRooms();
+};
 
   const updateRoom = async (id: string, name: string) => {
     await roomService.updateRoom(id, name);

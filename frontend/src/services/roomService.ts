@@ -17,7 +17,8 @@ export const roomService = {
     if (!IS_TEST) {
       return new Promise((res) => setTimeout(() => {
         const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-        res({ code, joinLink: `app/join/${code}` });
+        const joinLink = `app/join/${code}`;
+        res({ code, joinLink });
       }, 1000));
     }
     const response = await fetch(BASE_URL, {
