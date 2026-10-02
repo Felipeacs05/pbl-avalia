@@ -24,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.Principal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
@@ -92,7 +93,7 @@ class ProblemIntegrationTest {
                 .andExpect(jsonPath("$.title").value("Problem 1"))
                 .andReturn().getResponse().getContentAsString();
 
-        String createdId = objectMapper.readTree(responseBody).get("id").asString();
+        String createdId = objectMapper.readTree(responseBody).get("id").asText();
 
         entityManager.flush();
         entityManager.clear();
