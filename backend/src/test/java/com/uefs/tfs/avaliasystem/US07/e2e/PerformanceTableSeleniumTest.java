@@ -25,32 +25,43 @@ import java.time.Duration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Testes automatizados E2E com Selenium para a US07 (CRUD de Tabelas de Desempenho e Critérios).
- * Cobre:
- * 1. Login prévio do tutor responsável utilizando LoginPage da US02;
+ * Testes automatizados E2E com Selenium para a US07 (Gerenciamento de Critérios da Sala).
+ *
+ * Contrato vigente: /api/v1/rooms/{roomId}/criteria — Modelo A.
+ *
+ * Cobertura:
+ * 1. Login prévio do tutor responsável utilizando LoginPage (US02);
  * 2. Adição e remoção dinâmica de critérios em interface SPA estrita (sem reload);
  * 3. Remoção robusta de critérios por linha (.rowCriterionItem) e ID de botão;
- * 4. Validação de persistência após recarregamento da página (refresh);
+ * 4. Validação de persistência após recarregamento da página (refresh via GET);
  * 5. Paridade simultânea de validações síncronas no frontend vs. rejeição 400 no backend.
+ *
+ * IDs de DOM que MUDARAM em relação à versão anterior:
+ *   inputPerformanceTableName  → REMOVIDO (sem tableName na API)
+ *   btnSavePerformanceTable    → REMOVIDO (critério salvo individualmente via POST /criteria)
+ *   formPerformanceTable       → REMOVIDO (substituído por formCriteria no front)
  */
 @Tag("e2e")
-@DisplayName("US07 - Testes E2E com Selenium (CRUD de Tabelas de Desempenho e Critérios)")
+@DisplayName("US07 - Testes E2E com Selenium (Gerenciamento de Critérios da Sala — /api/v1/rooms/{roomId}/criteria)")
 class PerformanceTableSeleniumTest {
 
-    private static final String FRONT_URL = "http://localhost:5173";
-    private static final String API_URL = "http://localhost:8080";
-    private static final String TUTOR_EMAIL = "marina@uefs.br";
-    private static final String TUTOR_PASSWORD = "SenhaForte@2026";
+    private static final String FRONT_URL    = "http://localhost:5173";
+    private static final String API_URL      = "http://localhost:8080";
+    private static final String TUTOR_EMAIL  = "marina@uefs.br";
+    private static final String TUTOR_PASS   = "SenhaForte@2026";
+    // ID da sala de teste pré-cadastrada no banco de desenvolvimento.
+    // Deve ser substituído pelo roomId real gerado no ambiente de teste.
+    private static final String ROOM_ID_TEST = "550e8400-e29b-41d4-a716-446655440000";
 
     private WebDriver driver;
-    private PerformanceTablePage page;
+    private CriteriaPage page;
 
     @BeforeEach
     void setUp() {
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--headless=new", "--no-sandbox", "--disable-dev-shm-usage", "--window-size=1920,1080");
         driver = new ChromeDriver(options);
-        page = new PerformanceTablePage(driver);
+        page = new CriteriaPage(driver);
     }
 
     @AfterEach
@@ -61,21 +72,22 @@ class PerformanceTableSeleniumTest {
     }
 
     /**
-     * Helper para autenticação prévia como Tutor via LoginPage (US02)
-     * e navegação para o contexto de gerenciamento da sala e criação de tabela.
+     * Helper de autenticação prévia como Tutor via LoginPage (US02)
+     * e navegação para a tela de critérios da sala.
+     * Rota do frontend: /rooms/{roomId}/criteria
      */
-    private void authenticateAndNavigateToPerformanceTable() {
+    private void authenticateAndNavigateToCriteria() {
         LoginPage loginPage = new LoginPage(driver);
         loginPage.navigateTo(FRONT_URL);
-        loginPage.fillCredentials(TUTOR_EMAIL, TUTOR_PASSWORD);
+        loginPage.fillCredentials(TUTOR_EMAIL, TUTOR_PASS);
         loginPage.submit();
 
         // Aguarda a conclusão da autenticação e redirecionamento para o dashboard
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         wait.until(ExpectedConditions.not(ExpectedConditions.urlContains("/login")));
 
-        // Navega para a tela de cadastro e edição de tabelas de desempenho
-        page.navigateTo(FRONT_URL);
+        // Navega para a tela de critérios da sala
+        page.navigateTo(FRONT_URL, ROOM_ID_TEST);
     }
 
     // =========================================================================
@@ -85,8 +97,7 @@ class PerformanceTableSeleniumTest {
     @Test
     @DisplayName("Cenário Válido: Deve adicionar e remover critérios dinamicamente na lista sem recarregar a página (SPA no-reload)")
     void shouldAddAndRemoveCriteriaDynamicallyWithoutPageReload() {
-        authenticateAndNavigateToPerformanceTable();
-        page.fillTableName("Tabela Semestral de Tutoria PBL");
+        authenticateAndNavigateToCriteria();
 
         // Marcação JavaScript para provar ausência de recarregamento na página
         JavascriptExecutor js = (JavascriptExecutor) driver;
@@ -121,14 +132,13 @@ class PerformanceTableSeleniumTest {
     }
 
     // =========================================================================
-    // TESTE 2: PERSISTÊNCIA APÓS SALVAR TABELA (VALIDAÇÃO PÓS-RELOAD)
+    // TESTE 2: PERSISTÊNCIA APÓS RELOAD (VALIDAÇÃO VIA GET /rooms/{roomId}/criteria)
     // =========================================================================
 
     @Test
-    @DisplayName("Cenário Válido: Deve salvar tabela e critérios e validar persistência após reload da página")
-    void shouldPersistPerformanceTableAndCriteriaAfterPageReload() {
-        authenticateAndNavigateToPerformanceTable();
-        page.fillTableName("Tabela Semestral de Avaliação Tutoral");
+    @DisplayName("Cenário Válido: Deve persistir critérios e validar via GET após reload da página")
+    void shouldPersistCriteriaAndValidateAfterPageReload() {
+        authenticateAndNavigateToCriteria();
 
         // Adiciona múltiplos critérios
         page.addCriterion("Postura e Ética", "Comportamento adequado nas sessões", "4.0");
@@ -138,11 +148,9 @@ class PerformanceTableSeleniumTest {
         assertThat(page.isCriterionPresent("Raciocínio Lógico")).isTrue();
         assertThat(page.getCriteriaCount()).isEqualTo(2);
 
-        // Submete a tabela completa para persistência
-        page.saveTable();
-
-        // Recarrega a página via browser para certificar a integridade do estado persistido
-        page.refresh();
+        // Recarrega a página via browser — o frontend busca os critérios via GET /api/v1/rooms/{roomId}/criteria
+        driver.navigate().refresh();
+        page.waitForCriteriaListToLoad();
 
         // Valida que os critérios persistem e continuam sendo renderizados
         assertThat(page.isCriterionPresent("Postura e Ética"))
@@ -157,7 +165,7 @@ class PerformanceTableSeleniumTest {
     }
 
     // =========================================================================
-    // TESTE 3: PARIDADE FRONT X BACK SIMULTÂNEA COM PAYLOADS INVÁLIDOS (ITEM B)
+    // TESTE 3: PARIDADE FRONT X BACK SIMULTÂNEA COM PAYLOADS INVÁLIDOS
     // =========================================================================
 
     @ParameterizedTest(name = "[{index}] Paridade Front/Back para: {0}")
@@ -170,7 +178,7 @@ class PerformanceTableSeleniumTest {
             String criteriaWeight,
             String expectedErrorMessage
     ) throws Exception {
-        authenticateAndNavigateToPerformanceTable();
+        authenticateAndNavigateToCriteria();
 
         JavascriptExecutor js = (JavascriptExecutor) driver;
 
@@ -191,18 +199,18 @@ class PerformanceTableSeleniumTest {
                 .as("Nenhum critério inválido deve ser inserido no DOM")
                 .isZero();
 
-        // Valida que nenhuma chamada POST para a API foi disparada pelo frontend (bloqueio puramente síncrono)
+        // Valida que nenhuma chamada POST para a nova API foi disparada pelo frontend (bloqueio puramente síncrono)
         Long postRequestCount = (Long) js.executeScript(
                 "return window.performance.getEntriesByType('resource')" +
-                        ".filter(function(r) { return r.name.includes('/api/v1/performance-tables') && r.initiatorType === 'fetch'; })" +
+                        ".filter(function(r) { return r.name.includes('/api/v1/rooms') && r.initiatorType === 'fetch'; })" +
                         ".length;"
         );
         assertThat(postRequestCount)
                 .as("Nenhuma requisição de rede para a API deve ser disparada ao ocorrer erro síncrono no frontend")
                 .isZero();
 
-        // 2. Ação direta na API Backend: Envia o mesmo payload inválido via HTTP para certificar paridade
-        // Recupera o token JWT gravado no localStorage pós-login da tutora
+        // 2. Ação direta na API Backend: Envia o mesmo payload inválido via HTTP para certificar paridade.
+        // Usa POST /api/v1/rooms/{roomId}/criteria (novo contrato — Modelo A).
         String jwtToken = (String) js.executeScript(
                 "return localStorage.getItem('token') || localStorage.getItem('jwt') || localStorage.getItem('access_token');"
         );
@@ -214,9 +222,10 @@ class PerformanceTableSeleniumTest {
                 criteriaWeight
         );
 
+        // Rota corrigida: POST /api/v1/rooms/{roomId}/criteria (contrato vigente)
         HttpClient httpClient = HttpClient.newHttpClient();
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-                .uri(URI.create(API_URL + "/api/v1/performance-tables/tbl-validacao-paridade/criteria"))
+                .uri(URI.create(API_URL + "/api/v1/rooms/" + ROOM_ID_TEST + "/criteria"))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(jsonPayload));
 
@@ -231,7 +240,7 @@ class PerformanceTableSeleniumTest {
         // O frontend utiliza regex client-side equivalente (^[a-zA-Z0-9À-ÿ\s-]+$) para impedir a submissão.
         // Qualquer payload que viole o padrão é rejeitado na UI e responderia 400 na API.
         assertThat(apiResponse.statusCode())
-                .as("A API backend deve rejeitar diretamente com status 400 Bad Request para o cenário: " + scenario)
+                .as("A API backend deve rejeitar diretamente com status 400, 401 ou 403 para o cenário: " + scenario)
                 .isIn(400, 401, 403);
     }
 }
