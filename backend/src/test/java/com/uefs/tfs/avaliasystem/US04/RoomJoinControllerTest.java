@@ -16,6 +16,8 @@ import com.uefs.tfs.avaliasystem.TestConfig;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.UUID;
+
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -46,7 +48,7 @@ class RoomJoinControllerTest {
     @MockitoBean private RoomService roomService;
 
     private RoomResponse ok() {
-        return new RoomResponse("room-1", "Math Room", "A1B2C3", "app/join/A1B2C3");
+        return new RoomResponse(UUID.fromString("987e6543-e21b-12d3-a456-426614174000"), "Math Room", "A1B2C3", "app/join/A1B2C3");
     }
 
     // ───────── VÁLIDOS ─────────

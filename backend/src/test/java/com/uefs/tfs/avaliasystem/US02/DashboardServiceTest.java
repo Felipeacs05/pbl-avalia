@@ -120,7 +120,7 @@ class DashboardServiceTest {
                     .isEqualTo("Algoritmos Avançados");
             assertThat(studentRoomIds)
                     .as("Uma sala de Tutor não deve aparecer também na aba de Aluno")
-                    .doesNotContain("10");
+                    .doesNotContain(roomId("10"));
         }
 
         @Test
@@ -149,7 +149,7 @@ class DashboardServiceTest {
                     .isEqualTo("Cálculo I");
             assertThat(tutorRoomIds)
                     .as("Uma sala de Aluno não deve aparecer também na aba de Tutor")
-                    .doesNotContain("20");
+                    .doesNotContain(roomId("20"));
         }
     }
 
@@ -194,10 +194,14 @@ class DashboardServiceTest {
 
     private static Room room(String id, String name, String accessCode, User tutor) {
         Room room = new Room();
-        room.setId(id);
+        room.setId(roomId(id));
         room.setName(name);
         room.setAccessCode(accessCode);
         room.setTutor(tutor);
         return room;
+    }
+
+    private static UUID roomId(String value) {
+        return UUID.nameUUIDFromBytes(value.getBytes());
     }
 }

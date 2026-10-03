@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/rooms")
@@ -30,13 +31,13 @@ public class RoomController {
     @PreAuthorize("@roomSecurity.isOwner(#id, authentication)")
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public RoomResponse updateRoom(@PathVariable String id, @RequestBody @Valid RoomRequest request, Principal principal) {
+    public RoomResponse updateRoom(@PathVariable UUID id, @RequestBody @Valid RoomRequest request, Principal principal) {
         return roomService.updateRoom(id, request, principal.getName());
     }
     @PreAuthorize("@roomSecurity.isOwner(#id, authentication)")
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteRoom(@PathVariable String id, Principal principal) {
+    public void deleteRoom(@PathVariable UUID id, Principal principal) {
         roomService.deleteRoom(id, principal.getName());
     }
 

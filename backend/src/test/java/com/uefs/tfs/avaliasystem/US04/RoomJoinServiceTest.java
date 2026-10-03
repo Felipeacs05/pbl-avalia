@@ -44,7 +44,7 @@ class RoomJoinServiceTest {
 
     private static final String IP = "192.168.1.1";
     private static final String CODE = "A1B2C3";
-    private static final String ROOM_ID = "987e6543-e21b-12d3-a456-426614174000";
+    private static final UUID ROOM_ID = UUID.fromString("987e6543-e21b-12d3-a456-426614174000");
     private static final String TUTOR_ID = "123e4567-e89b-12d3-a456-426614174000";
     private static final String STUDENT_ID = "555e4567-e89b-12d3-a456-426614174000";
 

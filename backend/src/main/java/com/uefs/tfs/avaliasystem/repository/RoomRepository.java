@@ -13,7 +13,7 @@ import java.util.UUID;
 
 
 @Repository
-public interface RoomRepository extends JpaRepository<Room, String> {
+public interface RoomRepository extends JpaRepository<Room, UUID> {
     List<Room> findByTutorId(UUID TutorId);
 
 
@@ -39,7 +39,7 @@ public interface RoomRepository extends JpaRepository<Room, String> {
     boolean existsByAccessCode(String accessCode);
 
 
-    boolean existsByIdAndTutorId(String roomId, UUID tutorId);
+    boolean existsByIdAndTutorId(UUID roomId, UUID tutorId);
 
 
     Optional<Room> findByAccessCode(String accessCode);
@@ -48,4 +48,20 @@ public interface RoomRepository extends JpaRepository<Room, String> {
             "LEFT JOIN RoomMember rm ON rm.room = r " +
             "WHERE r.tutor.id = :userId OR (rm.user.id = :userId AND rm.active = true)")
     List<Room> findAllByTutorOrActiveMember(@Param("userId") java.util.UUID userId);
+
+
+    @Query("""
+    SELECT CASE WHEN COUNT(DISTINCT r) > 0 THEN true ELSE false END
+    FROM Room r
+    LEFT JOIN RoomMember rm ON rm.room = r
+    WHERE r.id = :roomId
+      AND (
+          r.tutor.id = :userId
+          OR (rm.user.id = :userId AND rm.active = true)
+      )
+""")
+    boolean existsByIdAndTutorOrActiveMember(
+            @Param("roomId") UUID roomId,
+            @Param("userId") UUID userId
+    );
 }

@@ -352,7 +352,8 @@ class PerformanceTableIntegrationTest {
         String nonExistentTableId = UUID.randomUUID().toString();
 
         // Act & Assert (Executar e Validar)
-        mockMvc.perform(delete("/api/v1/performance-tables/" + nonExistentTableId + "/criteria/crit-01")
+        UUID criterionId = UUID.randomUUID();
+        mockMvc.perform(delete("/api/v1/performance-tables/" + nonExistentTableId + "/criteria/" + criterionId)
                         .with(authenticatedAs(tutor.getId().toString())))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Tabela de desempenho não encontrada: " + nonExistentTableId));
@@ -367,7 +368,7 @@ class PerformanceTableIntegrationTest {
         table.setRoom(room);
         table = performanceTableRepository.save(table);
 
-        String nonExistentCriterionId = UUID.randomUUID().toString();
+        UUID nonExistentCriterionId = UUID.randomUUID();
 
         // Act & Assert (Executar e Validar)
         mockMvc.perform(delete("/api/v1/performance-tables/" + table.getId() + "/criteria/" + nonExistentCriterionId)
@@ -547,7 +548,7 @@ class PerformanceTableIntegrationTest {
     @DisplayName("Contrato esperado: Deve ativar/desativar critério via PATCH persistindo alteração no banco")
     void toggleCriterionActiveStatus_WhenEndpointCalled_ExpectDisabled() throws Exception {
         // Contrato esperado: PATCH /api/v1/performance-tables/{id}/criteria/{criterionId}/status
-        mockMvc.perform(patch("/api/v1/performance-tables/tbl-qualquer/criteria/crit-qualquer/status")
+        mockMvc.perform(patch("/api/v1/performance-tables/" + UUID.randomUUID() + "/criteria/" + UUID.randomUUID() + "/status")
                         .with(authenticatedAs(tutor.getId().toString()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\": \"INACTIVE\"}"))

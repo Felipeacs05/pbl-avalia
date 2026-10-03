@@ -63,7 +63,7 @@ public class RoomService {
     }
 
     @Transactional
-    public RoomResponse updateRoom(String roomId, RoomRequest request, String tutorId) {
+    public RoomResponse updateRoom(UUID roomId, RoomRequest request, String tutorId) {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("Sala não encontrada"));
 
@@ -78,7 +78,7 @@ public class RoomService {
     }
 
     @Transactional
-    public void deleteRoom(String roomId, String tutorId) {
+    public void deleteRoom(UUID roomId, String tutorId) {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("Sala não encontrada"));
 

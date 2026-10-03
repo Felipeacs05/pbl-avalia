@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class PerformanceTableService {
@@ -60,7 +61,7 @@ public class PerformanceTableService {
     }
 
     @Transactional
-    public CriterionResponse addCriterion(String performanceTableId, CriterionRequest request, String tutorId) {
+    public CriterionResponse addCriterion(UUID performanceTableId, CriterionRequest request, String tutorId) {
         PerformanceTable table = performanceTableRepository.findById(performanceTableId)
                 .orElseThrow(() -> new IllegalArgumentException("Tabela de desempenho não encontrada: " + performanceTableId));
 
@@ -79,7 +80,7 @@ public class PerformanceTableService {
     }
 
     @Transactional
-    public void deleteCriterion(String performanceTableId, String criterionId, String tutorId) {
+    public void deleteCriterion(UUID performanceTableId, UUID criterionId, String tutorId) {
         PerformanceTable table = performanceTableRepository.findById(performanceTableId)
                 .orElseThrow(() -> new IllegalArgumentException("Tabela de desempenho não encontrada: " + performanceTableId));
 
@@ -98,7 +99,7 @@ public class PerformanceTableService {
     }
 
     @Transactional(readOnly = true)
-    public PerformanceTableResponse getPerformanceTable(String performanceTableId) {
+    public PerformanceTableResponse getPerformanceTable(UUID performanceTableId) {
         PerformanceTable table = performanceTableRepository.findById(performanceTableId)
                 .orElseThrow(() -> new IllegalArgumentException("Tabela de desempenho não encontrada: " + performanceTableId));
         return toResponse(table);

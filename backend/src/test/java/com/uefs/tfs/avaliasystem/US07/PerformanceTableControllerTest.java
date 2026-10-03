@@ -1,6 +1,7 @@
 package com.uefs.tfs.avaliasystem.US07;
 
 import com.uefs.tfs.avaliasystem.TestConfig;
+import com.uefs.tfs.avaliasystem.Security.PerformanceTableSecurity;
 import com.uefs.tfs.avaliasystem.config.SecurityConfig;
 import com.uefs.tfs.avaliasystem.controller.PerformanceTableController;
 import com.uefs.tfs.avaliasystem.dto.CriterionRequest;
@@ -23,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -53,10 +55,17 @@ class PerformanceTableControllerTest {
     @MockitoBean
     private PerformanceTableService performanceTableService;
 
+    @MockitoBean(name = "performanceTableSecurity")
+    private PerformanceTableSecurity performanceTableSecurity;
+
     private final String TUTOR_UUID = "123e4567-e89b-12d3-a456-426614174000";
     private final String OTHER_USER_UUID = "999e4567-e89b-12d3-a456-426614174999";
-    private final String ROOM_UUID = "550e8400-e29b-41d4-a716-446655440000";
-    private final String TABLE_UUID = "tbl-771a3400-e29b-41d4-b825-112233445566";
+    private final UUID ROOM_UUID = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+    private final UUID TABLE_UUID = UUID.fromString("771a3400-e29b-41d4-b825-112233445566");
+    private final UUID NON_EXISTENT_TABLE_UUID = UUID.fromString("771a3400-e29b-41d4-b825-112233445567");
+    private final UUID CRITERION_UUID = UUID.fromString("881a3400-e29b-41d4-b825-112233445566");
+    private final UUID NON_EXISTENT_CRITERION_UUID = UUID.fromString("881a3400-e29b-41d4-b825-112233445567");
+    private final UUID OTHER_TABLE_CRITERION_UUID = UUID.fromString("881a3400-e29b-41d4-b825-112233445568");
 
     // =========================================================================
     // TESTES EXISTENTES (PRESERVADOS CONFORME REGRAS)
@@ -68,7 +77,7 @@ class PerformanceTableControllerTest {
         CriterionRequest criterionReq = new CriterionRequest("Postura e Ética", "Comportamento em tutoria", 3.0);
         PerformanceTableRequest request = new PerformanceTableRequest(ROOM_UUID, "Tabela de Soft Skills", List.of(criterionReq));
 
-        CriterionResponse criterionRes = new CriterionResponse("crit-01", "Postura e Ética", "Comportamento em tutoria", 3.0, "ACTIVE");
+        CriterionResponse criterionRes = new CriterionResponse(CRITERION_UUID, "Postura e Ética", "Comportamento em tutoria", 3.0, "ACTIVE");
         PerformanceTableResponse expectedResponse = new PerformanceTableResponse(
                 TABLE_UUID, ROOM_UUID, "Tabela de Soft Skills", "ACTIVE", List.of(criterionRes)
         );
@@ -81,7 +90,7 @@ class PerformanceTableControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.performanceTableId").value(TABLE_UUID))
+                .andExpect(jsonPath("$.performanceTableId").value(TABLE_UUID.toString()))
                 .andExpect(jsonPath("$.tableName").value("Tabela de Soft Skills"))
                 .andExpect(jsonPath("$.criteriaList[0].criteriaName").value("Postura e Ética"));
 
@@ -137,7 +146,7 @@ class PerformanceTableControllerTest {
     @DisplayName("Deve adicionar critério individual a uma tabela existente com sucesso retornando 201")
     void addCriterion_WithValidData_Returns201() throws Exception {
         CriterionRequest criterionReq = new CriterionRequest("Raciocínio Lógico", "Resolução de problemas", 5.0);
-        CriterionResponse expectedResponse = new CriterionResponse("crit-02", "Raciocínio Lógico", "Resolução de problemas", 5.0, "ACTIVE");
+        CriterionResponse expectedResponse = new CriterionResponse(CRITERION_UUID, "Raciocínio Lógico", "Resolução de problemas", 5.0, "ACTIVE");
 
         Mockito.when(performanceTableService.addCriterion(eq(TABLE_UUID), any(CriterionRequest.class), eq(TUTOR_UUID)))
                 .thenReturn(expectedResponse);
@@ -147,7 +156,7 @@ class PerformanceTableControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(criterionReq)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.criterionId").value("crit-02"))
+                .andExpect(jsonPath("$.criterionId").value(CRITERION_UUID.toString()))
                 .andExpect(jsonPath("$.criteriaName").value("Raciocínio Lógico"));
 
         verify(performanceTableService, Mockito.times(1))
@@ -157,12 +166,12 @@ class PerformanceTableControllerTest {
     @Test
     @DisplayName("Deve remover critério existente com sucesso retornando 204 (No Content)")
     void deleteCriterion_WhenExists_Returns204() throws Exception {
-        mockMvc.perform(delete("/api/v1/performance-tables/" + TABLE_UUID + "/criteria/crit-01")
+        mockMvc.perform(delete("/api/v1/performance-tables/" + TABLE_UUID + "/criteria/" + CRITERION_UUID)
                         .with(jwt().jwt(j -> j.subject(TUTOR_UUID))))
                 .andExpect(status().isNoContent());
 
         verify(performanceTableService, Mockito.times(1))
-                .deleteCriterion(eq(TABLE_UUID), eq("crit-01"), eq(TUTOR_UUID));
+                .deleteCriterion(eq(TABLE_UUID), eq(CRITERION_UUID), eq(TUTOR_UUID));
     }
 
     // =========================================================================
@@ -191,7 +200,7 @@ class PerformanceTableControllerTest {
         // Arrange (Preparar)
         String maxValidName = "A".repeat(255);
         CriterionRequest request = new CriterionRequest(maxValidName, "Descrição de borda máxima", 1.0);
-        CriterionResponse response = new CriterionResponse("crit-max", maxValidName, "Descrição de borda máxima", 1.0, "ACTIVE");
+        CriterionResponse response = new CriterionResponse(CRITERION_UUID, maxValidName, "Descrição de borda máxima", 1.0, "ACTIVE");
 
         Mockito.when(performanceTableService.addCriterion(eq(TABLE_UUID), any(CriterionRequest.class), eq(TUTOR_UUID)))
                 .thenReturn(response);
@@ -230,10 +239,10 @@ class PerformanceTableControllerTest {
     void deleteCriterion_WhenUserIsNotRoomTutor_Returns403() throws Exception {
         // Arrange (Preparar)
         doThrow(new SecurityException("Apenas o tutor responsável pela sala pode remover critérios."))
-                .when(performanceTableService).deleteCriterion(eq(TABLE_UUID), eq("crit-01"), eq(OTHER_USER_UUID));
+                .when(performanceTableService).deleteCriterion(eq(TABLE_UUID), eq(CRITERION_UUID), eq(OTHER_USER_UUID));
 
         // Act & Assert (Executar e Validar)
-        mockMvc.perform(delete("/api/v1/performance-tables/" + TABLE_UUID + "/criteria/crit-01")
+        mockMvc.perform(delete("/api/v1/performance-tables/" + TABLE_UUID + "/criteria/" + CRITERION_UUID)
                         .with(jwt().jwt(j -> j.subject(OTHER_USER_UUID))))
                 .andExpect(status().isForbidden());
     }
@@ -265,44 +274,44 @@ class PerformanceTableControllerTest {
     void addCriterion_WhenTableNotFound_Returns400() throws Exception {
         // Arrange (Preparar)
         CriterionRequest request = new CriterionRequest("Liderança", "Proatividade", 1.0);
-        Mockito.when(performanceTableService.addCriterion(eq("tabela-inexistente"), any(CriterionRequest.class), eq(TUTOR_UUID)))
-                .thenThrow(new IllegalArgumentException("Tabela de desempenho não encontrada: tabela-inexistente"));
+        Mockito.when(performanceTableService.addCriterion(eq(NON_EXISTENT_TABLE_UUID), any(CriterionRequest.class), eq(TUTOR_UUID)))
+                .thenThrow(new IllegalArgumentException("Tabela de desempenho não encontrada: " + NON_EXISTENT_TABLE_UUID));
 
         // Act & Assert (Executar e Validar)
-        mockMvc.perform(post("/api/v1/performance-tables/tabela-inexistente/criteria")
+        mockMvc.perform(post("/api/v1/performance-tables/" + NON_EXISTENT_TABLE_UUID + "/criteria")
                         .with(jwt().jwt(j -> j.subject(TUTOR_UUID)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Tabela de desempenho não encontrada: tabela-inexistente"));
+                .andExpect(jsonPath("$.message").value("Tabela de desempenho não encontrada: " + NON_EXISTENT_TABLE_UUID));
     }
 
     @Test
     @DisplayName("Deve retornar 400 (Bad Request) ao tentar remover critério de tabela inexistente")
     void deleteCriterion_WhenTableNotFound_Returns400() throws Exception {
         // Arrange (Preparar)
-        doThrow(new IllegalArgumentException("Tabela de desempenho não encontrada: tabela-inexistente"))
-                .when(performanceTableService).deleteCriterion(eq("tabela-inexistente"), eq("crit-01"), eq(TUTOR_UUID));
+        doThrow(new IllegalArgumentException("Tabela de desempenho não encontrada: " + NON_EXISTENT_TABLE_UUID))
+                .when(performanceTableService).deleteCriterion(eq(NON_EXISTENT_TABLE_UUID), eq(CRITERION_UUID), eq(TUTOR_UUID));
 
         // Act & Assert (Executar e Validar)
-        mockMvc.perform(delete("/api/v1/performance-tables/tabela-inexistente/criteria/crit-01")
+        mockMvc.perform(delete("/api/v1/performance-tables/" + NON_EXISTENT_TABLE_UUID + "/criteria/" + CRITERION_UUID)
                         .with(jwt().jwt(j -> j.subject(TUTOR_UUID))))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Tabela de desempenho não encontrada: tabela-inexistente"));
+                .andExpect(jsonPath("$.message").value("Tabela de desempenho não encontrada: " + NON_EXISTENT_TABLE_UUID));
     }
 
     @Test
     @DisplayName("Deve retornar 400 (Bad Request) ao tentar remover critério inexistente")
     void deleteCriterion_WhenCriterionNotFound_Returns400() throws Exception {
         // Arrange (Preparar)
-        doThrow(new IllegalArgumentException("Critério não encontrado: crit-inexistente"))
-                .when(performanceTableService).deleteCriterion(eq(TABLE_UUID), eq("crit-inexistente"), eq(TUTOR_UUID));
+        doThrow(new IllegalArgumentException("Critério não encontrado: " + NON_EXISTENT_CRITERION_UUID))
+                .when(performanceTableService).deleteCriterion(eq(TABLE_UUID), eq(NON_EXISTENT_CRITERION_UUID), eq(TUTOR_UUID));
 
         // Act & Assert (Executar e Validar)
-        mockMvc.perform(delete("/api/v1/performance-tables/" + TABLE_UUID + "/criteria/crit-inexistente")
+        mockMvc.perform(delete("/api/v1/performance-tables/" + TABLE_UUID + "/criteria/" + NON_EXISTENT_CRITERION_UUID)
                         .with(jwt().jwt(j -> j.subject(TUTOR_UUID))))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Critério não encontrado: crit-inexistente"));
+                .andExpect(jsonPath("$.message").value("Critério não encontrado: " + NON_EXISTENT_CRITERION_UUID));
     }
 
     @Test
@@ -310,10 +319,10 @@ class PerformanceTableControllerTest {
     void deleteCriterion_WhenCriterionBelongsToAnotherTable_Returns400() throws Exception {
         // Arrange (Preparar)
         doThrow(new IllegalArgumentException("O critério informado não pertence a esta tabela de desempenho."))
-                .when(performanceTableService).deleteCriterion(eq(TABLE_UUID), eq("crit-outra-tabela"), eq(TUTOR_UUID));
+                .when(performanceTableService).deleteCriterion(eq(TABLE_UUID), eq(OTHER_TABLE_CRITERION_UUID), eq(TUTOR_UUID));
 
         // Act & Assert (Executar e Validar)
-        mockMvc.perform(delete("/api/v1/performance-tables/" + TABLE_UUID + "/criteria/crit-outra-tabela")
+        mockMvc.perform(delete("/api/v1/performance-tables/" + TABLE_UUID + "/criteria/" + OTHER_TABLE_CRITERION_UUID)
                         .with(jwt().jwt(j -> j.subject(TUTOR_UUID))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("O critério informado não pertence a esta tabela de desempenho."));
@@ -342,7 +351,7 @@ class PerformanceTableControllerTest {
     void addCriterion_WhenNameHasOnlyHyphens_Returns201() throws Exception {
         // Arrange (Preparar)
         CriterionRequest request = new CriterionRequest("---", "Separador", 1.0);
-        CriterionResponse response = new CriterionResponse("crit-hyphen", "---", "Separador", 1.0, "ACTIVE");
+        CriterionResponse response = new CriterionResponse(CRITERION_UUID, "---", "Separador", 1.0, "ACTIVE");
 
         Mockito.when(performanceTableService.addCriterion(eq(TABLE_UUID), any(CriterionRequest.class), eq(TUTOR_UUID)))
                 .thenReturn(response);
@@ -361,7 +370,7 @@ class PerformanceTableControllerTest {
     void addCriterion_WhenNameHasAccents_Returns201() throws Exception {
         // Arrange (Preparar)
         CriterionRequest request = new CriterionRequest("Raciocínio Lógico e Dedução", "Capacidade analítica", 4.0);
-        CriterionResponse response = new CriterionResponse("crit-accent", "Raciocínio Lógico e Dedução", "Capacidade analítica", 4.0, "ACTIVE");
+        CriterionResponse response = new CriterionResponse(CRITERION_UUID, "Raciocínio Lógico e Dedução", "Capacidade analítica", 4.0, "ACTIVE");
 
         Mockito.when(performanceTableService.addCriterion(eq(TABLE_UUID), any(CriterionRequest.class), eq(TUTOR_UUID)))
                 .thenReturn(response);
@@ -380,7 +389,7 @@ class PerformanceTableControllerTest {
     void addCriterion_WhenWeightIsZero_Returns201() throws Exception {
         // Arrange (Preparar)
         CriterionRequest request = new CriterionRequest("Critério Opcional", "Sem pontuação direta", 0.0);
-        CriterionResponse response = new CriterionResponse("crit-zero", "Critério Opcional", "Sem pontuação direta", 0.0, "ACTIVE");
+        CriterionResponse response = new CriterionResponse(CRITERION_UUID, "Critério Opcional", "Sem pontuação direta", 0.0, "ACTIVE");
 
         Mockito.when(performanceTableService.addCriterion(eq(TABLE_UUID), any(CriterionRequest.class), eq(TUTOR_UUID)))
                 .thenReturn(response);
@@ -399,7 +408,7 @@ class PerformanceTableControllerTest {
     void addCriterion_WhenWeightIsOmitted_Returns201WithDefaultWeight() throws Exception {
         // Arrange (Preparar)
         String jsonWithoutWeight = "{\"criteriaName\": \"Participação\", \"criteriaDescription\": \"Presença ativa\"}";
-        CriterionResponse response = new CriterionResponse("crit-def", "Participação", "Presença ativa", 1.0, "ACTIVE");
+        CriterionResponse response = new CriterionResponse(CRITERION_UUID, "Participação", "Presença ativa", 1.0, "ACTIVE");
 
         Mockito.when(performanceTableService.addCriterion(eq(TABLE_UUID), any(CriterionRequest.class), eq(TUTOR_UUID)))
                 .thenReturn(response);
@@ -434,7 +443,7 @@ class PerformanceTableControllerTest {
     @DisplayName("Contrato esperado: Deve ativar/desativar critério via PATCH /api/v1/performance-tables/{id}/criteria/{critId}/status")
     void toggleCriterionActiveStatus_WhenEndpointCalled_ExpectContract() throws Exception {
         // Contrato esperado: PATCH /api/v1/performance-tables/{tableId}/criteria/{criterionId}/status
-        mockMvc.perform(patch("/api/v1/performance-tables/" + TABLE_UUID + "/criteria/crit-01/status")
+        mockMvc.perform(patch("/api/v1/performance-tables/" + TABLE_UUID + "/criteria/" + CRITERION_UUID + "/status")
                         .with(jwt().jwt(j -> j.subject(TUTOR_UUID)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\": \"INACTIVE\"}"))

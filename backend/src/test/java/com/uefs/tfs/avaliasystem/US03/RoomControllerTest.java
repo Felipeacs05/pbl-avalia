@@ -19,6 +19,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.UUID;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -55,7 +57,7 @@ class RoomControllerTest {
 
     private final String TUTOR_UUID = "123e4567-e89b-12d3-a456-426614174000";
     private final String OTHER_USER_UUID = "123e4567-e89b-12d3-a456-426614174001";
-    private final String ROOM_UUID = "987e6543-e21b-12d3-a456-426614174000";
+    private final UUID ROOM_UUID = UUID.fromString("987e6543-e21b-12d3-a456-426614174000");
 
     // --- TESTES DE CRIAÇÃO (POST) ---
 

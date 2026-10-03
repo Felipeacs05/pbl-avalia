@@ -1,7 +1,9 @@
 package com.uefs.tfs.avaliasystem.dto;
 
+import java.util.UUID;
+
 public class RoomResponse {
-    private String id;
+    private UUID id;
     private String name;
     private String code;
     private String joinLink;
@@ -15,15 +17,15 @@ public class RoomResponse {
     }
 
 
-    public RoomResponse(String id, String name, String code, String joinLink) {
+    public RoomResponse(UUID id, String name, String code, String joinLink) {
         this.id = id;
         this.name = name;
         this.code = code;
         this.joinLink = joinLink;
     }
 
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public String getCode() { return code; }

@@ -8,9 +8,11 @@ import com.uefs.tfs.avaliasystem.service.PerformanceTableService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/performance-tables")
@@ -28,16 +30,16 @@ public class PerformanceTableController {
         return performanceTableService.createPerformanceTable(request, principal.getName());
     }
 
+    @PreAuthorize("@performanceTableSecurity.isRoomParticipantOrTutor(#id, authentication)")
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public PerformanceTableResponse getPerformanceTable(@PathVariable String id) {
+    public PerformanceTableResponse getPerformanceTable(@PathVariable UUID id) {
         return performanceTableService.getPerformanceTable(id);
     }
-
     @PostMapping("/{performanceTableId}/criteria")
     @ResponseStatus(HttpStatus.CREATED)
     public CriterionResponse addCriterion(
-            @PathVariable String performanceTableId,
+            @PathVariable UUID performanceTableId,
             @RequestBody @Valid CriterionRequest request,
             Principal principal
     ) {
@@ -47,8 +49,8 @@ public class PerformanceTableController {
     @DeleteMapping("/{performanceTableId}/criteria/{criterionId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCriterion(
-            @PathVariable String performanceTableId,
-            @PathVariable String criterionId,
+            @PathVariable UUID performanceTableId,
+            @PathVariable UUID criterionId,
             Principal principal
     ) {
         performanceTableService.deleteCriterion(performanceTableId, criterionId, principal.getName());

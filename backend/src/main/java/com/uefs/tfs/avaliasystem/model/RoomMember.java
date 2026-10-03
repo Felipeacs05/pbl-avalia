@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Setter
 @Getter
@@ -14,7 +15,7 @@ public class RoomMember {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    private UUID id;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "room_id", nullable = false)

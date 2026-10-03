@@ -16,15 +16,15 @@ public class RoomSecurity {
         //pega o subject to jwt(o qual contem o id do usuario)
         UUID userId = UUID.fromString(authentication.getName());
         //retorna se a sala existe, e se o id do usuário e o mesmo id q ta em tutor_id, na sala.
-        return roomRepository.existsByIdAndTutorId(roomId.toString(), userId);
+        return roomRepository.existsByIdAndTutorId(roomId, userId);
     }
 
-    public boolean isOwner(String roomId, Authentication authentication) {
+    public boolean isRoomMemberOrOwner(UUID roomId, Authentication authentication) {
 
         //pega o subject to jwt(o qual contem o id do usuario)
         UUID userId = UUID.fromString(authentication.getName());
         //retorna se a sala existe, e se o id do usuário e o mesmo id q ta em tutor_id, na sala.
 
-        return roomRepository.existsByIdAndTutorId(roomId, userId);
+        return roomRepository.existsByIdAndTutorOrActiveMember(roomId, userId);
     }
 }

@@ -43,7 +43,7 @@ class RoomServiceTest {
     private Room existingRoom;
 
     private final String TUTOR_UUID = "123e4567-e89b-12d3-a456-426614174000";
-    private final String ROOM_UUID = "987e6543-e21b-12d3-a456-426614174000";
+    private final UUID ROOM_UUID = UUID.fromString("987e6543-e21b-12d3-a456-426614174000");
 
     @BeforeEach
     void setUp() {
