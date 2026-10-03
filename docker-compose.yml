@@ -13,5 +13,30 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./docs/schema.sql:/docker-entrypoint-initdb.d/init.sql:ro
 
+  backend:
+    build: ./backend
+    container_name: avalia_backend
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/tfs_test
+      - SPRING_DATASOURCE_USERNAME=tfs_user
+      - SPRING_DATASOURCE_PASSWORD=tfs_pass
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      - postgres
+
+  frontend:
+    build: ./frontend
+    container_name: avalia_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
+    depends_on:
+      - backend
+
 volumes:
   postgres_data:
