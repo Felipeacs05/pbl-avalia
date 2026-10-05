@@ -6,7 +6,9 @@ import { BottomTabBar } from "../../components/features/navigation/BottomTabBar"
 import { StudentRoomCard } from "../../components/features/rooms-student/StudentRoomCard";
 import { useSearchParams } from "next/navigation";
 import { EnterRoomModal } from "../../components/features/rooms-student/EnterRoomModal";
-import { validateRoomCode } from "../../mocks/roomCode.mock";
+import { attemptEnterRoom } from "../../mocks/roomCode.mock";
+
+type HttpError = { response?: { status?: number; headers?: Record<string, string> } };
 
 function StudentContent() {
   const { rooms, isLoading } = useRooms();
@@ -17,15 +19,34 @@ function StudentContent() {
   const [isModalOpen, setIsModalOpen] = useState(codeFromUrl !== "");
   const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
   const [attemptedCode, setAttemptedCode] = useState("");
+  const [blockMessage, setBlockMessage] = useState<string | null>(null);
 
-  const handleConfirmCode = (code: string) => {
-    if (validateRoomCode(code)) {
-      setIsModalOpen(false);
-      alert(`Entrando na sala com o código: ${code.toUpperCase()}`);
-    } else {
-      setAttemptedCode(code);
-      setIsModalOpen(false);
-      setIsErrorModalOpen(true);
+  const handleConfirmCode = async (code: string) => {
+    setBlockMessage(null); // nova tentativa: limpa o aviso de bloqueio anterior
+    try {
+      if (await attemptEnterRoom(code)) {
+        setIsModalOpen(false);
+        alert(`Entrando na sala com o código: ${code.toUpperCase()}`);
+      } else {
+        setAttemptedCode(code);
+        setIsModalOpen(false);
+        setIsErrorModalOpen(true);
+      }
+    } catch (error) {
+      const response = (error as HttpError).response;
+      if (response?.status === 429) {
+        const minutes = Math.ceil(Number(response.headers?.["retry-after"]) / 60);
+        setBlockMessage(
+          "Você fez muitas tentativas com códigos inválidos, então seu acesso foi bloqueado temporariamente por segurança. " +
+            (minutes > 0
+              ? `Tente novamente em cerca de ${minutes} min.`
+              : "Aguarde alguns minutos e tente novamente.")
+        );
+        setIsModalOpen(false);
+        setIsErrorModalOpen(true);
+      } else {
+        console.error("Erro ao entrar na sala:", error);
+      }
     }
   };
 
@@ -75,9 +96,16 @@ function StudentContent() {
               </svg>
             </div>
 
-            <h3 className="text-base font-bold text-gray-900 mb-1">Código errado</h3>
+            {/* Se blockMessage existe, o pop-up mostra o aviso de bloqueio (429); senão, o "Código errado" de sempre */}
+            <h3 className="text-base font-bold text-gray-900 mb-1">
+              {blockMessage ? "Muitas tentativas" : "Código errado"}
+            </h3>
             <p className="text-xs text-gray-500 mb-5 leading-relaxed">
-              O código <span className="font-semibold text-gray-700">“{attemptedCode}”</span> não corresponde a nenhuma sala ativa. Verifique com seu professor e tente novamente.
+              {blockMessage ?? (
+                <>
+                  O código <span className="font-semibold text-gray-700">“{attemptedCode}”</span> não corresponde a nenhuma sala ativa. Verifique com seu professor e tente novamente.
+                </>
+              )}
             </p>
 
             <div className="flex gap-2 w-full">
@@ -86,18 +114,22 @@ function StudentContent() {
                 onClick={() => setIsErrorModalOpen(false)}
                 className="flex-1 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                Fechar
+                {/* aviso amigável para o usuario */}
+                {blockMessage ? "Entendi" : "Fechar"}
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsErrorModalOpen(false);
-                  setIsModalOpen(true);
-                }}
-                className="flex-1 py-2 text-xs font-semibold text-white bg-[#182860] hover:bg-[#121e48] rounded-lg transition-colors"
-              >
-                Tentar de novo
-              </button>
+              {/* Bloqueado: esconde "Tentar de novo", porque tentar agora só gera outro 429 */}
+              {!blockMessage && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsErrorModalOpen(false);
+                    setIsModalOpen(true);
+                  }}
+                  className="flex-1 py-2 text-xs font-semibold text-white bg-[#182860] hover:bg-[#121e48] rounded-lg transition-colors"
+                >
+                  Tentar de novo
+                </button>
+              )}
             </div>
           </div>
         </div>
