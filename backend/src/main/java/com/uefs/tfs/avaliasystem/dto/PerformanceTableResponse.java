@@ -1,18 +1,19 @@
 package com.uefs.tfs.avaliasystem.dto;
 
 import java.util.List;
+import java.util.UUID;
 
 public class PerformanceTableResponse {
 
-    private String performanceTableId;
-    private String roomId;
+    private UUID performanceTableId;
+    private UUID roomId;
     private String tableName;
     private String status;
     private List<CriterionResponse> criteriaList;
 
     public PerformanceTableResponse() {}
 
-    public PerformanceTableResponse(String performanceTableId, String roomId, String tableName, String status, List<CriterionResponse> criteriaList) {
+    public PerformanceTableResponse(UUID performanceTableId, UUID roomId, String tableName, String status, List<CriterionResponse> criteriaList) {
         this.performanceTableId = performanceTableId;
         this.roomId = roomId;
         this.tableName = tableName;
@@ -20,11 +21,11 @@ public class PerformanceTableResponse {
         this.criteriaList = criteriaList;
     }
 
-    public String getPerformanceTableId() { return performanceTableId; }
-    public void setPerformanceTableId(String performanceTableId) { this.performanceTableId = performanceTableId; }
+    public UUID getPerformanceTableId() { return performanceTableId; }
+    public void setPerformanceTableId(UUID performanceTableId) { this.performanceTableId = performanceTableId; }
 
-    public String getRoomId() { return roomId; }
-    public void setRoomId(String roomId) { this.roomId = roomId; }
+    public UUID getRoomId() { return roomId; }
+    public void setRoomId(UUID roomId) { this.roomId = roomId; }
 
     public String getTableName() { return tableName; }
     public void setTableName(String tableName) { this.tableName = tableName; }

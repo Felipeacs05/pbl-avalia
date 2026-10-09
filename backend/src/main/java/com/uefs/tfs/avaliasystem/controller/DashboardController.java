@@ -13,7 +13,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/users/me")
+@RequestMapping("/api/v1/users/me")
 public class DashboardController {
     private final RoomService roomService;
 

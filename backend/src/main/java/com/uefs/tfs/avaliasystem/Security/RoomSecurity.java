@@ -19,4 +19,9 @@ public class RoomSecurity {
         return roomRepository.existsByIdAndTutorId(roomId, userId);
     }
 
+    public boolean isRoomMemberOrOwner(UUID roomId, Authentication authentication) {
+        UUID userId = UUID.fromString(authentication.getName());
+        return roomRepository.existsByIdAndTutorOrActiveMember(roomId, userId);
+    }
+
 }

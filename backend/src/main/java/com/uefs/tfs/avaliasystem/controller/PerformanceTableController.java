@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/performance-tables")
@@ -25,32 +26,32 @@ public class PerformanceTableController {
             @RequestBody @Valid PerformanceTableRequest request,
             Principal principal
     ) {
-        return performanceTableService.createPerformanceTable(request, principal.getName());
+        return performanceTableService.createPerformanceTable(request, UUID.fromString(principal.getName()));
     }
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public PerformanceTableResponse getPerformanceTable(@PathVariable String id) {
+    public PerformanceTableResponse getPerformanceTable(@PathVariable UUID id) {
         return performanceTableService.getPerformanceTable(id);
     }
 
     @PostMapping("/{performanceTableId}/criteria")
     @ResponseStatus(HttpStatus.CREATED)
     public CriterionResponse addCriterion(
-            @PathVariable String performanceTableId,
+            @PathVariable UUID performanceTableId,
             @RequestBody @Valid CriterionRequest request,
             Principal principal
     ) {
-        return performanceTableService.addCriterion(performanceTableId, request, principal.getName());
+        return performanceTableService.addCriterion(performanceTableId, request, UUID.fromString(principal.getName()));
     }
 
     @DeleteMapping("/{performanceTableId}/criteria/{criterionId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCriterion(
-            @PathVariable String performanceTableId,
-            @PathVariable String criterionId,
+            @PathVariable UUID performanceTableId,
+            @PathVariable UUID criterionId,
             Principal principal
     ) {
-        performanceTableService.deleteCriterion(performanceTableId, criterionId, principal.getName());
+        performanceTableService.deleteCriterion(performanceTableId, criterionId, UUID.fromString(principal.getName()));
     }
 }

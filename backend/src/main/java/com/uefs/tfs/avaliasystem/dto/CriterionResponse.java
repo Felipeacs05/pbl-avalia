@@ -1,8 +1,10 @@
 package com.uefs.tfs.avaliasystem.dto;
 
+import java.util.UUID;
+
 public class CriterionResponse {
 
-    private String criterionId;
+    private UUID criterionId;
     private String criteriaName;
     private String criteriaDescription;
     private Double criteriaWeight;
@@ -10,7 +12,7 @@ public class CriterionResponse {
 
     public CriterionResponse() {}
 
-    public CriterionResponse(String criterionId, String criteriaName, String criteriaDescription, Double criteriaWeight, String status) {
+    public CriterionResponse(UUID criterionId, String criteriaName, String criteriaDescription, Double criteriaWeight, String status) {
         this.criterionId = criterionId;
         this.criteriaName = criteriaName;
         this.criteriaDescription = criteriaDescription;
@@ -18,8 +20,8 @@ public class CriterionResponse {
         this.status = status;
     }
 
-    public String getCriterionId() { return criterionId; }
-    public void setCriterionId(String criterionId) { this.criterionId = criterionId; }
+    public UUID getCriterionId() { return criterionId; }
+    public void setCriterionId(UUID criterionId) { this.criterionId = criterionId; }
 
     public String getCriteriaName() { return criteriaName; }
     public void setCriteriaName(String criteriaName) { this.criteriaName = criteriaName; }
