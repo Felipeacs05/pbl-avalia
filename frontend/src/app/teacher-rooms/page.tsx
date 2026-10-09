@@ -14,7 +14,7 @@ import type { Room } from "../../types/room"; // ← ADICIONAR IMPORT
 export default function Home() {
   const router = useRouter();
   const { rooms, isLoading, createRoom, updateRoom, deleteRoom } = useRooms();
-  const { copyLink, toast: copyToast } = useCopyLink();
+  const { copyLink, toast: copyToast, clearToast } = useCopyLink();
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false); // ← ADICIONAR
@@ -94,7 +94,7 @@ export default function Home() {
           <Toast
             message={activeToast.message}
             type={activeToast.type}
-            onClose={() => setLocalToast(null)}
+            onClose={() => { setLocalToast(null); clearToast(); }}
           />
         </div>
       )}

@@ -36,7 +36,7 @@ export function LoginAuth() {
           onChange={(e) => setEmail(e.target.value)}
           required
           placeholder="seu@email.com"
-          className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#757DC3]"
+          className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#757DC3] text-black placeholder-gray-500"
         />
       </div>
 
@@ -48,7 +48,7 @@ export function LoginAuth() {
           onChange={(e) => setPassword(e.target.value)}
           required
           placeholder="••••••••"
-          className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#757DC3]"
+          className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#757DC3] text-black placeholder-gray-500"
         />
       </div>
 

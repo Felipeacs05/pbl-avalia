@@ -34,7 +34,7 @@ export function CreateRoomModal({ onClose, onSubmit }: CreateRoomModalProps) {
   };
 
   return (
-    <div className="absolute inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+    <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
       
       <div className="bg-[#4354A0] w-full max-w-sm rounded-3xl p-6 text-white shadow-2xl relative">
         

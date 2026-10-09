@@ -10,7 +10,7 @@ interface RoomListProps {
     onEdit?: (room: Room) => void;
     onShare?: (room: Room) => void;
     onCopyLink?: (room: Room) => void;
-    onDelete?: (room: Room) => void; // Propagando o onDelete
+    onDelete?: (room: Room) => void; 
 }
 
 export function RoomList({ rooms, onEnter, onEdit, onShare, onCopyLink, onDelete }: RoomListProps) {
