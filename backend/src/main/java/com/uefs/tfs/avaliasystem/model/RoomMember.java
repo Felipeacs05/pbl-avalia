@@ -34,4 +34,8 @@ public class RoomMember {
 
     private Instant unlinkedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "team_id")
+    private Team team;
+
 }
