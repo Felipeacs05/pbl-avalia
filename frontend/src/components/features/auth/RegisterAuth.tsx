@@ -79,7 +79,7 @@ export function RegisterAuth() {
             />
             </div>
             <div>
-            <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">Confirmar</label>
+            <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">Confirme sua senha</label>
             <input
                 id="confirm-password"
                 type="password"
@@ -94,13 +94,16 @@ export function RegisterAuth() {
         </div>
 
         <div>
-            <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">Foto de Perfil</label>
+            {/* [OPCIONAL] Indicação sutil de que o campo não é obrigatório (Estética e design minimalista) */}
+            <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">
+                Foto de Perfil <span className="text-xs font-normal text-gray-400">(Opcional)</span>
+            </label>
+            {/* [OPCIONAL] Atributo nativo `required` removido: o navegador não bloqueia mais o envio com "Selecione um arquivo." */}
             <input
             id="image"
             type="file"
             accept="image/*"
             onChange={handleImageChange}
-            required
             disabled={loading}
             className="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-[#CDD3EE] file:text-[#182860] hover:file:bg-[#b5beeb] transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             />
