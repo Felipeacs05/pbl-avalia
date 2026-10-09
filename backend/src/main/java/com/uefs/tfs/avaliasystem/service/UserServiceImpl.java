@@ -44,27 +44,26 @@ public class UserServiceImpl implements UserService {
     @Override
     public User register(RegisterUserRequest request, MultipartFile photo) {
 
-        if (photo == null || photo.isEmpty()) {
-            throw new InvalidRegisterException("Foto ausente.");
-        }
+        String profilePictureUrl = null;
 
-        if (photo.getSize() > MAX_FILE_SIZE) {
-            throw new IllegalArgumentException("arquivos acima de 5MB devem ser rejeitados antes de qualquer persistência");
-        }
-
-        if (photo.getContentType() != null) {
-            String contentType = photo.getContentType().toLowerCase();
-            if (!contentType.equals("image/jpeg") && !contentType.equals("image/jpg") && !contentType.equals("image/png")) {
-                throw new IllegalArgumentException("arquivos que não sejam JPG, PNG ou JPEG devem ser rejeitados");
+        if (photo != null && !photo.isEmpty()) {
+            if (photo.getSize() > MAX_FILE_SIZE) {
+                throw new IllegalArgumentException("arquivos acima de 5MB devem ser rejeitados antes de qualquer persistência");
             }
+
+            if (photo.getContentType() != null) {
+                String contentType = photo.getContentType().toLowerCase();
+                if (!contentType.equals("image/jpeg") && !contentType.equals("image/jpg") && !contentType.equals("image/png")) {
+                    throw new IllegalArgumentException("arquivos que não sejam JPG, PNG ou JPEG devem ser rejeitados");
+                }
+            }
+            
+            // Simulação do salvamento da foto e geração de URL
+            // TODO: CONFIGURAR SALVAMENTO DA FOTO
+            profilePictureUrl = "url-da-foto/fotosPerfil/foto.png";
         }
 
         String encodedPassword = passwordEncoder.encode(request.getPassword());
-
-        // Simulação do salvamento da foto e geração de URL
-
-        // TODO: CONFIGURAR SALVAMENTO DA FOTO
-        String profilePictureUrl = "url-da-foto/fotosPerfil/foto.png";
 
         User user = new User(request.getName(), request.getEmail(), encodedPassword, profilePictureUrl);
         return userRepository.save(user);
