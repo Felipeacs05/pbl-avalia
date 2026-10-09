@@ -36,6 +36,15 @@ api.interceptors.response.use(
         window.location.href = '/';
       }
     }
+    
+// 429 (Too Many Requests): IP bloqueado por excesso de requisições.
+    if (error.response?.status === 429) {
+      error.response.data = {
+        ...(typeof error.response.data === 'object' ? error.response.data : {}),
+        message: 'Muitas tentativas em pouco tempo. Seu acesso foi temporariamente bloqueado. Aguarde alguns minutos e tente novamente.',
+      };
+    }
+
     return Promise.reject(error);
   }
-);
+); 
