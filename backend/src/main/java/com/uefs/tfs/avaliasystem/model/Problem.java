@@ -35,6 +35,9 @@ public class Problem {
     @Column(name = "self_assessment_released", nullable = false)
     private Boolean selfAssessmentReleased = false;
 
+    @Column(name = "peer_assessment_released", nullable = false)
+    private Boolean peerAssessmentReleased = false;
+
     @Column(name = "created_at", columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private Instant createdAt;
 
