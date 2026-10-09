@@ -3,11 +3,8 @@ import { Presentation, GraduationCap, User, Plus } from "lucide-react";
 import { PrimaryButton } from "../../ui/PrimaryButton";
 import Link from "next/link";
 
-// src/components/features/navigation/BottomTabBar.tsx
-
 interface BottomTabBarProps {
-  onCreateRoom: () => void;
-  
+  onCreateRoom?: () => void;
   activeTab?: "teacher" | "student";
 }
 
@@ -17,11 +14,13 @@ export function BottomTabBar({ onCreateRoom, activeTab = "teacher" }: BottomTabB
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 pt-3 pb-4 px-4 z-50">
       
-      <div className="mb-3">
-        <PrimaryButton icon={isStudent ? undefined : <Plus size={20} strokeWidth={3} />} onClick={onCreateRoom}>
-          {isStudent ? "Entrar em sala" : "Criar nova sala"}
-        </PrimaryButton>
-      </div>
+      {onCreateRoom && (
+        <div className="mb-3">
+          <PrimaryButton icon={isStudent ? undefined : <Plus size={20} strokeWidth={3} />} onClick={onCreateRoom}>
+            {isStudent ? "Entrar em sala" : "Criar nova sala"}
+          </PrimaryButton>
+        </div>
+      )}
 
       <div className="grid grid-cols-3 text-center">
         {isStudent ? (

@@ -19,7 +19,7 @@ export const registrationService = {
     formData.append('name', data.name);
     formData.append('email', data.email);
     formData.append('password', data.password);
-    // [OPCIONAL] A imagem só é anexada se o usuário tiver selecionado uma
+    // A imagem só é anexada se o usuário tiver selecionado uma
     if (data.image) {
         formData.append('image', data.image);
     }

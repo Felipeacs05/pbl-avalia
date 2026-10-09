@@ -109,6 +109,7 @@ beforeEach(() => {
   availableStudents = [makeOtherStudent()];
   enrolledStudents = [makeStudent(), makeOtherStudent()];
   vi.stubGlobal("fetch", vi.fn(fakeBackend));
+  vi.stubGlobal("confirm", vi.fn(() => true));
 });
 
 describe("[US06] Tutor groups panel integration", () => {

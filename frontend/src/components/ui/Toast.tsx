@@ -1,8 +1,5 @@
-// src/components/ui/Toast.tsx
 import React, { useEffect } from "react";
 import { AlertCircle, CheckCircle, X } from "lucide-react";
-
-// src/components/ui/Toast.tsx
 
 interface ToastProps {
   message: string;
@@ -11,7 +8,6 @@ interface ToastProps {
 }
 
 export function Toast({ message, type = "error", onClose }: ToastProps) {
-  // Fecha o popup automaticamente após 3 segundos
   useEffect(() => {
     const timer = setTimeout(onClose, 3000);
     return () => clearTimeout(timer);
@@ -20,7 +16,6 @@ export function Toast({ message, type = "error", onClose }: ToastProps) {
   const isError = type === "error";
 
   return (
-    // Animação feita com Tailwind: desliza de cima para baixo
     <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 animate-[bounce_0.3s_ease-in-out]">
       <div className="bg-white px-5 py-3 rounded-xl shadow-xl border border-gray-100 flex items-center gap-3 min-w-[300px]">
         {isError ? (
