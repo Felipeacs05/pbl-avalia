@@ -18,7 +18,7 @@ export default function DisciplinesPage() {
   const { disciplines, isLoading: isLoadingDisciplines } =
     useDisciplines(roomId);
 
-  const [activeTab, setActiveTab] = useState<"subject" | "people">("subject");
+  const [activeTab, setActiveTab] = useState<"subject" | "groups" | "people">("subject");
 
   const room = rooms.find((r) => r.id === roomId);
 
@@ -34,7 +34,7 @@ export default function DisciplinesPage() {
       <div className="bg-white border-b border-gray-100 px-5 py-3 sticky top-0 z-40 flex items-center justify-between w-full">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push("/teacher-rooms")}
             className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors active:scale-95"
             aria-label="Voltar"
           >
@@ -45,7 +45,7 @@ export default function DisciplinesPage() {
               ? "..."
               : room
               ? `${room.code} - ${room.semester ?? ""}`
-              : "Room"}
+              : "Sala"}
           </span>
         </div>
         <button
@@ -105,10 +105,16 @@ export default function DisciplinesPage() {
         )}
       </div>
 
-      {/* Bottom tab bar */}
       <DisciplineTabBar
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        roomId={roomId}
+        onTabChange={(tab) => {
+          if (tab === "groups") {
+            router.push(`/professor-salas/${roomId}/groups`);
+          } else {
+            setActiveTab(tab);
+          }
+        }}
         onNewProblem={() => {
           /* TODO: open create problem modal */
         }}

@@ -47,7 +47,7 @@ export function useRegistration() {
 
     if (!name || !email || !password || !confirmPassword) return showToast("Preencha todos os campos obrigatórios.");
     if (password !== confirmPassword) return showToast("As senhas não coincidem.");
-    if (!image) return showToast("A foto de perfil é obrigatória.");
+    // [OPCIONAL] Validação "A foto de perfil é obrigatória." removida: a imagem agora é opcional.
 
     setLoading(true);
     try {

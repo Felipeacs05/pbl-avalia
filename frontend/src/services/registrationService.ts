@@ -19,7 +19,10 @@ export const registrationService = {
     formData.append('name', data.name);
     formData.append('email', data.email);
     formData.append('password', data.password);
-    formData.append('image', data.image);
+    // A imagem só é anexada se o usuário tiver selecionado uma
+    if (data.image) {
+        formData.append('image', data.image);
+    }
 
     await api.post('/auth/register', formData, {
         headers: {
