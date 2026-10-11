@@ -30,4 +30,19 @@ public interface RoomRepository extends JpaRepository<Room, UUID> {
             "WHERE r.tutor.id = :userId " +
             "OR r.id IN (SELECT rm.room.id FROM RoomMember rm WHERE rm.user.id = :userId AND rm.active = true)")
     List<Room> findAllByTutorOrActiveMember(@Param("userId") UUID userId);
+
+    @Query("""
+            SELECT CASE WHEN COUNT(DISTINCT r) > 0 THEN true ELSE false END
+            FROM Room r
+            LEFT JOIN RoomMember rm ON rm.room = r
+            WHERE r.id = :roomId
+              AND (
+                  r.tutor.id = :userId
+                  OR (rm.user.id = :userId AND rm.active = true)
+              )
+            """)
+    boolean existsByIdAndTutorOrActiveMember(
+            @Param("roomId") UUID roomId,
+            @Param("userId") UUID userId
+    );
 }

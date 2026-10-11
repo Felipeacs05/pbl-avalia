@@ -3,6 +3,7 @@ package com.uefs.tfs.avaliasystem.controller;
 import com.uefs.tfs.avaliasystem.dto.JoinRoomRequest;
 import com.uefs.tfs.avaliasystem.dto.RoomRequest;
 import com.uefs.tfs.avaliasystem.dto.RoomResponse;
+import com.uefs.tfs.avaliasystem.dto.RoomMemberResponse;
 import com.uefs.tfs.avaliasystem.service.RoomService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -46,6 +47,13 @@ public class RoomController {
     @ResponseStatus(HttpStatus.OK)
     public List<RoomResponse> listRooms(Principal principal) {
         return roomService.listRooms(userId(principal));
+    }
+
+    @GetMapping("/{roomId}/members")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("@roomSecurity.isRoomMemberOrOwner(#roomId, authentication)")
+    public List<RoomMemberResponse> listRoomMembers(@PathVariable UUID roomId) {
+        return roomService.listRoomMembers(roomId);
     }
 
     @PostMapping("/join")

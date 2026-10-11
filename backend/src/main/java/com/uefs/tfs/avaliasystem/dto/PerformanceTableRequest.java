@@ -7,11 +7,12 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.util.List;
+import java.util.UUID;
 
 public class PerformanceTableRequest {
 
     @NotNull(message = "O ID da sala é obrigatório")
-    private String roomId;
+    private UUID roomId;
 
     @NotBlank(message = "O nome da tabela de desempenho é obrigatório")
     @Size(min = 3, max = 255, message = "O nome da tabela deve ter entre 3 e 255 caracteres")
@@ -23,14 +24,14 @@ public class PerformanceTableRequest {
 
     public PerformanceTableRequest() {}
 
-    public PerformanceTableRequest(String roomId, String tableName, List<CriterionRequest> criteriaList) {
+    public PerformanceTableRequest(UUID roomId, String tableName, List<CriterionRequest> criteriaList) {
         this.roomId = roomId;
         this.tableName = tableName;
         this.criteriaList = criteriaList;
     }
 
-    public String getRoomId() { return roomId; }
-    public void setRoomId(String roomId) { this.roomId = roomId; }
+    public UUID getRoomId() { return roomId; }
+    public void setRoomId(UUID roomId) { this.roomId = roomId; }
 
     public String getTableName() { return tableName; }
     public void setTableName(String tableName) { this.tableName = tableName; }

@@ -11,6 +11,7 @@ public class RoomResponse {
     public RoomResponse() {
     }
 
+
     public RoomResponse(String code, String joinLink) {
         this.code = code;
         this.joinLink = joinLink;
