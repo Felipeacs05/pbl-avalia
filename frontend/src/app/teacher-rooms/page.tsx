@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useRooms } from "../../hooks/useRooms";
 import { useCopyLink } from "../../hooks/useCopyLink";
 import { RoomList } from "../../components/features/rooms/RoomList";
@@ -11,6 +12,7 @@ import { Toast } from "../../components/ui/Toast";
 import type { Room } from "../../types/room"; // ← ADICIONAR IMPORT
 
 export default function Home() {
+  const router = useRouter();
   const { rooms, isLoading, createRoom, updateRoom, deleteRoom } = useRooms();
   const { copyLink, toast: copyToast } = useCopyLink();
 
@@ -24,7 +26,9 @@ export default function Home() {
 
   const activeToast = copyToast || localToast;
 
-  const handleEnter = (name: string) => alert(`Entrando na sala: ${name}`);
+  const handleEnter = (room: Room) => {
+    router.push(`/professor-salas/${room.id}/disciplinas`);
+  };
 
   const handleShare = async (code: string) => {
     await copyLink(`app/join/${code}`);
@@ -107,7 +111,7 @@ export default function Home() {
         ) : (
           <RoomList
             rooms={rooms}
-            onEnter={(room) => handleEnter(room.name)}
+            onEnter={handleEnter}
             onEdit={handleEdit} // ← MUDAR (era handleEdit(room.name), agora passa room)
             onShare={(room) => handleShare(room.code)}
             onDelete={handleDelete} // ← ADICIONAR
