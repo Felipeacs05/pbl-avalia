@@ -92,11 +92,11 @@ class SelfAssessmentIntegrationTest {
 
     @Nested
     @DisplayName("[US13] Cenários Válidos de Integração")
-    class Validos {
+    class ValidsScenarios {
 
         @Test
         @DisplayName("[US13] submitSelfAssessment_PeriodoLiberado_GravaNoBancoH2")
-        void submitSelfAssessment_PeriodoLiberado_GravaNoBancoH2() throws Exception {
+        void submitSelfAssessment_OpenPeriod_SavesToH2Database() throws Exception {
             User tutor = persistUser("Tutor US13", "tutor.us13." + UUID.randomUUID() + "@uefs.br");
             User aluno = persistUser("Aluno US13", "aluno.us13." + UUID.randomUUID() + "@uefs.br");
             Room room = persistRoom(tutor);
@@ -128,11 +128,11 @@ class SelfAssessmentIntegrationTest {
 
     @Nested
     @DisplayName("[US13] Cenários Inválidos de Integração")
-    class Invalidos {
+    class InvalidsScenarios {
 
         @Test
         @DisplayName("[US13] submitSelfAssessment_PeriodoFechado_Retorna403ENaoGravaNoBanco")
-        void submitSelfAssessment_PeriodoFechado_Retorna403ENaoGravaNoBanco() throws Exception {
+        void submitSelfAssessment_ClosedPeriod_Returns403AndDoesNotSaveToDatabase() throws Exception {
             User tutor = persistUser("Tutor US13", "tutor.us13b." + UUID.randomUUID() + "@uefs.br");
             User aluno = persistUser("Aluno US13", "aluno.us13b." + UUID.randomUUID() + "@uefs.br");
             Room room = persistRoom(tutor);

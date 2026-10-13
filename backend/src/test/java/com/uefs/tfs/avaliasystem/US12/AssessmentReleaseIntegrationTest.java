@@ -83,11 +83,11 @@ class AssessmentReleaseIntegrationTest {
 
     @Nested
     @DisplayName("[US12] Cenários Válidos de Integração")
-    class Validos {
+    class ValidsScenarios {
 
         @Test
         @DisplayName("[US12] alternarSelfAssessment_TutorAutenticado_AtualizaBancoH2")
-        void alternarSelfAssessment_TutorAutenticado_AtualizaBancoH2() throws Exception {
+        void toggleSelfAssessment_AuthenticatedTutor_UpdatesH2Database() throws Exception {
             User tutor = persistUser("Tutor Responsavel", "tutor." + UUID.randomUUID() + "@uefs.br");
             Room room = persistRoom(tutor);
             Problem problem = persistProblem(room, false, false);
@@ -108,7 +108,7 @@ class AssessmentReleaseIntegrationTest {
 
         @Test
         @DisplayName("[US12] alternarPeerAssessment_TutorAutenticado_AtualizaBancoH2")
-        void alternarPeerAssessment_TutorAutenticado_AtualizaBancoH2() throws Exception {
+        void togglePeerAssessment_AuthenticatedTutor_UpdatesH2Database() throws Exception {
             User tutor = persistUser("Tutor Responsavel", "tutor2." + UUID.randomUUID() + "@uefs.br");
             Room room = persistRoom(tutor);
             Problem problem = persistProblem(room, false, false);
@@ -130,11 +130,11 @@ class AssessmentReleaseIntegrationTest {
 
     @Nested
     @DisplayName("[US12] Cenários Inválidos de Integração")
-    class Invalidos {
+    class InvalidsScenarios {
 
         @Test
         @DisplayName("[US12] alternarSelfAssessment_UsuarioNaoTutor_Retorna403ENaoAlteraBanco")
-        void alternarSelfAssessment_UsuarioNaoTutor_Retorna403ENaoAlteraBanco() throws Exception {
+        void toggleSelfAssessment_NonTutorUser_Returns403AndDoesNotUpdateDatabase() throws Exception {
             User tutor = persistUser("Tutor Original", "tutor3." + UUID.randomUUID() + "@uefs.br");
             User intruso = persistUser("Aluno Intruso", "aluno." + UUID.randomUUID() + "@uefs.br");
             Room room = persistRoom(tutor);

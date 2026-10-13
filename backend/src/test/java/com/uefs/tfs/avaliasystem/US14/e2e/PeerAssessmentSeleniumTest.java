@@ -38,7 +38,7 @@ class PeerAssessmentSeleniumTest {
 
     @Test
     @DisplayName("[US14] listaDePares_RenderizaApenasColegasDoGrupo")
-    void listaDePares_RenderizaApenasColegasDoGrupo() {
+    void peerList_RendersOnlyGroupPeers() {
         UUID problemId = UUID.randomUUID();
         page.navigateTo(BASE_URL, problemId);
 

@@ -137,7 +137,7 @@ class PeerAssessmentE2ETest {
 
     @Test
     @DisplayName("[US14] e2e_JornadaCompleta_TutorLibera_AlunoAvaliaColega_EBloqueiaOutroGrupo")
-    void e2e_JornadaCompleta_TutorLibera_AlunoAvaliaColega_EBloqueiaOutroGrupo() {
+    void e2e_FullJourney_TutorOpens_StudentAssessesPeer_AndBlocksOtherGroup() {
         // 1. Aluno A tenta avaliar antes da liberacao do tutor -> 403 Forbidden
         List<AssessmentRequest> payloadAlunoB = List.of(new AssessmentRequest(alunoB.getId(), 9.0, "Parceiro"));
         HttpEntity<List<AssessmentRequest>> requestFechado = new HttpEntity<>(payloadAlunoB, authHeaders(alunoA.getId()));

@@ -47,11 +47,11 @@ class SelfAssessmentControllerTest {
 
     @Nested
     @DisplayName("[US13] Cenários Válidos")
-    class Validos {
+    class ValidsScenarios {
 
         @Test
         @DisplayName("[US13] submitSelfAssessment_DadosValidos_Retorna201")
-        void submitSelfAssessment_DadosValidos_Retorna201() throws Exception {
+        void submitSelfAssessment_ValidData_Returns201() throws Exception {
             UUID problemId = UUID.randomUUID();
             UUID studentId = UUID.randomUUID();
             AssessmentRequest request = new AssessmentRequest(null, 8.5, "Participei ativamente de todas as sessoes");
@@ -67,7 +67,7 @@ class SelfAssessmentControllerTest {
 
         @Test
         @DisplayName("[US13] submitSelfAssessment_LimitesExatos0e10_Retorna201")
-        void submitSelfAssessment_LimitesExatos0e10_Retorna201() throws Exception {
+        void submitSelfAssessment_ExactLimits0And10_Returns201() throws Exception {
             UUID problemId = UUID.randomUUID();
             UUID studentId = UUID.randomUUID();
             AssessmentRequest requestZero = new AssessmentRequest(null, 0.0, "Nota zero dentro do limite");
@@ -89,11 +89,11 @@ class SelfAssessmentControllerTest {
 
     @Nested
     @DisplayName("[US13] Cenários Inválidos (Bean Validation & Segurança)")
-    class Invalidos {
+    class InvalidsScenarios {
 
         @Test
         @DisplayName("[US13] submitSelfAssessment_NotaMaiorQueDez_Retorna400ENuncaChamaService")
-        void submitSelfAssessment_NotaMaiorQueDez_Retorna400ENuncaChamaService() throws Exception {
+        void submitSelfAssessment_ScoreGreaterThanTen_Returns400AndNeverCallsService() throws Exception {
             UUID problemId = UUID.randomUUID();
             UUID studentId = UUID.randomUUID();
             AssessmentRequest request = new AssessmentRequest(null, 15.0, "Nota invalida");
@@ -109,7 +109,7 @@ class SelfAssessmentControllerTest {
 
         @Test
         @DisplayName("[US13] submitSelfAssessment_NotaNegativa_Retorna400ENuncaChamaService")
-        void submitSelfAssessment_NotaNegativa_Retorna400ENuncaChamaService() throws Exception {
+        void submitSelfAssessment_NegativeScore_Returns400AndNeverCallsService() throws Exception {
             UUID problemId = UUID.randomUUID();
             UUID studentId = UUID.randomUUID();
             AssessmentRequest request = new AssessmentRequest(null, -1.0, "Nota negativa");
@@ -125,7 +125,7 @@ class SelfAssessmentControllerTest {
 
         @Test
         @DisplayName("[US13] submitSelfAssessment_ComentarioEmBranco_Retorna400")
-        void submitSelfAssessment_ComentarioEmBranco_Retorna400() throws Exception {
+        void submitSelfAssessment_BlankComment_Returns400() throws Exception {
             UUID problemId = UUID.randomUUID();
             UUID studentId = UUID.randomUUID();
             AssessmentRequest request = new AssessmentRequest(null, 8.0, "   ");
@@ -141,7 +141,7 @@ class SelfAssessmentControllerTest {
 
         @Test
         @DisplayName("[US13] submitSelfAssessment_PeriodoFechado_Retorna403")
-        void submitSelfAssessment_PeriodoFechado_Retorna403() throws Exception {
+        void submitSelfAssessment_ClosedPeriod_Returns403() throws Exception {
             UUID problemId = UUID.randomUUID();
             UUID studentId = UUID.randomUUID();
             AssessmentRequest request = new AssessmentRequest(null, 9.0, "Periodo fechado");

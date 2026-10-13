@@ -25,11 +25,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Cobertura de Critérios de Aceite da US12 na camada Controller:
- * - Liberação de Autoavaliação e Avaliação entre Pares
- * - Autenticação JWT obrigatória (401 se ausente)
- * - Delegação correta para AssessmentReleaseService
- * - Mapeamento de AccessDeniedException -> 403 Forbidden
+ * Teste de Controller da US12 usando @WebMvcTest.
+ * Cobertura de critérios:
+ * - Rotas PATCH para alternância dos toggles de autoavaliação e de pares
+ * - Retorno 401 quando a requisição não possui token JWT
+ * - Retorno 200 quando o tutor aciona o toggle com token válido
+ * - Mapeamento de AccessDeniedException para HTTP 403 Forbidden sem vazar stack trace
  */
 @WebMvcTest(AssessmentReleaseController.class)
 @Import(SecurityConfig.class)
@@ -44,27 +45,30 @@ class AssessmentReleaseControllerTest {
 
     @Nested
     @DisplayName("[US12] Cenários Válidos")
-    class Validos {
+    class ValidScenarios {
 
         @Test
-        @DisplayName("[US12] toggleSelfAssessment_ComTokenTutor_Retorna200")
-        void toggleSelfAssessment_ComTokenTutor_Retorna200() throws Exception {
+        @DisplayName("[US12] toggle de autoavaliação - tutor autenticado - deve retornar 200 OK")
+        void patchSelfAssessmentRelease_WhenTutorAuthenticated_ShouldReturn200() throws Exception {
             UUID problemId = UUID.randomUUID();
             UUID tutorId = UUID.randomUUID();
+            // Serviço mockado retorna sucesso para o tutor correto
             when(service.toggleSelfAssessment(eq(problemId), eq(tutorId))).thenReturn(new Problem());
 
             mockMvc.perform(patch("/api/v1/problems/{problemId}/self-assessment-release", problemId)
                             .with(jwt().jwt(j -> j.subject(tutorId.toString()))))
                     .andExpect(status().isOk());
 
+            // Verifica que o serviço foi chamado exatamente uma vez com os IDs corretos
             verify(service, times(1)).toggleSelfAssessment(eq(problemId), eq(tutorId));
         }
 
         @Test
-        @DisplayName("[US12] togglePeerAssessment_ComTokenTutor_Retorna200")
-        void togglePeerAssessment_ComTokenTutor_Retorna200() throws Exception {
+        @DisplayName("[US12] toggle de pares - tutor autenticado - deve retornar 200 OK")
+        void patchPeerAssessmentRelease_WhenTutorAuthenticated_ShouldReturn200() throws Exception {
             UUID problemId = UUID.randomUUID();
             UUID tutorId = UUID.randomUUID();
+            // Serviço mockado retorna sucesso para o tutor correto
             when(service.togglePeerAssessment(eq(problemId), eq(tutorId))).thenReturn(new Problem());
 
             mockMvc.perform(patch("/api/v1/problems/{problemId}/peer-assessment-release", problemId)
@@ -77,26 +81,28 @@ class AssessmentReleaseControllerTest {
 
     @Nested
     @DisplayName("[US12] Cenários Inválidos")
-    class Invalidos {
+    class InvalidScenarios {
 
         @Test
-        @DisplayName("[US12] toggleSelfAssessment_SemToken_Retorna401")
-        void toggleSelfAssessment_SemToken_Retorna401() throws Exception {
+        @DisplayName("[US12] toggle de autoavaliação - sem token JWT - deve retornar 401 Unauthorized")
+        void patchSelfAssessmentRelease_WhenNoToken_ShouldReturn401() throws Exception {
             UUID problemId = UUID.randomUUID();
-
+            // Requisição sem cabeçalho Authorization deve ser bloqueada pela cadeia de filtros de segurança
             mockMvc.perform(patch("/api/v1/problems/{problemId}/self-assessment-release", problemId))
                     .andExpect(status().isUnauthorized());
 
+            // Serviço jamais deve ser alcançado sem autenticação válida
             verify(service, never()).toggleSelfAssessment(any(), any());
         }
 
         @Test
-        @DisplayName("[US12] toggleSelfAssessment_NaoTutor_Retorna403")
-        void toggleSelfAssessment_NaoTutor_Retorna403() throws Exception {
+        @DisplayName("[US12] toggle de autoavaliação - usuário não é tutor da sala - deve retornar 403 Forbidden")
+        void patchSelfAssessmentRelease_WhenNotTutor_ShouldReturn403() throws Exception {
             UUID problemId = UUID.randomUUID();
             UUID alunoId = UUID.randomUUID();
 
-            doThrow(new AccessDeniedException("Only the tutor can toggle self-assessment"))
+            // Simula que o serviço rejeita o usuário por não ser tutor da sala
+            doThrow(new AccessDeniedException("Somente o tutor pode alternar o toggle de autoavaliação"))
                     .when(service).toggleSelfAssessment(eq(problemId), eq(alunoId));
 
             mockMvc.perform(patch("/api/v1/problems/{problemId}/self-assessment-release", problemId)

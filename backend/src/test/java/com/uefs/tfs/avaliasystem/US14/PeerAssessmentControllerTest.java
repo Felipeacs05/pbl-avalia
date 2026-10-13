@@ -48,11 +48,11 @@ class PeerAssessmentControllerTest {
 
     @Nested
     @DisplayName("[US14] Cenários Válidos")
-    class Validos {
+    class ValidsScenarios {
 
         @Test
         @DisplayName("[US14] submitPeerAssessments_LoteValido_Retorna201")
-        void submitPeerAssessments_LoteValido_Retorna201() throws Exception {
+        void submitPeerAssessments_ValidBatch_Returns201() throws Exception {
             UUID problemId = UUID.randomUUID();
             UUID studentId = UUID.randomUUID();
             UUID peerId1 = UUID.randomUUID();
@@ -75,11 +75,11 @@ class PeerAssessmentControllerTest {
 
     @Nested
     @DisplayName("[US14] Cenários Inválidos")
-    class Invalidos {
+    class InvalidsScenarios {
 
         @Test
         @DisplayName("[US14] submitPeerAssessments_ColegaComNotaInvalida_Retorna400ENuncaChamaService")
-        void submitPeerAssessments_ColegaComNotaInvalida_Retorna400ENuncaChamaService() throws Exception {
+        void submitPeerAssessments_PeerWithInvalidScore_Returns400AndNeverCallsService() throws Exception {
             UUID problemId = UUID.randomUUID();
             UUID studentId = UUID.randomUUID();
             UUID peerId = UUID.randomUUID();
@@ -99,7 +99,7 @@ class PeerAssessmentControllerTest {
 
         @Test
         @DisplayName("[US14] submitPeerAssessments_AlvoDeOutroGrupo_Retorna403")
-        void submitPeerAssessments_AlvoDeOutroGrupo_Retorna403() throws Exception {
+        void submitPeerAssessments_TargetFromAnotherGroup_Returns403() throws Exception {
             UUID problemId = UUID.randomUUID();
             UUID studentId = UUID.randomUUID();
             UUID peerId = UUID.randomUUID();
@@ -120,7 +120,7 @@ class PeerAssessmentControllerTest {
 
         @Test
         @DisplayName("[US14] submitPeerAssessments_PeriodoFechado_Retorna403")
-        void submitPeerAssessments_PeriodoFechado_Retorna403() throws Exception {
+        void submitPeerAssessments_ClosedPeriod_Returns403() throws Exception {
             UUID problemId = UUID.randomUUID();
             UUID studentId = UUID.randomUUID();
             UUID peerId = UUID.randomUUID();

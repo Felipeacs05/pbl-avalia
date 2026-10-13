@@ -44,7 +44,7 @@ class AssessmentReleaseSeleniumTest {
 
     @Test
     @DisplayName("[US12] alternarToggle_TutorClica_AtualizaTextoVisualAbertas")
-    void alternarToggle_TutorClica_AtualizaTextoVisualAbertas() {
+    void void clickToggle_TutorClicks_UpdatesVisualTextToOpen() {
         UUID problemId = UUID.randomUUID();
         page.navigateTo(BASE_URL, problemId);
 

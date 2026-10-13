@@ -110,11 +110,11 @@ class PeerAssessmentIntegrationTest {
 
     @Nested
     @DisplayName("[US14] Cenários Válidos de Integração")
-    class Validos {
+    class ValidsScenarios {
 
         @Test
         @DisplayName("[US14] submitPeerAssessments_MesmoGrupo_GravaAvaliacoesNoH2")
-        void submitPeerAssessments_MesmoGrupo_GravaAvaliacoesNoH2() throws Exception {
+        void submitPeerAssessments_SameGroup_SavesAssessmentsToH2Database() throws Exception {
             User tutor = persistUser("Tutor US14", "tutor.us14." + UUID.randomUUID() + "@uefs.br");
             Room room = persistRoom(tutor);
             Team team = persistTeam("Grupo Alfa", room);
@@ -153,11 +153,11 @@ class PeerAssessmentIntegrationTest {
 
     @Nested
     @DisplayName("[US14] Cenários Inválidos de Integração (Isolamento)")
-    class Invalidos {
+    class InvalidsScenarios {
 
         @Test
         @DisplayName("[US14] submitPeerAssessments_GruposDiferentes_Retorna403ENaoGravaNoBanco")
-        void submitPeerAssessments_GruposDiferentes_Retorna403ENaoGravaNoBanco() throws Exception {
+        void submitPeerAssessments_DifferentGroups_Returns403AndDoesNotSaveToDatabase() throws Exception {
             User tutor = persistUser("Tutor US14", "tutor.us14b." + UUID.randomUUID() + "@uefs.br");
             Room room = persistRoom(tutor);
             Team teamAlfa = persistTeam("Grupo Alfa", room);

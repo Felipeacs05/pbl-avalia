@@ -38,7 +38,7 @@ class SelfAssessmentSeleniumTest {
 
     @Test
     @DisplayName("[US13] preencherAutoavaliacao_FormularioVisivel_PreencheESubmete")
-    void preencherAutoavaliacao_FormularioVisivel_PreencheESubmete() {
+    void fillSelfAssessment_VisibleForm_FillsAndSubmits() {
         UUID problemId = UUID.randomUUID();
         page.navigateTo(BASE_URL, problemId);
 
