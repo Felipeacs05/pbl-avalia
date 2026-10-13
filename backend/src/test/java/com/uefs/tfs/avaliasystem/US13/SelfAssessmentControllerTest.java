@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uefs.tfs.avaliasystem.TestConfig;
 import com.uefs.tfs.avaliasystem.controller.SelfAssessmentController;
 import com.uefs.tfs.avaliasystem.dto.AssessmentRequest;
-import com.uefs.tfs.avaliasystem.security.SecurityConfig;
+import com.uefs.tfs.avaliasystem.config.SecurityConfig;
 import com.uefs.tfs.avaliasystem.service.SelfAssessmentService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

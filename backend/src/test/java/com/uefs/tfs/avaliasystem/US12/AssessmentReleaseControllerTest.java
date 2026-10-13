@@ -3,7 +3,7 @@ package com.uefs.tfs.avaliasystem.US12;
 import com.uefs.tfs.avaliasystem.TestConfig;
 import com.uefs.tfs.avaliasystem.controller.AssessmentReleaseController;
 import com.uefs.tfs.avaliasystem.model.Problem;
-import com.uefs.tfs.avaliasystem.security.SecurityConfig;
+import com.uefs.tfs.avaliasystem.config.SecurityConfig;
 import com.uefs.tfs.avaliasystem.service.AssessmentReleaseService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
