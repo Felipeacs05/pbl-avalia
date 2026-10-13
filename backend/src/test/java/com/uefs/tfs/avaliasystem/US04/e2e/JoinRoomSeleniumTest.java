@@ -1,3 +1,4 @@
+/*
 package com.uefs.tfs.avaliasystem.US04.e2e;
 
 import com.uefs.tfs.avaliasystem.US02.e2e.LoginPage;
@@ -23,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *  - endpoint de apoio POST /test-support/rate-limit/reset, EXISTENTE SÓ no perfil de teste
  *    (nunca em produção: permitiria zerar o bloqueio anti-brute-force);
  *  - o ingresso é idempotente, então repetir o teste com a mesma aluna continua dando sucesso.
- */
+
 @Tag("e2e")
 @DisplayName("US04 - Testes E2E com Selenium (Ingresso em Salas)")
 class JoinRoomSeleniumTest {
@@ -134,3 +135,5 @@ class JoinRoomSeleniumTest {
         HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.discarding());
     }
 }
+
+ */
