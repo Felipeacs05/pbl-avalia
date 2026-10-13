@@ -1,4 +1,4 @@
-import { LoginAuth } from "@/components/features/auth/LoginAuth";
+import { LoginAuth } from "@/components/features/Auth/LoginAuth";
 
 // src/app/page.tsx (AQUI É O LOGIN)
 

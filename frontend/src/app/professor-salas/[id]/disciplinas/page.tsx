@@ -89,8 +89,11 @@ export default function DisciplinesPage() {
                 <ProblemCard
                   key={problem.id}
                   problem={problem}
+                  onClick={() => {
+                    router.push(`/professor-salas/${roomId}/problems/${problem.id}`);
+                  }}
                   onViewStats={() => {
-                    /* TODO: navigate to statistics */
+                    router.push(`/professor-salas/${roomId}/problems/${problem.id}`);
                   }}
                   onEdit={() => {
                     /* TODO: open edit modal */

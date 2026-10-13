@@ -1,5 +1,5 @@
 import React from "react";
-import { RegisterAuth } from "@/components/features/auth/RegisterAuth"; 
+import { RegisterAuth } from "@/components/features/Auth/RegisterAuth"; 
 
 // src/app/register/page.tsx
 
