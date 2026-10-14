@@ -17,12 +17,17 @@ export default function SessionAttendancePage() {
     router.push(`/professor-salas/${roomId}/problems/${problemId}`);
   };
 
+  const handleEndSession = () => {
+    router.push(`/professor-salas/${roomId}/problems/${problemId}/sessions/${sessionId}/evaluate`);
+  };
+
   return (
     <AttendanceSessionView
       roomId={roomId}
       problemId={problemId}
       sessionId={sessionId}
       onBack={handleBack}
+      onEndSession={handleEndSession}
     />
   );
 }

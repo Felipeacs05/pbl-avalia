@@ -90,4 +90,16 @@ export const attendanceService = {
       clearTimeout(timer);
     }
   },
+
+  updateRole(sessionId: string, studentId: string, role: string | undefined): void {
+    if (!IS_TEST) {
+      sessionMock.updateStudentRole(sessionId, studentId, role);
+    }
+  },
+
+  updateTags(sessionId: string, studentId: string, tags: string[]): void {
+    if (!IS_TEST) {
+      sessionMock.updateStudentTags(sessionId, studentId, tags);
+    }
+  },
 };

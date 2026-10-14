@@ -102,6 +102,7 @@ export function useAttendance(sessionId: string, initialStudents: SessionStudent
   );
 
   const assignRole = useCallback((studentId: string, newRole: string | undefined) => {
+    attendanceService.updateRole(sessionId, studentId, newRole);
     setStudents((current) =>
       current.map((student) => {
         // Regra de unicidade PBL: apenas UM Coordenador, UM Quadro e UMA Mesa por sessão.
@@ -111,6 +112,7 @@ export function useAttendance(sessionId: string, initialStudents: SessionStudent
           student.id !== studentId &&
           student.role?.trim().toLowerCase() === newRole.trim().toLowerCase()
         ) {
+          attendanceService.updateRole(sessionId, student.id, undefined);
           return { ...student, role: undefined };
         }
         if (student.id === studentId) {
@@ -119,15 +121,16 @@ export function useAttendance(sessionId: string, initialStudents: SessionStudent
         return student;
       }),
     );
-  }, []);
+  }, [sessionId]);
 
   const updateTags = useCallback((studentId: string, newTags: string[]) => {
+    attendanceService.updateTags(sessionId, studentId, newTags);
     setStudents((current) =>
       current.map((student) =>
         student.id === studentId ? { ...student, tags: newTags } : student,
       ),
     );
-  }, []);
+  }, [sessionId]);
 
   return { students, error, changeStatus, assignRole, updateTags };
 }

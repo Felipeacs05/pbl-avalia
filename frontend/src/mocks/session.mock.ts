@@ -67,15 +67,43 @@ function wait<T>(value: () => T): Promise<T> {
 export const sessionMock = {
   fetchRoster(sessionId: string): Promise<SessionRoster> {
     return wait(() => {
-      const students = buildMockStudents().map((student) => {
-        const saved = attendanceByKey.get(keyOf(sessionId, student.id));
-        return saved
-          ? { ...student, status: saved.status, recordedAt: saved.recordedAt }
-          : student;
+      const students = buildMockStudents().map((defaultStudent) => {
+        const key = keyOf(sessionId, defaultStudent.id);
+        const existingStudent = studentsByKey.get(key);
+        const saved = attendanceByKey.get(key);
+
+        const currentRole = existingStudent?.role !== undefined ? existingStudent.role : defaultStudent.role;
+        const currentTags = existingStudent?.tags ?? defaultStudent.tags;
+
+        const merged: SessionStudent = {
+          ...defaultStudent,
+          role: currentRole,
+          tags: currentTags,
+          status: saved ? saved.status : defaultStudent.status,
+          recordedAt: saved ? saved.recordedAt : defaultStudent.recordedAt,
+        };
+
+        studentsByKey.set(key, merged);
+        return merged;
       });
-      students.forEach((student) => studentsByKey.set(keyOf(sessionId, student.id), student));
       return { id: sessionId, date: new Date().toISOString(), students };
     });
+  },
+
+  updateStudentRole(sessionId: string, studentId: string, role: string | undefined): void {
+    const key = keyOf(sessionId, studentId);
+    const student = studentsByKey.get(key);
+    if (student) {
+      student.role = role;
+    }
+  },
+
+  updateStudentTags(sessionId: string, studentId: string, tags: string[]): void {
+    const key = keyOf(sessionId, studentId);
+    const student = studentsByKey.get(key);
+    if (student) {
+      student.tags = tags;
+    }
   },
 
   registerAttendance(

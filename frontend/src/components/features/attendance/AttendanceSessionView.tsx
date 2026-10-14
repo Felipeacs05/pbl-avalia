@@ -13,12 +13,14 @@ interface AttendanceSessionViewProps {
   problemId?: string;
   sessionId: string;
   onBack: () => void;
+  onEndSession?: () => void;
 }
 
 export function AttendanceSessionView({
   roomId,
   sessionId,
   onBack,
+  onEndSession,
 }: AttendanceSessionViewProps) {
   const { rooms } = useRooms();
   const { roster, dateLabel, isLoading, error } = useSessionRoster(sessionId);
@@ -83,6 +85,7 @@ export function AttendanceSessionView({
         <div className="w-full pt-4 pb-6 mt-auto">
           <button
             type="button"
+            onClick={onEndSession}
             className="w-full bg-[#757DC3] hover:bg-[#6870B5] active:scale-[0.99] text-white py-3.5 px-6 rounded-2xl font-semibold text-base shadow-sm transition-all text-center cursor-pointer"
           >
             Encerrar Sessão
