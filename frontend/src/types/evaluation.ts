@@ -34,3 +34,15 @@ export interface SelfEvaluationSubmission {
   justification: string; // opcional: vai vazio ("") se o aluno não escrever nada
   peers: PeerEvaluation[]; // uma entrada por colega do grupo 
 }
+
+export type PeerEvaluationScores = SelfEvaluationScores;
+
+export interface PeerEvaluationItem {
+  studentId: string;            
+  scores: PeerEvaluationScores; 
+  comment: string;              
+}
+
+export interface PeerEvaluationSubmission {
+  evaluations: PeerEvaluationItem[];
+}
