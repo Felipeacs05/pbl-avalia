@@ -4,6 +4,7 @@ import com.uefs.tfs.avaliasystem.dto.DashboardResponse;
 import com.uefs.tfs.avaliasystem.dto.RoomDto;
 import com.uefs.tfs.avaliasystem.dto.RoomRequest;
 import com.uefs.tfs.avaliasystem.dto.RoomResponse;
+import com.uefs.tfs.avaliasystem.dto.RoomMemberResponse;
 import com.uefs.tfs.avaliasystem.exception.InvalidAccessCodeException;
 import com.uefs.tfs.avaliasystem.exception.TooManyAttemptsException;
 import com.uefs.tfs.avaliasystem.exception.UserNotFoundException;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -94,6 +96,31 @@ public class RoomService {
         return roomRepository.findAllByTutorOrActiveMember(userId).stream()
                 .map(room -> new RoomResponse(room.getId(), room.getName(), room.getAccessCode(), room.getInviteLink()))
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<RoomMemberResponse> listRoomMembers(UUID roomId) {
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("Sala não encontrada"));
+
+        List<RoomMemberResponse> members = new ArrayList<>();
+        User tutor = room.getTutor();
+        members.add(new RoomMemberResponse(
+                tutor.getId(),
+                tutor.getName(),
+                Role.TUTOR
+        ));
+
+        roomMemberRepository.findAllByRoomIdAndActiveTrueOrderByUserNameAsc(roomId).stream()
+                .filter(member -> !member.getUser().getId().equals(tutor.getId()))
+                .map(member -> new RoomMemberResponse(
+                        member.getUser().getId(),
+                        member.getUser().getName(),
+                        member.getRole()
+                ))
+                .forEach(members::add);
+
+        return members;
     }
 
     @Transactional(readOnly = true)

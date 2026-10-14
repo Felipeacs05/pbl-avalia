@@ -31,11 +31,11 @@ public class PerformanceTableService {
     private RoomRepository roomRepository;
 
     @Transactional
-    public PerformanceTableResponse createPerformanceTable(PerformanceTableRequest request, String tutorId) {
-        Room room = roomRepository.findById(UUID.fromString(request.getRoomId()))
+    public PerformanceTableResponse createPerformanceTable(PerformanceTableRequest request, UUID tutorId) {
+        Room room = roomRepository.findById(request.getRoomId())
                 .orElseThrow(() -> new IllegalArgumentException("Sala não encontrada com o ID fornecido: " + request.getRoomId()));
 
-        if (!room.getTutor().getId().toString().equals(tutorId)) {
+        if (!room.getTutor().getId().equals(tutorId)) {
             throw new SecurityException("Apenas o tutor responsável pela sala pode criar tabelas de desempenho.");
         }
 
@@ -61,11 +61,11 @@ public class PerformanceTableService {
     }
 
     @Transactional
-    public CriterionResponse addCriterion(String performanceTableId, CriterionRequest request, String tutorId) {
+    public CriterionResponse addCriterion(UUID performanceTableId, CriterionRequest request, UUID tutorId) {
         PerformanceTable table = performanceTableRepository.findById(performanceTableId)
                 .orElseThrow(() -> new IllegalArgumentException("Tabela de desempenho não encontrada: " + performanceTableId));
 
-        if (!table.getRoom().getTutor().getId().toString().equals(tutorId)) {
+        if (!table.getRoom().getTutor().getId().equals(tutorId)) {
             throw new SecurityException("Apenas o tutor responsável pela sala pode gerenciar critérios.");
         }
 
@@ -76,15 +76,15 @@ public class PerformanceTableService {
         criterion.setPerformanceTable(table);
 
         Criterion saved = criterionRepository.save(criterion);
-        return new CriterionResponse(saved.getId().toString(), saved.getName(), saved.getDescription(), saved.getWeight(), "ACTIVE");
+        return new CriterionResponse(saved.getId(), saved.getName(), saved.getDescription(), saved.getWeight(), "ACTIVE");
     }
 
     @Transactional
-    public void deleteCriterion(String performanceTableId, String criterionId, String tutorId) {
+    public void deleteCriterion(UUID performanceTableId, UUID criterionId, UUID tutorId) {
         PerformanceTable table = performanceTableRepository.findById(performanceTableId)
                 .orElseThrow(() -> new IllegalArgumentException("Tabela de desempenho não encontrada: " + performanceTableId));
 
-        if (!table.getRoom().getTutor().getId().toString().equals(tutorId)) {
+        if (!table.getRoom().getTutor().getId().equals(tutorId)) {
             throw new SecurityException("Apenas o tutor responsável pela sala pode remover critérios.");
         }
 
@@ -99,7 +99,7 @@ public class PerformanceTableService {
     }
 
     @Transactional(readOnly = true)
-    public PerformanceTableResponse getPerformanceTable(String performanceTableId) {
+    public PerformanceTableResponse getPerformanceTable(UUID performanceTableId) {
         PerformanceTable table = performanceTableRepository.findById(performanceTableId)
                 .orElseThrow(() -> new IllegalArgumentException("Tabela de desempenho não encontrada: " + performanceTableId));
         return toResponse(table);
@@ -107,12 +107,12 @@ public class PerformanceTableService {
 
     private PerformanceTableResponse toResponse(PerformanceTable table) {
         List<CriterionResponse> criteriaResponses = table.getCriteriaList().stream()
-                .map(c -> new CriterionResponse(c.getId().toString(), c.getName(), c.getDescription(), c.getWeight(), "ACTIVE"))
+                .map(c -> new CriterionResponse(c.getId(), c.getName(), c.getDescription(), c.getWeight(), "ACTIVE"))
                 .toList();
 
         return new PerformanceTableResponse(
-                table.getId().toString(),
-                table.getRoom().getId().toString(),
+                table.getId(),
+                table.getRoom().getId(),
                 table.getName(),
                 "ACTIVE",
                 criteriaResponses

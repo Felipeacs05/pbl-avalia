@@ -30,11 +30,8 @@ public class AuthController {
     )
     public ResponseEntity<UserResponse> register(
             @Valid @RequestPart("data") RegisterUserRequest request,
-            @RequestPart(value = "photo") MultipartFile photo
+            @RequestPart(value = "photo", required = false) MultipartFile photo
     ) {
-        if (photo.isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
 
         if (request.getName() != null
                 && (request.getName().contains("<")

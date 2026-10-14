@@ -1,7 +1,7 @@
 import React from "react";
 import { Room } from "../../../types/room";
 import { IconButton } from "../../ui/IconButton";
-import { Link2, Edit, Trash2 } from "lucide-react"; // Importei o Trash2
+import { Link2, Edit, Trash2 } from "lucide-react"; 
 
 interface RoomCardProps {
   room: Room;
