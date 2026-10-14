@@ -1,4 +1,4 @@
-﻿package com.uefs.tfs.avaliasystem.service;
+package com.uefs.tfs.avaliasystem.service;
 
 import com.uefs.tfs.avaliasystem.model.Problem;
 import com.uefs.tfs.avaliasystem.model.Room;
