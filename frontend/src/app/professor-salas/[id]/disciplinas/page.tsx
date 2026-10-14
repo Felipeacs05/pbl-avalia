@@ -1,7 +1,7 @@
 // src/app/professor-salas/[id]/disciplinas/page.tsx
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useRooms } from "../../../../hooks/useRooms";
 import { useDisciplines } from "../../../../hooks/useDiscipline";
@@ -21,19 +21,10 @@ function DisciplinesContent() {
   const { disciplines, isLoading: isLoadingDisciplines } =
     useDisciplines(roomId);
 
-  const initialTab = searchParams.get("tab") === "people" ? "people" : "subject";
-  const [activeTab, setActiveTab] = useState<"subject" | "groups" | "people">(
-    initialTab
-  );
-
-  useEffect(() => {
-    const tabParam = searchParams.get("tab");
-    if (tabParam === "people") {
-      setActiveTab("people");
-    } else if (tabParam === "subject") {
-      setActiveTab("subject");
-    }
-  }, [searchParams]);
+  // Deriva a aba ativa diretamente do searchParams (evita useEffect e useState desnecessários)
+  const tabParam = searchParams.get("tab");
+  const activeTab: "subject" | "groups" | "people" =
+    tabParam === "people" ? "people" : "subject";
 
   const room = rooms.find((r) => r.id === roomId);
 
@@ -41,6 +32,21 @@ function DisciplinesContent() {
   const discipline = disciplines[0] ?? null;
 
   const isLoading = isLoadingRooms || isLoadingDisciplines;
+
+  const handleTabChange = (tab: "subject" | "groups" | "people") => {
+    if (tab === "groups") {
+      router.push(`/professor-salas/${roomId}/groups`);
+    } else {
+      // Sincroniza alterando a URL sem re-render em cascata
+      const newSearchParams = new URLSearchParams(searchParams.toString());
+      if (tab === "people") {
+        newSearchParams.set("tab", "people");
+      } else {
+        newSearchParams.delete("tab");
+      }
+      router.push(`?${newSearchParams.toString()}`, { scroll: false });
+    }
+  };
 
   return (
     <main className="w-full min-h-screen bg-[#F5F5F5] font-sans relative flex flex-col">
@@ -58,8 +64,8 @@ function DisciplinesContent() {
             {isLoading
               ? "..."
               : room
-              ? `${room.code} - ${room.semester ?? ""}`
-              : "Sala"}
+                ? `${room.code} ${room.semester ?? ""}`
+                : "Sala"}
           </span>
         </div>
         <button
@@ -143,18 +149,12 @@ function DisciplinesContent() {
       <DisciplineTabBar
         activeTab={activeTab}
         roomId={roomId}
-        onTabChange={(tab) => {
-          if (tab === "groups") {
-            router.push(`/professor-salas/${roomId}/groups`);
-          } else {
-            setActiveTab(tab);
-          }
-        }}
+        onTabChange={handleTabChange}
         onNewProblem={
           activeTab === "subject"
             ? () => {
-                /* TODO: open create problem modal */
-              }
+              /* TODO: open create problem modal */
+            }
             : undefined
         }
       />
