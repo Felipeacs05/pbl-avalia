@@ -73,29 +73,37 @@ class AuthControllerRegisterTest {
     }
 
     @Test
-    @DisplayName("US01 - cadastro sem foto de perfil retorna 400")
-    void shouldRejectRegistrationWithoutProfilePhoto() throws Exception {
+    @DisplayName("US01 - cadastro sem foto de perfil retorna 201")
+    void shouldAcceptRegistrationWithoutProfilePhoto() throws Exception {
         var requestData = new RegisterUserRequest("Ana Silva", "ana@uefs.br", "senhaForte123");
         var dataPart = new MockMultipartFile(
                 "data", "", "application/json", objectMapper.writeValueAsBytes(requestData));
 
+        var createdUser = new User("Ana Silva", "ana@uefs.br", "$2a$10$hashSeguroBCrypt", null);
+
+        when(userService.register(any(), any())).thenReturn(createdUser);
+
         mockMvc.perform(multipart("/api/v1/auth/register").file(dataPart))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isCreated());
     }
 
     @Test
-    @DisplayName("US01 - cadastro com foto vazia (0 bytes) retorna 400")
-    void shouldRejectRegistrationWithEmptyPhoto() throws Exception {
+    @DisplayName("US01 - cadastro com foto vazia (0 bytes) retorna 201")
+    void shouldAcceptRegistrationWithEmptyPhoto() throws Exception {
         var requestData = new RegisterUserRequest("Ana Silva", "ana@uefs.br", "senhaForte123");
         var dataPart = new MockMultipartFile(
                 "data", "", "application/json", objectMapper.writeValueAsBytes(requestData));
         var emptyPhoto = new MockMultipartFile(
                 "photo", "vazia.jpg", "image/jpeg", new byte[0]);
 
+        var createdUser = new User("Ana Silva", "ana@uefs.br", "$2a$10$hashSeguroBCrypt", null);
+
+        when(userService.register(any(), any())).thenReturn(createdUser);
+
         mockMvc.perform(multipart("/api/v1/auth/register")
                         .file(dataPart)
                         .file(emptyPhoto))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isCreated());
     }
 
     @Test

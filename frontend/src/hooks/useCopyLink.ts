@@ -18,5 +18,7 @@ export function useCopyLink() {
     }
     };
 
-    return { copyLink, toast };
+    const clearToast = () => setToast(null);
+
+    return { copyLink, toast, clearToast };
 }

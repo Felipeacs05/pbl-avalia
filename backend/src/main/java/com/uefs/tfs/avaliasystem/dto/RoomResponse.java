@@ -8,6 +8,8 @@ public class RoomResponse {
     private String code;
     private String joinLink;
 
+    public RoomResponse() {
+    }
 
 
     public RoomResponse(String code, String joinLink) {

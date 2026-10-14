@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 
+// src/app/group/page.tsx
+
 interface RoomPageProps {
   params: Promise<{ id: string }>;
 }
