@@ -1,4 +1,4 @@
-﻿package com.uefs.tfs.avaliasystem.US14;
+package com.uefs.tfs.avaliasystem.US14;
 
 import com.uefs.tfs.avaliasystem.dto.AssessmentRequest;
 import com.uefs.tfs.avaliasystem.model.Assessment;
@@ -39,7 +39,7 @@ class PeerAssessmentServiceTest {
 
     @Test
     @DisplayName("[US14] submeterPares_MesmoGrupo_Sucesso")
-    void submeterPares_MesmoGrupo_Sucesso() {
+    void submitPeers_SameGroup_Success() {
         UUID evaluatorId = UUID.randomUUID();
         UUID targetId = UUID.randomUUID();
         
@@ -72,7 +72,7 @@ class PeerAssessmentServiceTest {
 
     @Test
     @DisplayName("[US14] submeterPares_GruposDiferentes_LancaExcecao")
-    void submeterPares_GruposDiferentes_LancaExcecao() {
+    void submitPeers_DifferentGroups_ThrowsException() {
         UUID evaluatorId = UUID.randomUUID();
         UUID targetId = UUID.randomUUID();
         

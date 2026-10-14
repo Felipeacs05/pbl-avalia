@@ -1,4 +1,4 @@
-﻿package com.uefs.tfs.avaliasystem.model;
+package com.uefs.tfs.avaliasystem.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -38,4 +38,16 @@ public class Assessment {
     private String comment;
 
     private Instant createdAt = Instant.now();
+    // Nota enviada originalmente pelo aluno (preservada para auditoria)
+    private Double originalGrade;
+
+    // Nota definida pelo tutor na moderação
+    private Double adjustedGrade;
+
+    @Column(length = 1000)
+    private String justification;
+
+    // Flag para o frontend identificar notas moderadas
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private Boolean modifiedByTutor = false;
 }
