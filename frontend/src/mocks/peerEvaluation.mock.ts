@@ -8,7 +8,7 @@ import { evaluationMock } from "./evaluationMock";
 import type { Student } from "../types/student";
 import type { PeerEvaluationSubmission } from "../types/evaluation";
 
-export const PEER_EVALUATION_MOCK_PROBLEM_ID = "prob_2";
+export const PEER_EVALUATION_MOCK_PROBLEM_ID = "prob_3";
 
 export const PEER_EVALUATION_MOCK_PEERS: Student[] = [
   {

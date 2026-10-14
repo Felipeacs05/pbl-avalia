@@ -181,10 +181,9 @@ export function PeerEvaluationModal({ isOpen, onClose, isEvaluationOpen, peers, 
               </ul>
             )}
 
-            {/* Mostra quantas notas faltam */}
-            {peers.length > 0 && missingScores > 0 && (
+            {(
               <p className="text-xs text-gray-500 text-center">
-                Preencha todas as notas para enviar. Faltam <span className="font-bold text-gray-700">{missingScores}</span>.
+                Preencha todas as notas para enviar.
               </p>
             )}
 
