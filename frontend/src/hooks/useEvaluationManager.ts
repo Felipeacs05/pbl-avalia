@@ -1,4 +1,3 @@
-// src/hooks/useEvaluationManager.ts
 import { useState, useEffect, useCallback } from "react";
 import type { EvaluationStatus, EvaluationType } from "../types/evaluation";
 import { evaluationService } from "../services/evaluationService";
@@ -15,7 +14,7 @@ export function useEvaluationManager(problemId: string) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchStatus = useCallback(async () => {
+  const refreshStatus = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -30,11 +29,35 @@ export function useEvaluationManager(problemId: string) {
   }, [problemId]);
 
   useEffect(() => {
-    fetchStatus();
-  }, [fetchStatus]);
+    let isMounted = true;
+
+    async function loadInitialStatus() {
+      try {
+        const status = await evaluationService.getEvaluationStatus(problemId);
+        if (isMounted) {
+          setEvaluationStatus(status);
+          setSelectedType(status.activeType);
+          setError(null);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : "Failed to load evaluation status");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadInitialStatus();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [problemId]);
 
   const openModal = useCallback(() => {
-    // Synchronize pending selection with the currently released type
     setSelectedType(evaluationStatus.activeType);
     setIsModalOpen(true);
   }, [evaluationStatus.activeType]);
@@ -43,18 +66,10 @@ export function useEvaluationManager(problemId: string) {
     setIsModalOpen(false);
   }, []);
 
-  /**
-   * Mutually exclusive toggle:
-   * - Toggling an already selected type deselects it (null).
-   * - Toggling a different type unchecks the previous and selects the new one.
-   */
   const toggleType = useCallback((type: "self_evaluation" | "peer_evaluation") => {
     setSelectedType((current) => (current === type ? null : type));
   }, []);
 
-  /**
-   * Confirms and persists the selected evaluation release.
-   */
   const confirmRelease = useCallback(async (): Promise<EvaluationStatus | null> => {
     try {
       setIsSubmitting(true);
@@ -86,6 +101,6 @@ export function useEvaluationManager(problemId: string) {
     toggleType,
     setSelectedType,
     confirmRelease,
-    refreshStatus: fetchStatus,
+    refreshStatus,
   };
 }
