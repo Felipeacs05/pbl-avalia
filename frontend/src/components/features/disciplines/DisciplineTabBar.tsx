@@ -33,8 +33,7 @@ export function DisciplineTabBar({
     } else if (tab === "groups") {
       router.push(`/professor-salas/${roomId}/groups`);
     } else if (tab === "people") {
-      // Carômetro ainda em desenvolvimento por outro membro: não altera rota
-      return;
+      router.push(`/professor-salas/${roomId}/disciplinas?tab=people`);
     }
   };
 

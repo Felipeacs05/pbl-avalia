@@ -25,8 +25,7 @@ export default function GroupManagementPage() {
       // Permanece na tela atual
       return;
     } else if (tab === "people") {
-      // Sem rota carômetro
-      return;
+      router.push(`/professor-salas/${roomId}/disciplinas?tab=people`);
     }
   };
 
