@@ -1,4 +1,4 @@
-﻿package com.uefs.tfs.avaliasystem.dto;
+package com.uefs.tfs.avaliasystem.dto;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

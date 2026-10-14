@@ -1,4 +1,4 @@
-package com.uefs.tfs.avaliasystem.Security;
+package com.uefs.tfs.avaliasystem.security;
 
 import com.uefs.tfs.avaliasystem.repository.RoomRepository;
 import lombok.RequiredArgsConstructor;

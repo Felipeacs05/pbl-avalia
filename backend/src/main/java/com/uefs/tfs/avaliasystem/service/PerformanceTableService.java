@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -117,5 +118,20 @@ public class PerformanceTableService {
                 "ACTIVE",
                 criteriaResponses
         );
+    }
+
+    @Transactional(readOnly = true)
+    public double calculateFinalGrade(UUID performanceTableId, Map<UUID, Double> gradesByCriterion) {
+        List<Criterion> criteria = criterionRepository.findByPerformanceTableId(performanceTableId);
+
+        return criteria.stream()
+                .mapToDouble(criterion -> {
+                    Double grade = gradesByCriterion.get(criterion.getId());
+                    if (grade == null) {
+                        throw new IllegalArgumentException("Nota não informada para o critério: " + criterion.getId());
+                    }
+                    return grade * criterion.getWeight();
+                })
+                .sum();
     }
 }
