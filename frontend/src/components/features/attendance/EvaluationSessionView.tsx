@@ -5,6 +5,7 @@ import React from "react";
 import { ArrowLeft, BarChart3 } from "lucide-react";
 import { useRooms } from "../../../hooks/useRooms";
 import { useSessionRoster } from "../../../hooks/useSessionRoster";
+import type { SessionStudent } from "../../../types/attendance";
 import { EvaluationStudentList } from "./EvaluationStudentList";
 
 interface EvaluationSessionViewProps {
@@ -15,6 +16,7 @@ interface EvaluationSessionViewProps {
   onEditPreset?: () => void;
   onGenerateReport?: () => void;
   onCloseSession?: () => void;
+  onConfigureEvaluation?: (student: SessionStudent) => void;
 }
 
 export function EvaluationSessionView({
@@ -24,6 +26,7 @@ export function EvaluationSessionView({
   onEditPreset,
   onGenerateReport,
   onCloseSession,
+  onConfigureEvaluation,
 }: EvaluationSessionViewProps) {
   const { rooms } = useRooms();
   const { roster, dateLabel, isLoading, error } = useSessionRoster(sessionId);
@@ -85,7 +88,10 @@ export function EvaluationSessionView({
           </div>
         ) : roster ? (
           <div className="w-full flex-1">
-            <EvaluationStudentList students={roster.students} />
+            <EvaluationStudentList
+              students={roster.students}
+              onConfigureEvaluation={onConfigureEvaluation}
+            />
           </div>
         ) : null}
 
