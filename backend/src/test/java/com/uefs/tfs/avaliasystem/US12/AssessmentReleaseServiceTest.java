@@ -1,10 +1,11 @@
-﻿package com.uefs.tfs.avaliasystem.US12;
+package com.uefs.tfs.avaliasystem.US12;
 
 import com.uefs.tfs.avaliasystem.model.Problem;
 import com.uefs.tfs.avaliasystem.model.Room;
 import com.uefs.tfs.avaliasystem.model.User;
 import com.uefs.tfs.avaliasystem.repository.ProblemRepository;
 import com.uefs.tfs.avaliasystem.service.AssessmentReleaseService;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,7 @@ class AssessmentReleaseServiceTest {
     @Nested
     @DisplayName("Validos")
     class Validos {
+
         @Test
         @DisplayName("[US12] alternarChave_TutorAciona_DeveInverterFlagESalvar")
         void alternarChave_TutorAciona_DeveInverterFlagESalvar() {

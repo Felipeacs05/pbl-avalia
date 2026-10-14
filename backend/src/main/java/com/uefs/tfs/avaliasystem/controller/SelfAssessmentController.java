@@ -1,4 +1,4 @@
-﻿package com.uefs.tfs.avaliasystem.controller;
+package com.uefs.tfs.avaliasystem.controller;
 
 import com.uefs.tfs.avaliasystem.dto.AssessmentRequest;
 import com.uefs.tfs.avaliasystem.service.SelfAssessmentService;

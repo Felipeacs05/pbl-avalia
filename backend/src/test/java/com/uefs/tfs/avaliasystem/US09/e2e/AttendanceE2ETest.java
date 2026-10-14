@@ -1,3 +1,4 @@
+
 package com.uefs.tfs.avaliasystem.US09.e2e;
 
 import com.uefs.tfs.avaliasystem.TestConfig;
@@ -298,3 +299,5 @@ class AttendanceE2ETest {
         return tutoringSessionRepository.save(newSession);
     }
 }
+
+
