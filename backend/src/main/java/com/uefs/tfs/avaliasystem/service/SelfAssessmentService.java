@@ -1,4 +1,4 @@
-﻿package com.uefs.tfs.avaliasystem.service;
+package com.uefs.tfs.avaliasystem.service;
 
 import com.uefs.tfs.avaliasystem.dto.AssessmentRequest;
 import com.uefs.tfs.avaliasystem.model.Assessment;

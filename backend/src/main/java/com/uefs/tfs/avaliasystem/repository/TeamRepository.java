@@ -1,4 +1,4 @@
-﻿package com.uefs.tfs.avaliasystem.repository;
+package com.uefs.tfs.avaliasystem.repository;
 
 import com.uefs.tfs.avaliasystem.model.Team;
 import org.springframework.data.jpa.repository.JpaRepository;

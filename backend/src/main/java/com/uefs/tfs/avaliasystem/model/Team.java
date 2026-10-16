@@ -1,4 +1,4 @@
-﻿package com.uefs.tfs.avaliasystem.model;
+package com.uefs.tfs.avaliasystem.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;

@@ -1,4 +1,4 @@
-﻿package com.uefs.tfs.avaliasystem.US12;
+package com.uefs.tfs.avaliasystem.US12;
 
 import com.uefs.tfs.avaliasystem.model.Problem;
 import com.uefs.tfs.avaliasystem.model.Room;
