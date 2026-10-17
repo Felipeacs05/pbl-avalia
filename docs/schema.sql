@@ -137,3 +137,32 @@ CREATE TABLE IF NOT EXISTS evaluation (
     REFERENCES users(id)
     ON DELETE RESTRICT
     );
+
+
+-- 8. Session Role Assignments (US10 - Roles: COORDINATOR, BOARD_SECRETARY, TABLE_SECRETARY)
+CREATE TABLE IF NOT EXISTS session_role_assignment (
+    id UUID PRIMARY KEY,
+    session_id UUID NOT NULL,
+    student_id UUID NOT NULL,
+    role VARCHAR(50) NOT NULL,
+    extra_grade NUMERIC(4, 2) NOT NULL DEFAULT 0.0 CHECK (extra_grade >= 0.0 AND extra_grade <= 10.0),
+
+    CONSTRAINT uk_session_role
+    UNIQUE (session_id, role),
+
+    CONSTRAINT uk_session_student
+    UNIQUE (session_id, student_id),
+
+    CONSTRAINT fk_session_role_assignment_session
+    FOREIGN KEY (session_id)
+    REFERENCES session(id)
+    ON DELETE CASCADE,
+
+    CONSTRAINT fk_session_role_assignment_student
+    FOREIGN KEY (student_id)
+    REFERENCES users(id)
+    ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_session_role_assignment_session ON session_role_assignment(session_id);
+CREATE INDEX IF NOT EXISTS idx_session_role_assignment_student ON session_role_assignment(student_id);

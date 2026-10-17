@@ -1,2 +1,4 @@
 target/
 .mvn/
+# Testes não fazem parte da imagem de produção
+src/test/

@@ -7,6 +7,7 @@ import { BarChart3, Edit, Trash2 } from "lucide-react";
 
 interface ProblemCardProps {
   problem: Problem;
+  onClick?: () => void;
   onViewStats?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -14,12 +15,16 @@ interface ProblemCardProps {
 
 export function ProblemCard({
   problem,
+  onClick,
   onViewStats,
   onEdit,
   onDelete,
 }: ProblemCardProps) {
   return (
-    <div className="bg-[#4354A0] text-white p-5 rounded-[1.5rem] shadow-md cursor-pointer hover:bg-[#3b4b8f] transition-all active:scale-[0.98]">
+    <div
+      onClick={onClick}
+      className="bg-[#4354A0] text-white p-5 rounded-[1.5rem] shadow-md cursor-pointer hover:bg-[#3b4b8f] transition-all active:scale-[0.98]"
+    >
       <h3 className="text-lg font-bold mb-1 tracking-wide">
         {problem.title}
       </h3>
