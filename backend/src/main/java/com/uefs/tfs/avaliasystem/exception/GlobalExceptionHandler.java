@@ -1,3 +1,4 @@
+
 package com.uefs.tfs.avaliasystem.exception;
 
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,12 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
+    @ExceptionHandler(InvalidWeightSumException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidWeightSumException(InvalidWeightSumException ex) {
+        log.warn("Invalid criteria weights: {}", ex.getMessage());
+        return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleResourceNotFoundException(ResourceNotFoundException ex) {
         log.warn("Resource not found: {}", ex.getMessage());
@@ -41,29 +48,41 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
+
         for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
             errors.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
+
         log.warn("Bean Validation error: {}", errors);
+
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.BAD_REQUEST.value());
         body.put("error", "Bad Request");
         body.put("message", "Validation failed");
         body.put("errors", errors);
+
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
     @ExceptionHandler(MissingServletRequestPartException.class)
     public ResponseEntity<Map<String, Object>> handleMissingServletRequestPartException(MissingServletRequestPartException ex) {
         log.warn("Missing request part: {}", ex.getRequestPartName());
-        return buildResponse(HttpStatus.BAD_REQUEST, "Required request part '" + ex.getRequestPartName() + "' is not present");
+
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
+                "Required request part '" + ex.getRequestPartName() + "' is not present"
+        );
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<Map<String, Object>> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex) {
         log.warn("File size limit exceeded: {}", ex.getMessage());
-        return buildResponse(HttpStatus.BAD_REQUEST, "File exceeds maximum upload limit of 5MB");
+
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
+                "File exceeds maximum upload limit of 5MB"
+        );
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)
@@ -104,18 +123,25 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IOException.class)
     public ResponseEntity<Map<String, Object>> handleIOException(IOException ex) {
         log.error("I/O error during file processing: ", ex);
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error processing uploaded file");
+
+        return buildResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Error processing uploaded file"
+        );
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneralException(Exception ex) {
         log.error("Unhandled server exception: ", ex);
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
+
+        return buildResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "An unexpected error occurred"
+        );
     }
+
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<Map<String, Object>> handleAccessDeniedException(
-            AccessDeniedException ex
-    ) {
+    public ResponseEntity<Map<String, Object>> handleAccessDeniedException(AccessDeniedException ex) {
         log.warn("Access denied: {}", ex.getMessage());
 
         return buildResponse(
@@ -123,12 +149,15 @@ public class GlobalExceptionHandler {
                 "You do not have permission to perform this operation"
         );
     }
+
     private ResponseEntity<Map<String, Object>> buildResponse(HttpStatus status, String message) {
         Map<String, Object> body = new HashMap<>();
+
         body.put("timestamp", LocalDateTime.now());
         body.put("status", status.value());
         body.put("error", status.getReasonPhrase());
         body.put("message", message);
+
         return ResponseEntity.status(status).body(body);
     }
 }
