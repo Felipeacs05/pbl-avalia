@@ -2,7 +2,7 @@ export interface AuthResponse {
   token: string;
   user?: {
     id: string;
-    nome: string;
+    name: string;
     email: string;
   };
 }
