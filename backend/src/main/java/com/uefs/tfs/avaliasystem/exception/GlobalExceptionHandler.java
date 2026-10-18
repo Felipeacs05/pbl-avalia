@@ -131,4 +131,14 @@ public class GlobalExceptionHandler {
         body.put("message", message);
         return ResponseEntity.status(status).body(body);
     }
+    @ExceptionHandler(AssessmentNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleAssessmentNotFound(AssessmentNotFoundException ex) {
+        log.warn("Assessment not found: {}", ex.getMessage());
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+    @ExceptionHandler(ProblemNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleProblemNotFound(ProblemNotFoundException ex) {
+        log.warn("Problem not found: {}", ex.getMessage());
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
 }
