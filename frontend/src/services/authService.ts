@@ -6,12 +6,14 @@ import { AuthResponse } from '@/types/auth';
 // false = backend funcionando true = chamada simulada
 const USE_MOCK = true;
 
+//src/services/authService.ts
+
 export const authService = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     if (USE_MOCK) {
       return new Promise((resolve, reject) => {
         setTimeout(() => {
-          if (credentials.senha === '123456') {
+          if (credentials.password === '123456') {
             resolve(authMockSuccess);
           } else {
             reject({

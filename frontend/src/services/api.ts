@@ -1,6 +1,8 @@
 // src/services/api.ts
 import axios from 'axios';
 
+//src/services/api.ts (USO AXIOS PARA REQUISIÇÕES HTTP)
+
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api',
   headers: {
@@ -34,6 +36,15 @@ api.interceptors.response.use(
         window.location.href = '/';
       }
     }
+    
+// 429 (Too Many Requests): IP bloqueado por excesso de requisições.
+    if (error.response?.status === 429) {
+      error.response.data = {
+        ...(typeof error.response.data === 'object' ? error.response.data : {}),
+        message: 'Muitas tentativas em pouco tempo. Seu acesso foi temporariamente bloqueado. Aguarde alguns minutos e tente novamente.',
+      };
+    }
+
     return Promise.reject(error);
   }
-);
+); 
