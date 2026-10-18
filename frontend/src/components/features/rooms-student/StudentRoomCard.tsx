@@ -15,7 +15,7 @@ const COLORS = ["#3F4A9A", "#141B5E", "#020845"];
 function getInitials(name: string) {
   return name
     .split(" ")
-    .map((parte) => parte[0])
+    .map((part) => part[0])
     .slice(0, 2)
     .join("")
     .toUpperCase();

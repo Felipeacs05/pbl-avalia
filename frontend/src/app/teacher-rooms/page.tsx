@@ -27,7 +27,7 @@ export default function Home() {
   const activeToast = copyToast || localToast;
 
   const handleEnter = (room: Room) => {
-    router.push(`/professor-salas/${room.id}/disciplinas`);
+    router.push(`/teacher-rooms/${room.id}/disciplines`);
   };
 
   const handleShare = async (code: string) => {
