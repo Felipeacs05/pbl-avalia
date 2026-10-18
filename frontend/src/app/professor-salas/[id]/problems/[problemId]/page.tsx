@@ -53,8 +53,8 @@ export default function ProblemDetailsPage() {
 
   const handleStartSession = async () => {
     const result = await startSession();
-    if (result) {
-      console.log("Session started:", result.sessionId);
+    if (result && result.sessionId) {
+      router.push(`/professor-salas/${roomId}/problems/${problemId}/sessions/${result.sessionId}`);
     }
   };
 

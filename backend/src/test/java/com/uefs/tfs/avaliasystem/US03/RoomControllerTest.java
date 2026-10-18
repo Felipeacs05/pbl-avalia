@@ -1,6 +1,6 @@
 package com.uefs.tfs.avaliasystem.US03;
 
-import com.uefs.tfs.avaliasystem.Security.RoomSecurity;
+import com.uefs.tfs.avaliasystem.security.RoomSecurity;
 import com.uefs.tfs.avaliasystem.config.SecurityConfig;
 import com.uefs.tfs.avaliasystem.controller.RoomController;
 import com.uefs.tfs.avaliasystem.dto.RoomRequest;

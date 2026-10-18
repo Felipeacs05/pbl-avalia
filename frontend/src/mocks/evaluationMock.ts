@@ -16,6 +16,12 @@ export const initialEvaluationStatuses: Record<string, EvaluationStatus> = {
     activeType: null,
     isReleased: false,
   },
+  prob_3: {
+    problemId: "prob_3",
+    activeType: "peer_evaluation",
+    isReleased: true,
+    releasedAt: new Date().toISOString(),
+  },
 };
 
 const inMemoryEvaluationStore = new Map<string, EvaluationStatus>(
