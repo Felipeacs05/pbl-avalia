@@ -6,7 +6,7 @@
 // Transferência: dar a um aluno um papel que já está com outro tira o papel do anterior na hora.
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   SessionRole,
   SessionRoleRow,
@@ -40,7 +40,9 @@ export function useSessionRoles(sessionId: string, initialStudents: SessionRoleS
 
   // Linhas atuais, para saber quem perde o papel numa transferência
   const rowsRef = useRef(students);
-  rowsRef.current = students;
+  useEffect(() => {
+    rowsRef.current = students;
+  }, [students]);
   // Último estado gravado no servidor por aluno (para desfazer o destaque otimista)
   const confirmedRef = useRef(new Map<string, RoleState>());
   // Número do último clique por aluno: só a resposta mais recente decide o estado final
