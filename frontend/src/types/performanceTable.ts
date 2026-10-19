@@ -39,3 +39,11 @@ export interface StudentEvaluationData {
   message: string;
   updatedAt?: string;
 }
+
+export interface PresetCriterion {
+  id: string;
+  name: string;
+  weight: number;       // peso inteiro, ex.: 1 -> "Peso 1"
+  isOptional: boolean;  // true = seção "Critérios opcionais"
+  isRemovable: boolean; // false = não mostra a lixeira (ex.: Papel)
+}
