@@ -1,12 +1,6 @@
 // src/mocks/studentEvaluation.mock.ts
 import type { StudentEvaluationData } from "../types/performanceTable";
 
-const DEFAULT_SAMPLE_TAGS = [
-  "Boas considerações",
-  "Atraso",
-  "Uso de celular fora de hora",
-];
-
 const evaluationsStore = new Map<string, StudentEvaluationData>();
 
 const keyOf = (sessionId: string, studentId: string) => `${sessionId}:${studentId}`;
@@ -21,11 +15,13 @@ export const studentEvaluationMock = {
     const key = keyOf(sessionId, studentId);
     const stored = evaluationsStore.get(key);
     if (stored) {
-      return { ...stored };
+      // ====== ALTERADO POR CLAUDE ======
+      // Nome e tags vêm da chamada da sessão (fonte da verdade), não do cache.
+      // Antes o cache guardava o nome provisório e as tags de exemplo da 1ª busca, feita antes de a lista de alunos carregar.
+      return { ...stored, studentName, tags: existingTags };
     }
 
-    const initialTags =
-      existingTags.length > 0 ? existingTags : DEFAULT_SAMPLE_TAGS;
+    const initialTags = existingTags; // ====== ALTERADO POR CLAUDE ====== (sem tags de exemplo)
 
     const initialData: StudentEvaluationData = {
       sessionId,
