@@ -31,7 +31,8 @@ export function StudentPerformanceTableView({
 
   // Localiza o aluno correspondente ao ID
   const currentStudent = roster?.students.find((s) => s.id === studentId);
-  const studentName = currentStudent?.name || "Luana Angélica";
+  // ====== ALTERADO POR CLAUDE ====== (antes caía no nome fixo "Luana Angélica")
+  const studentName = currentStudent?.name || "Aluno";
   const studentTags = currentStudent?.tags || [];
 
   // Hook de gestão do estado da avaliação do aluno
@@ -72,10 +73,8 @@ export function StudentPerformanceTableView({
     notaAdicional: 0,
   };
 
-  const tags =
-    evaluation?.tags && evaluation.tags.length > 0
-      ? evaluation.tags
-      : ["Boas considerações", "Atraso", "Uso de celular fora de hora"];
+  // ====== ALTERADO POR CLAUDE ====== (sem tags de exemplo: mostra só as marcações reais da sessão)
+  const tags = evaluation?.tags ?? [];
 
   const message = evaluation?.message || "";
 
@@ -157,36 +156,21 @@ export function StudentPerformanceTableView({
                   title="Comportamento"
                   weightLabel="Peso 1"
                   score={criteria.comportamento}
-                  onScoreClick={() =>
-                    updateCriterionScore(
-                      "comportamento",
-                      criteria.comportamento === 100 ? 75 : 100
-                    )
-                  }
+                  onScoreChange={(value) => updateCriterionScore("comportamento", value)} // ====== ALTERADO POR CLAUDE ======
                 />
 
                 <CriteriaScoreCard
                   title="Participação"
                   weightLabel="Peso 1"
                   score={criteria.participacao}
-                  onScoreClick={() =>
-                    updateCriterionScore(
-                      "participacao",
-                      criteria.participacao === 100 ? 75 : 100
-                    )
-                  }
+                  onScoreChange={(value) => updateCriterionScore("participacao", value)} // ====== ALTERADO POR CLAUDE ======
                 />
 
                 <CriteriaScoreCard
                   title="Segmentos"
                   weightLabel="Peso 1"
                   score={criteria.segmentos}
-                  onScoreClick={() =>
-                    updateCriterionScore(
-                      "segmentos",
-                      criteria.segmentos === 100 ? 75 : 100
-                    )
-                  }
+                  onScoreChange={(value) => updateCriterionScore("segmentos", value)} // ====== ALTERADO POR CLAUDE ======
                 />
 
                 <CriteriaScoreCard
@@ -213,12 +197,7 @@ export function StudentPerformanceTableView({
                 title="Papel"
                 weightLabel=""
                 score={criteria.notaPapel}
-                onScoreClick={() =>
-                  updateCriterionScore(
-                    "notaPapel",
-                    criteria.notaPapel === 100 ? 80 : 100
-                  )
-                }
+                onScoreChange={(value) => updateCriterionScore("notaPapel", value)} // ====== ALTERADO POR CLAUDE ======
               />
             </section>
 
@@ -238,12 +217,7 @@ export function StudentPerformanceTableView({
                 tone="gray"
                 scorePrefix="+ "
                 score={criteria.notaAdicional}
-                onScoreClick={() =>
-                  updateCriterionScore(
-                    "notaAdicional",
-                    criteria.notaAdicional === 0 ? 10 : 0
-                  )
-                }
+                onScoreChange={(value) => updateCriterionScore("notaAdicional", value)} // ====== ALTERADO POR CLAUDE ======
               />
             </section>
 
@@ -253,6 +227,10 @@ export function StudentPerformanceTableView({
                 Marcações Recebidas pelo aluno durante a sessão
               </h2>
               <div className="w-full bg-white rounded-2xl border border-gray-200/90 p-4 min-h-[90px] flex flex-wrap gap-2 content-start shadow-xs">
+                {/* ====== ALTERADO POR CLAUDE ====== (aviso quando o aluno não recebeu marcações) */}
+                {tags.length === 0 && (
+                  <p className="text-xs italic text-gray-400">Nenhuma marcação recebida nesta sessão.</p>
+                )}
                 {tags.map((tag) => (
                   <span
                     key={tag}

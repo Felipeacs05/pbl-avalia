@@ -4,6 +4,17 @@
 import React, { useState } from "react";
 import { User } from "lucide-react";
 
+/** "Camila Rocha" -> "CR". */
+export function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
 interface AvatarProps {
   src?: string;
   /** Texto alternativo. Deixe vazio quando o nome já aparece ao lado da foto. */
@@ -12,6 +23,8 @@ interface AvatarProps {
   sizeClassName?: string;
   /** Foto desfocada e em tons de cinza (ex.: item inativo). */
   dimmed?: boolean;
+  /** Nome da pessoa: sem foto, mostra as iniciais. */
+  name?: string;
 }
 
 export function Avatar({
@@ -19,6 +32,7 @@ export function Avatar({
   alt = "",
   sizeClassName = "w-12 h-12",
   dimmed = false,
+  name,
 }: AvatarProps) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const showImage = Boolean(src) && failedSrc !== src;
@@ -37,6 +51,10 @@ export function Avatar({
           }`}
           onError={() => setFailedSrc(src ?? null)}
         />
+      ) : name ? (
+        <span className="text-white/90 text-sm font-bold select-none" aria-hidden="true">
+          {getInitials(name)}
+        </span>
       ) : (
         <User className="text-white/80" size={22} aria-hidden="true" />
       )}

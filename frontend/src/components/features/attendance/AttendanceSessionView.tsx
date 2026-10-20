@@ -1,12 +1,17 @@
 // src/components/features/attendance/AttendanceSessionView.tsx
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useRooms } from "../../../hooks/useRooms";
 import { useSessionRoster } from "../../../hooks/useSessionRoster";
 import { AttendancePanel } from "./AttendancePanel";
 import { SessionTitle } from "./SessionTitle";
+import { useSessionRoles } from "../../../hooks/useSessionRoles";
+import type { SessionRoster } from "../../../types/session";
+import type { SessionRole } from "../../../types/sessionRole";
+import type { StudentRoleState } from "./AttendanceStudentRow";
+import { toSessionRoleStudent } from "../session-roles/sessionRoleOptions";
 
 interface AttendanceSessionViewProps {
   roomId?: string;
@@ -73,11 +78,8 @@ export function AttendanceSessionView({
           </div>
         ) : roster ? (
           <div className="w-full flex-1">
-            <AttendancePanel
-              key={roster.id}
-              sessionId={roster.id}
-              students={roster.students}
-            />
+            {/* ====== ALTERADO POR CLAUDE ====== (conteúdo com papéis) */}
+            <SessionContent key={roster.id} roster={roster} />
           </div>
         ) : null}
 
@@ -92,6 +94,52 @@ export function AttendanceSessionView({
           </button>
         </div>
       </main>
+    </div>
+  );
+}
+
+// ====== ALTERADO POR CLAUDE ======
+/** Chamada + papéis (US10). Fica separado com key = sessão porque os hooks só leem os alunos na montagem. */
+function SessionContent({ roster }: { roster: SessionRoster }) {
+  const initialRoleStudents = useMemo(() => roster.students.map(toSessionRoleStudent), [roster]);
+  const { students: roleRows, error: roleError, assignRole, removeRole, clearError } = useSessionRoles(
+    roster.id,
+    initialRoleStudents,
+  );
+
+  const roles = useMemo(() => {
+    const map: Record<string, StudentRoleState> = {};
+    roleRows.forEach((r) => {
+      map[r.id] = { role: r.role, extraGrade: r.extraGrade, isSaving: r.isSaving };
+    });
+    return map;
+  }, [roleRows]);
+
+  const handleSaveRole = (studentId: string, role: SessionRole | null, extraGrade: number | null) => {
+    if (role) void assignRole(studentId, role, extraGrade ?? 0);
+    else void removeRole(studentId);
+  };
+
+  return (
+    <div className="w-full flex flex-col gap-3">
+      {/* Recusa do backend ao salvar papel (ex.: 403 não é o tutor) */}
+      {roleError && (
+        <div
+          role="alert"
+          className="w-full rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 flex items-start justify-between gap-3"
+        >
+          <span>{roleError}</span>
+          <button type="button" onClick={clearError} className="text-xs font-bold underline shrink-0 cursor-pointer">
+            Fechar
+          </button>
+        </div>
+      )}
+      <AttendancePanel
+        sessionId={roster.id}
+        students={roster.students}
+        roles={roles}
+        onSaveRole={handleSaveRole}
+      />
     </div>
   );
 }

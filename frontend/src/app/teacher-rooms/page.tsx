@@ -9,6 +9,7 @@ import { BottomTabBar } from "../../components/features/navigation/BottomTabBar"
 import { CreateRoomModal } from "../../components/features/rooms/CreateRoomModal";
 import { EditRoomModal } from "../../components/features/rooms/EditRoomModal"; // ← ADICIONAR IMPORT
 import { Toast } from "../../components/ui/Toast";
+import { ConfirmModal } from "../../components/ui/ConfirmModal"; 
 import type { Room } from "../../types/room"; // ← ADICIONAR IMPORT
 
 export default function Home() {
@@ -19,6 +20,7 @@ export default function Home() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false); // ← ADICIONAR
   const [editingRoom, setEditingRoom] = useState<Room | null>(null); // ← ADICIONAR
+  const [roomToDelete, setRoomToDelete] = useState<Room | null>(null); // sala aguardando confirmação
   const [localToast, setLocalToast] = useState<{
     message: string;
     type: "success" | "error";
@@ -114,7 +116,7 @@ export default function Home() {
             onEnter={handleEnter}
             onEdit={handleEdit} // ← MUDAR (era handleEdit(room.name), agora passa room)
             onShare={(room) => handleShare(room.code)}
-            onDelete={handleDelete} // ← ADICIONAR
+            onDelete={setRoomToDelete} // abre a confirmação de exclusão
           />
         )}
       </div>
@@ -139,6 +141,26 @@ export default function Home() {
           initialName={editingRoom.name}
           onClose={() => setIsEditModalOpen(false)}
           onSubmit={handleEditSubmit}
+        />
+      )}
+
+      {/* confirmação antes de excluir a sala */}
+      {roomToDelete && (
+        <ConfirmModal
+          title="Excluir sala"
+          message={
+            <>
+              Tem certeza que deseja excluir a sala <strong>{roomToDelete.name}</strong> ({roomToDelete.code})?
+              Essa ação não pode ser desfeita.
+            </>
+          }
+          confirmLabel="Excluir"
+          variant="danger"
+          onConfirm={async () => {
+            await handleDelete(roomToDelete); // handleDelete já mostra o toast de sucesso ou de erro
+            setRoomToDelete(null);
+          }}
+          onClose={() => setRoomToDelete(null)}
         />
       )}
     </main>

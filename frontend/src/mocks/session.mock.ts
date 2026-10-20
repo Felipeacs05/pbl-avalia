@@ -6,7 +6,6 @@ const MOCK_LATENCY_MS = 450;
 
 const PORTRAIT_BASE_URL = "https://randomuser.me/api/portraits";
 
-/** Alunos fictícios (nomes e fotos aleatórias) usados enquanto não há backend. */
 function buildMockStudents(): SessionStudent[] {
   const now = new Date();
   const minutesAgo = (minutes: number) =>
@@ -25,7 +24,6 @@ function buildMockStudents(): SessionStudent[] {
       id: "stu_02",
       name: "Rafael Mendes",
       role: "Quadro",
-      avatarUrl: `${PORTRAIT_BASE_URL}/men/32.jpg`,
       status: "PRESENT",
       recordedAt: minutesAgo(10),
     },
@@ -40,14 +38,12 @@ function buildMockStudents(): SessionStudent[] {
     {
       id: "stu_04",
       name: "Thiago Alves",
-      avatarUrl: `${PORTRAIT_BASE_URL}/men/75.jpg`,
       status: "ABSENT",
       recordedAt: minutesAgo(5),
     },
     {
       id: "stu_05",
       name: "Larissa Gomes",
-      avatarUrl: `${PORTRAIT_BASE_URL}/women/12.jpg`,
       status: "JUSTIFIED_ABSENCE",
       recordedAt: minutesAgo(4),
     },
@@ -90,12 +86,27 @@ export const sessionMock = {
     });
   },
 
-  updateStudentRole(sessionId: string, studentId: string, role: string | undefined): void {
+  // ====== ALTERADO POR CLAUDE ====== (extraGrade opcional, usado pela US10)
+  updateStudentRole(
+    sessionId: string,
+    studentId: string,
+    role: string | undefined,
+    extraGrade?: number | null,
+  ): void {
     const key = keyOf(sessionId, studentId);
     const student = studentsByKey.get(key);
     if (student) {
       student.role = role;
+      if (extraGrade !== undefined) student.extraGrade = extraGrade;
     }
+  },
+
+  // ====== ALTERADO POR CLAUDE ======
+  // Alunos da sessão já carregados (cópia), para o mock de papéis checar quem tem cada papel.
+  getStudents(sessionId: string): SessionStudent[] {
+    return [...studentsByKey.entries()]
+      .filter(([key]) => key.startsWith(`${sessionId}:`))
+      .map(([, student]) => ({ ...student }));
   },
 
   updateStudentTags(sessionId: string, studentId: string, tags: string[]): void {

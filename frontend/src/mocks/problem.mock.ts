@@ -1,5 +1,8 @@
 // src/mocks/problem.mock.ts
 import type { ProblemDetails } from "../types/problem";
+import type { Problem } from "../types/discipline";
+import { gradeMock } from "./grade.mock";
+import { roomsMock } from "./rooms.mock";
 
 export const problemDetailsMock: Record<string, ProblemDetails> = {
   prob_01: {
@@ -86,3 +89,32 @@ export const problemDetailsMock: Record<string, ProblemDetails> = {
     ],
   },
 };
+
+// Cria um problema no "banco" falso: entra na lista da disciplina (tela de disciplinas)
+// e nos detalhes (tela do problema). Fica em memória: F5 apaga.
+export function createProblemInMock(
+  disciplineId: string,
+  input: { title: string; description: string }
+): Problem {
+  const discipline = gradeMock.find((d) => d.id === disciplineId);
+  if (!discipline) throw new Error("Disciplina não encontrada.");
+
+  const room = roomsMock.find((r) => r.id === discipline.roomId);
+  const problem: Problem = { id: `prob_${Date.now()}`, title: input.title, description: input.description };
+
+  discipline.problems.push(problem);
+  problemDetailsMock[problem.id] = {
+    ...problem,
+    disciplineCode: room?.code ?? "",
+    semester: room?.semester ?? "",
+    sessions: [],
+  };
+  return problem;
+}
+// Exclui o problema da disciplina e dos detalhes. Fica em memória: F5 traz de volta os problemas iniciais.
+export function deleteProblemInMock(problemId: string): void {
+  gradeMock.forEach((discipline) => {
+    discipline.problems = discipline.problems.filter((p) => p.id !== problemId);
+  });
+  delete problemDetailsMock[problemId];
+}
