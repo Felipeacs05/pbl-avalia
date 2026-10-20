@@ -3,7 +3,8 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { Delete, User } from "lucide-react";
+import { Delete } from "lucide-react";
+import { getInitials } from "../ui/Avatar"; 
 import type { Student } from "../../types/student";
 
 interface StudentCardProps {
@@ -27,7 +28,8 @@ export function StudentCard({ student, onAction }: StudentCardProps) {
               onError={() => setImageError(true)}
             />
           ) : (
-            <User className="text-white/80" size={24} />
+            // ====== ALTERADO POR CLAUDE ====== (iniciais no lugar do ícone)
+            <span className="text-white/90 text-sm font-bold select-none">{getInitials(student.name)}</span>
           )}
         </div>
 

@@ -9,6 +9,7 @@ import React, { useState } from "react";
 import { ChevronDown, CheckCircle2 } from "lucide-react";
 import type { Student } from "../../../types/student";
 import type { PeerEvaluationScores } from "../../../types/evaluation";
+import { getInitials } from "../../ui/Avatar";
 
 // Critérios do Figma, na ordem em que aparecem
 export const PEER_CRITERIA: { key: keyof PeerEvaluationScores; label: string }[] = [
@@ -27,17 +28,6 @@ function parseScore(value: string): number | null {
   const number = Number(value);
   if (Number.isNaN(number)) return null;
   return Math.min(MAX_SCORE, Math.max(MIN_SCORE, Math.round(number)));
-}
-
-// Iniciais para quando o colega não tem foto ou a imagem falha ao carregar
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
 }
 
 interface PeerEvaluationCardProps {

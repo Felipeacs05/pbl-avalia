@@ -1,7 +1,7 @@
 // src/app/teacher-rooms/[id]/disciplines/page.tsx
 "use client";
 
-import React, { Suspense } from "react";
+import React, { Suspense, useCallback, useState } from "react"; // ====== ALTERADO POR CLAUDE ====== (useState, useCallback)
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useRooms } from "../../../../hooks/useRooms";
 import { useDisciplines } from "../../../../hooks/useDiscipline";
@@ -10,6 +10,15 @@ import { ProblemCard } from "../../../../components/features/disciplines/Problem
 import { DisciplineTabBar } from "../../../../components/features/disciplines/DisciplineTabBar";
 import { PhotoRosterList } from "../../../../components/PhotoRoster/PhotoRosterList";
 import { ArrowLeft, Share2, BookOpen } from "lucide-react";
+// ====== ALTERADO POR CLAUDE ======
+import { CreateProblemModal } from "../../../../components/features/disciplines/CreateProblemModal";
+import { problemService } from "../../../../services/problemService";
+import { ConfirmModal } from "../../../../components/ui/ConfirmModal";
+import { Toast } from "../../../../components/ui/Toast";
+import type { Problem } from "../../../../types/discipline";
+
+// Ação dos botões do card de problema que está esperando confirmação
+type ProblemAction = { type: "extract" | "delete"; problem: Problem };
 
 function DisciplinesContent() {
   const params = useParams();
@@ -18,7 +27,8 @@ function DisciplinesContent() {
   const roomId = String(params.id);
 
   const { rooms, isLoading: isLoadingRooms } = useRooms();
-  const { disciplines, isLoading: isLoadingDisciplines } =
+  // (refetch, para atualizar a lista depois de excluir)
+  const { disciplines, isLoading: isLoadingDisciplines, refetch } =
     useDisciplines(roomId);
 
   // Deriva a aba ativa diretamente do searchParams (evita useEffect e useState desnecessários)
@@ -31,6 +41,55 @@ function DisciplinesContent() {
   const discipline = disciplines[0] ?? null;
 
   const isLoading = isLoadingRooms || isLoadingDisciplines;
+
+  // Criar problema: o modal coleta título e descrição; depois de criado, o professor
+  // vai direto para o Pré-set de Critérios desse problema (e de lá para a tela do problema).
+  const [isCreateProblemOpen, setIsCreateProblemOpen] = useState(false);
+
+  const handleCreateProblem = async (input: { title: string; description: string }) => {
+    if (!discipline) throw new Error("Nenhuma disciplina nesta sala.");
+    const created = await problemService.createProblem(discipline.id, input);
+    router.push(`/teacher-rooms/${roomId}/problems/${created.id}/preset`);
+  };
+
+  // Botões do card: extrair e excluir abrem o modal de confirmação primeiro; editar vai direto
+  const [pendingAction, setPendingAction] = useState<ProblemAction | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const clearToast = useCallback(() => setToastMessage(null), []); // função estável: o Toast reinicia o timer se ela mudar
+
+  const handleConfirmAction = async () => {
+    if (!pendingAction) return;
+    const { type, problem } = pendingAction;
+
+    if (type === "extract") {
+      setPendingAction(null);
+      // TODO: trocar pela extração real do arquivo quando o back-end existir
+      alert("Tela de extração");
+    } else {
+      await problemService.deleteProblem(problem.id); // se falhar, o modal mostra o erro e continua aberto
+      await refetch();
+      setPendingAction(null);
+      setToastMessage(`Problema "${problem.title}" excluído.`);
+    }
+  };
+
+  // Textos do modal de confirmação para cada ação
+  const confirmTexts = pendingAction && {
+    extract: {
+      title: "Extrair arquivo",
+      message: <>Deseja extrair o arquivo do problema <strong>{pendingAction.problem.title}</strong>?</>,
+      confirmLabel: "Extrair",
+    },
+    delete: {
+      title: "Excluir problema",
+      message: (
+        <>
+          Tem certeza que deseja excluir <strong>{pendingAction.problem.title}</strong>? Essa ação não pode ser desfeita.
+        </>
+      ),
+      confirmLabel: "Excluir",
+    },
+  }[pendingAction.type];
 
   const handleTabChange = (tab: "subject" | "groups" | "people") => {
     if (tab === "groups") {
@@ -124,17 +183,10 @@ function DisciplinesContent() {
                         `/teacher-rooms/${roomId}/problems/${problem.id}`
                       );
                     }}
-                    onViewStats={() => {
-                      router.push(
-                        `/teacher-rooms/${roomId}/problems/${problem.id}`
-                      );
-                    }}
-                    onEdit={() => {
-                      /* TODO: open edit modal */
-                    }}
-                    onDelete={() => {
-                      /* TODO: confirm deletion */
-                    }}
+                    onViewStats={() => setPendingAction({ type: "extract", problem })}
+                    // Editar vai direto para o Pré-set (mesmo fluxo da criação: salvar -> tela do problema)
+                    onEdit={() => router.push(`/teacher-rooms/${roomId}/problems/${problem.id}/preset`)}
+                    onDelete={() => setPendingAction({ type: "delete", problem })}
                   />
                 ))}
               </div>
@@ -149,13 +201,30 @@ function DisciplinesContent() {
         roomId={roomId}
         onTabChange={handleTabChange}
         onNewProblem={
-          activeTab === "subject"
-            ? () => {
-              /* TODO: open create problem modal */
-            }
+          activeTab === "subject" && discipline
+            ? () => setIsCreateProblemOpen(true)
             : undefined
         }
       />
+
+      {pendingAction && confirmTexts && (
+        <ConfirmModal
+          title={confirmTexts.title}
+          message={confirmTexts.message}
+          confirmLabel={confirmTexts.confirmLabel}
+          variant={pendingAction.type === "delete" ? "danger" : "default"}
+          onConfirm={handleConfirmAction}
+          onClose={() => setPendingAction(null)}
+        />
+      )}
+      {toastMessage && <Toast message={toastMessage} type="success" onClose={clearToast} />}
+
+      {isCreateProblemOpen && (
+        <CreateProblemModal
+          onClose={() => setIsCreateProblemOpen(false)}
+          onSubmit={handleCreateProblem}
+        />
+      )}
     </main>
   );
 }

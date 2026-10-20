@@ -11,6 +11,7 @@ import React, { useEffect, useState } from "react";
 import { X, ClipboardCheck, Lock, Loader2 } from "lucide-react";
 import type { PeerEvaluation, SelfEvaluationScores, SelfEvaluationSubmission } from "../../../types/evaluation";
 import type { Student } from "../../../types/group";
+import { getInitials } from "../../ui/Avatar";
 
 const CRITERIA: { key: keyof SelfEvaluationScores; label: string }[] = [
   { key: "content", label: "Bom seguimento e conteúdo" },
@@ -26,16 +27,6 @@ const INITIAL_SCORES: SelfEvaluationScores = { content: 0, participation: 0, beh
 function clampScore(value: number): number {
   if (Number.isNaN(value)) return MIN_SCORE;
   return Math.min(MAX_SCORE, Math.max(MIN_SCORE, Math.round(value)));
-}
-
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
 }
 
 type HttpError = { response?: { status?: number } };

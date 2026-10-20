@@ -3,41 +3,38 @@
 
 import React, { useMemo } from "react";
 import type { AttendanceRow, AttendanceStatus } from "../../../types/attendance";
-import { AttendanceStudentRow } from "./AttendanceStudentRow";
+import { AttendanceStudentRow, type StudentRoleState } from "./AttendanceStudentRow";
 import type { OccupiedRoleInfo } from "./AssignRoleModal";
+//  vêm do hook da US10
+import type { SessionRole } from "../../../types/sessionRole";
 
 interface AttendanceListProps {
   students: AttendanceRow[];
   error: string | null;
+  /** Papel de cada aluno (id -> estado), vindo de useSessionRoles. */
+  roles?: Record<string, StudentRoleState>;
   onChangeStatus: (studentId: string, status: AttendanceStatus) => Promise<void>;
-  onAssignRole?: (studentId: string, role: string | undefined) => void;
+  onSaveRole?: (studentId: string, role: SessionRole | null, extraGrade: number | null) => void;
   onUpdateTags?: (studentId: string, tags: string[]) => void;
 }
 
 export function AttendanceList({
   students,
   error,
+  roles = {},
   onChangeStatus,
-  onAssignRole,
+  onSaveRole,
   onUpdateTags,
 }: AttendanceListProps) {
-  // Mapeamento de papéis ocupados na sessão para garantir a unicidade de papéis (PBL)
+  // Quem está com cada papel (para "Ocupado por X" e o aviso de transferência)
   const occupiedRoles = useMemo(() => {
-    const map: Record<string, OccupiedRoleInfo> = {};
+    const map: Partial<Record<SessionRole, OccupiedRoleInfo>> = {};
     students.forEach((s) => {
-      if (s.role) {
-        const normalized = s.role.toLowerCase().startsWith("coordenad")
-          ? "Coordenador"
-          : s.role.toLowerCase().startsWith("quadr")
-          ? "Quadro"
-          : s.role.toLowerCase().startsWith("mes")
-          ? "Mesa"
-          : s.role;
-        map[normalized] = { studentId: s.id, studentName: s.name };
-      }
+      const role = roles[s.id]?.role;
+      if (role) map[role] = { studentId: s.id, studentName: s.name };
     });
     return map;
-  }, [students]);
+  }, [students, roles]);
 
   return (
     <div className="w-full flex flex-col gap-3">
@@ -60,9 +57,10 @@ export function AttendanceList({
             <AttendanceStudentRow
               key={student.id}
               student={student}
+              roleState={roles[student.id]}
               occupiedRoles={occupiedRoles}
+              onSaveRole={onSaveRole}
               onChangeStatus={onChangeStatus}
-              onAssignRole={onAssignRole}
               onUpdateTags={onUpdateTags}
             />
           ))}

@@ -24,6 +24,7 @@ export interface SessionStudent {
   recordedAt: string | null;
   avatarUrl?: string;
   role?: string;
+  extraGrade?: number | null; // nota extra pelo papel
   tags?: string[];
 }
 
