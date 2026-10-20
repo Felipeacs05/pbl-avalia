@@ -15,7 +15,7 @@ public class CriterionRequest {
     private String criteriaDescription;
 
     @PositiveOrZero(message = "O peso do critério deve ser positivo")
-    private Double criteriaWeight = 1.0;
+    private Double criteriaWeight;
 
     public CriterionRequest() {}
 

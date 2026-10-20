@@ -35,7 +35,7 @@ class SelfAssessmentServiceTest {
 
     @Test
     @DisplayName("[US13] submeterNota_Aberto_Sucesso")
-    void submeterNota_Aberto_Sucesso() {
+    void submitScore_OpenPeriod_Success() {
         UUID studentId = UUID.randomUUID();
         User student = new User();
         student.setId(studentId);

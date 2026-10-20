@@ -2,7 +2,7 @@ package com.uefs.tfs.avaliasystem.US06;
 
 import tools.jackson.databind.ObjectMapper;
 import com.uefs.tfs.avaliasystem.controller.GroupController;
-import com.uefs.tfs.avaliasystem.Security.RoomSecurity;
+import com.uefs.tfs.avaliasystem.security.RoomSecurity;
 import com.uefs.tfs.avaliasystem.TestConfig;
 import com.uefs.tfs.avaliasystem.config.SecurityConfig;
 import com.uefs.tfs.avaliasystem.dto.GroupRequest;
