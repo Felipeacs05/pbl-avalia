@@ -57,6 +57,10 @@ class DashboardServiceTest {
     private static final UUID INVALID_USER_ID = UUID.randomUUID();
     private static final UUID OTHER_TUTOR_ID = UUID.randomUUID();
 
+    private static final UUID TUTOR_ROOM_ID = UUID.randomUUID();
+    private static final UUID TUTOR_ROOM_ID_2 = UUID.randomUUID();
+    private static final UUID STUDENT_ROOM_ID = UUID.randomUUID();
+
     // ────────────────────────────────────────────────────────────────────────
     //  TESTES VÁLIDOS
     // ────────────────────────────────────────────────────────────────────────
@@ -71,11 +75,11 @@ class DashboardServiceTest {
             var user = new User(VALID_USER_ID, "Usuário", "usuario@example.com", "senha", null);
             var otherTutor = new User(OTHER_TUTOR_ID, "Outro tutor", "tutor@example.com", "senha", null);
             var tutorRooms = List.of(
-                    room("10", "Algoritmos Avançados", "ALGO-001", user),
-                    room("11", "Estruturas de Dados", "ED-002", user)
+                    room(TUTOR_ROOM_ID, "Algoritmos Avançados", "ALGO-001", user),
+                    room(TUTOR_ROOM_ID_2, "Estruturas de Dados", "ED-002", user)
             );
             var studentRooms = List.of(
-                    room("20", "Cálculo I", "CALC-001", otherTutor)
+                    room(STUDENT_ROOM_ID, "Cálculo I", "CALC-001", otherTutor)
             );
 
             when(userRepository.existsById(VALID_USER_ID)).thenReturn(true);
@@ -99,10 +103,10 @@ class DashboardServiceTest {
             var user = new User(VALID_USER_ID, "Usuário", "usuario@example.com", "senha", null);
             var otherTutor = new User(OTHER_TUTOR_ID, "Outro tutor", "tutor@example.com", "senha", null);
             var tutorRooms = List.of(
-                    room("10", "Algoritmos Avançados", "ALGO-001", user)
+                    room(TUTOR_ROOM_ID, "Algoritmos Avançados", "ALGO-001", user)
             );
             var studentRooms = List.of(
-                    room("20", "Cálculo I", "CALC-001", otherTutor)
+                    room(STUDENT_ROOM_ID, "Cálculo I", "CALC-001", otherTutor)
             );
 
             when(userRepository.existsById(VALID_USER_ID)).thenReturn(true);
@@ -120,7 +124,7 @@ class DashboardServiceTest {
                     .isEqualTo("Algoritmos Avançados");
             assertThat(studentRoomIds)
                     .as("Uma sala de Tutor não deve aparecer também na aba de Aluno")
-                    .doesNotContain("10");
+                    .doesNotContain(TUTOR_ROOM_ID);
         }
 
         @Test
@@ -129,10 +133,10 @@ class DashboardServiceTest {
             var user = new User(VALID_USER_ID, "Usuário", "usuario@example.com", "senha", null);
             var otherTutor = new User(OTHER_TUTOR_ID, "Outro tutor", "tutor@example.com", "senha", null);
             var tutorRooms = List.of(
-                    room("10", "Algoritmos Avançados", "ALGO-001", user)
+                    room(TUTOR_ROOM_ID, "Algoritmos Avançados", "ALGO-001", user)
             );
             var studentRooms = List.of(
-                    room("20", "Cálculo I", "CALC-001", otherTutor)
+                    room(STUDENT_ROOM_ID, "Cálculo I", "CALC-001", otherTutor)
             );
 
             when(userRepository.existsById(VALID_USER_ID)).thenReturn(true);
@@ -149,7 +153,7 @@ class DashboardServiceTest {
                     .isEqualTo("Cálculo I");
             assertThat(tutorRoomIds)
                     .as("Uma sala de Aluno não deve aparecer também na aba de Tutor")
-                    .doesNotContain("20");
+                    .doesNotContain(STUDENT_ROOM_ID);
         }
     }
 
@@ -192,7 +196,7 @@ class DashboardServiceTest {
         }
     }
 
-    private static Room room(String id, String name, String accessCode, User tutor) {
+    private static Room room(UUID id, String name, String accessCode, User tutor) {
         Room room = new Room();
         room.setId(id);
         room.setName(name);

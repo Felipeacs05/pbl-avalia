@@ -42,14 +42,13 @@ class RoomServiceTest {
     private User tutorUser;
     private Room existingRoom;
 
-    private final String TUTOR_UUID = "123e4567-e89b-12d3-a456-426614174000";
-    private final String ROOM_UUID = "987e6543-e21b-12d3-a456-426614174000";
+    private final UUID TUTOR_UUID = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+    private final UUID ROOM_UUID = UUID.fromString("987e6543-e21b-12d3-a456-426614174000");
 
     @BeforeEach
     void setUp() {
         tutorUser = new User();
-        // Caso seu User.setId espere UUID:
-        tutorUser.setId(UUID.fromString(TUTOR_UUID));
+        tutorUser.setId(TUTOR_UUID);
         tutorUser.setName("Tutor Teste");
 
         existingRoom = new Room();
@@ -77,8 +76,9 @@ class RoomServiceTest {
 
         assertEquals("Módulo de Engenharia de Software", capturedRoom.getName());
         assertNotNull(capturedRoom.getTutor());
-        // Ajustado para converter para String na asserção
-        assertEquals(TUTOR_UUID, capturedRoom.getTutor().getId().toString());
+
+        // CORRIGIDO: Comparação direta entre dois UUIDs
+        assertEquals(TUTOR_UUID, capturedRoom.getTutor().getId());
 
         assertNotNull(capturedRoom.getAccessCode());
         assertFalse(capturedRoom.getAccessCode().isBlank());
@@ -86,13 +86,14 @@ class RoomServiceTest {
         assertNotNull(capturedRoom.getInviteLink());
         assertTrue(capturedRoom.getInviteLink().contains(capturedRoom.getAccessCode()));
 
+        // Verificação do link retornado na resposta
         assertTrue(response.getJoinLink().startsWith("app/join/"));
     }
 
     @Test
     @DisplayName("Deve lançar exceção ao tentar criar sala com um utilizador (Tutor) inexistente")
     void createRoom_WithInvalidTutorId_ThrowsException() {
-        String invalidTutorUuid = "00000000-0000-0000-0000-000000000000";
+        UUID invalidTutorUuid = UUID.fromString("00000000-0000-0000-0000-000000000000");
         RoomRequest request = new RoomRequest("Módulo Válido");
 
         Mockito.when(userRepository.findById(any())).thenReturn(Optional.empty());
@@ -123,15 +124,16 @@ class RoomServiceTest {
         assertEquals("Módulo Atualizado", capturedRoom.getName());
         assertEquals("A1B2C", capturedRoom.getAccessCode());
         assertEquals("app/join/A1B2C", capturedRoom.getInviteLink());
-        // Ajustado para converter para String na asserção
-        assertEquals(TUTOR_UUID, capturedRoom.getTutor().getId().toString());
+
+        // CORRIGIDO: Comparação direta entre dois UUIDs
+        assertEquals(TUTOR_UUID, capturedRoom.getTutor().getId());
     }
 
     @Test
     @DisplayName("Deve impedir a edição e disparar exceção se o utilizador não for o Tutor da sala")
     void updateRoom_UserIsNotTutor_ThrowsException() {
         RoomRequest updateRequest = new RoomRequest("Módulo Hackeado");
-        String unauthorizedUuid = "999e9999-e99b-99d9-a999-999999999999";
+        UUID unauthorizedUuid = UUID.fromString("999e9999-e99b-99d9-a999-999999999999");
 
         Mockito.when(roomRepository.findById(ROOM_UUID)).thenReturn(Optional.of(existingRoom));
 
@@ -158,7 +160,7 @@ class RoomServiceTest {
     @Test
     @DisplayName("Deve impedir a exclusão e disparar exceção se o utilizador não for o Tutor")
     void deleteRoom_UserIsNotTutor_ThrowsException() {
-        String unauthorizedUuid = "999e9999-e99b-99d9-a999-999999999999";
+        UUID unauthorizedUuid = UUID.fromString("999e9999-e99b-99d9-a999-999999999999");
         Mockito.when(roomRepository.findById(ROOM_UUID)).thenReturn(Optional.of(existingRoom));
 
         SecurityException exception = assertThrows(SecurityException.class, () -> {

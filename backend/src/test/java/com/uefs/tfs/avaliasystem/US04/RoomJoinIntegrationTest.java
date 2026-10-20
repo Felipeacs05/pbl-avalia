@@ -31,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * US04 — Integração: Controller + Service + Repository (H2) + RateLimitingService reais.
  * O limiter é singleton: cada teste usa um IP exclusivo.
- */
+*/
 @SpringBootTest
 @TestConfig
 @AutoConfigureMockMvc
@@ -61,13 +61,13 @@ class RoomJoinIntegrationTest {
     }
 
     // JWT simulado: o "sub" vira principal.getName() no controller.
-    private RequestPostProcessor as(String userId) {
-        return jwt().jwt(j -> j.subject(userId));
+    private RequestPostProcessor as(UUID userId) {
+        return jwt().jwt(j -> j.subject(String.valueOf(userId)));
     }
 
     private void joinByCode(String code, String ip, int expectedStatus) throws Exception {
         mockMvc.perform(post("/api/v1/rooms/join")
-                        .with(as(student.getId().toString()))
+                        .with(as(student.getId()))
                         .header("X-Forwarded-For", ip)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"accessCode\":\"" + code + "\"}"))
@@ -97,7 +97,7 @@ class RoomJoinIntegrationTest {
     @DisplayName("Link de convite persiste o vínculo sem digitar o código")
     void joinByInviteLink_persistsStudentMembership() throws Exception {
         mockMvc.perform(post("/api/v1/rooms/join/{code}", "JOIN01")
-                        .with(as(student.getId().toString()))
+                        .with(as(student.getId()))
                         .header("X-Forwarded-For", "10.0.0.2"))
                 .andExpect(status().isOk());
         assertEquals(1, activeStudentLinks());
@@ -153,3 +153,4 @@ class RoomJoinIntegrationTest {
         return userRepository.save(u);
     }
 }
+

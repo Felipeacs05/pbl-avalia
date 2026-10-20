@@ -4,6 +4,7 @@ import com.uefs.tfs.avaliasystem.dto.DashboardResponse;
 import com.uefs.tfs.avaliasystem.dto.RoomDto;
 import com.uefs.tfs.avaliasystem.dto.RoomRequest;
 import com.uefs.tfs.avaliasystem.dto.RoomResponse;
+import com.uefs.tfs.avaliasystem.dto.RoomMemberResponse;
 import com.uefs.tfs.avaliasystem.exception.InvalidAccessCodeException;
 import com.uefs.tfs.avaliasystem.exception.TooManyAttemptsException;
 import com.uefs.tfs.avaliasystem.exception.UserNotFoundException;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -41,8 +43,8 @@ public class RoomService {
     }
 
     @Transactional
-    public RoomResponse createRoom(RoomRequest request, String tutorId) {
-        User tutor = userRepository.findById(UUID.fromString(tutorId))
+    public RoomResponse createRoom(RoomRequest request, UUID tutorId) {
+        User tutor = userRepository.findById((tutorId))
                 .orElseThrow(() -> new IllegalArgumentException("Utilizador não encontrado para assumir o papel de Tutor."));
 
         Room room = new Room();
@@ -63,11 +65,11 @@ public class RoomService {
     }
 
     @Transactional
-    public RoomResponse updateRoom(String roomId, RoomRequest request, String tutorId) {
+    public RoomResponse updateRoom(UUID roomId, RoomRequest request, UUID tutorId) {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("Sala não encontrada"));
 
-        if (!room.getTutor().getId().toString().equals(tutorId)) {
+        if (!room.getTutor().getId().equals(tutorId)) {
             throw new SecurityException("Apenas o Tutor da sala possui permissão para editá-la.");
         }
 
@@ -78,11 +80,11 @@ public class RoomService {
     }
 
     @Transactional
-    public void deleteRoom(String roomId, String tutorId) {
+    public void deleteRoom(UUID roomId, UUID tutorId) {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("Sala não encontrada"));
 
-        if (!room.getTutor().getId().toString().equals(tutorId)) {
+        if (!room.getTutor().getId().equals(tutorId)) {
             throw new SecurityException("Apenas o Tutor da sala possui permissão para excluí-la.");
         }
 
@@ -90,10 +92,35 @@ public class RoomService {
     }
 
     @Transactional(readOnly = true)
-    public List<RoomResponse> listRooms(String userId) {
-        return roomRepository.findAllByTutorOrActiveMember(UUID.fromString(userId)).stream()
+    public List<RoomResponse> listRooms(UUID userId) {
+        return roomRepository.findAllByTutorOrActiveMember(userId).stream()
                 .map(room -> new RoomResponse(room.getId(), room.getName(), room.getAccessCode(), room.getInviteLink()))
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<RoomMemberResponse> listRoomMembers(UUID roomId) {
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("Sala não encontrada"));
+
+        List<RoomMemberResponse> members = new ArrayList<>();
+        User tutor = room.getTutor();
+        members.add(new RoomMemberResponse(
+                tutor.getId(),
+                tutor.getName(),
+                Role.TUTOR
+        ));
+
+        roomMemberRepository.findAllByRoomIdAndActiveTrueOrderByUserNameAsc(roomId).stream()
+                .filter(member -> !member.getUser().getId().equals(tutor.getId()))
+                .map(member -> new RoomMemberResponse(
+                        member.getUser().getId(),
+                        member.getUser().getName(),
+                        member.getRole()
+                ))
+                .forEach(members::add);
+
+        return members;
     }
 
     @Transactional(readOnly = true)
@@ -113,7 +140,7 @@ public class RoomService {
     }
 
     @Transactional
-    public RoomResponse joinRoom(String userId, String accessCode, String ip) {
+    public RoomResponse joinRoom(UUID userId, String accessCode, String ip) {
         if (rateLimitingService.isIpBlocked(ip)) {
             throw new TooManyAttemptsException("IP bloqueado temporariamente por excesso de tentativas");
         }
@@ -127,15 +154,13 @@ public class RoomService {
             return new InvalidAccessCodeException("Código de acesso inválido");
         });
 
-        UUID userUuid = UUID.fromString(userId);
-
-        User student = userRepository.findById(userUuid).orElseThrow(() ->
+        User student = userRepository.findById(userId).orElseThrow(() ->
                 new IllegalArgumentException("Usuário não encontrado"));
-        if (room.getTutor() != null && room.getTutor().getId().equals(userUuid)){
+        if (room.getTutor() != null && room.getTutor().getId().equals(userId)){
             throw new IllegalArgumentException("Tutor não pode ingressar como aluno na prórpia sala");
         }
 
-        Optional<RoomMember> existingMemberOpt = roomMemberRepository.findByRoomIdAndUserId(room.getId(), userUuid);
+        Optional<RoomMember> existingMemberOpt = roomMemberRepository.findByRoomIdAndUserId(room.getId(), userId);
 
         if (existingMemberOpt.isPresent()) {
             RoomMember member = existingMemberOpt.get();
@@ -159,4 +184,3 @@ public class RoomService {
         return new RoomResponse(room.getId(), room.getName(), room.getAccessCode(), room.getInviteLink());
     }
 }
-
