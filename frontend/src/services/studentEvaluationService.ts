@@ -1,9 +1,9 @@
 // src/services/studentEvaluationService.ts
 import type { StudentEvaluationData } from "../types/performanceTable";
 import { studentEvaluationMock } from "../mocks/studentEvaluation.mock";
+import { IS_TEST, USE_REAL_API } from "./apiMode";
 
 const BASE_URL = "/api/v1/sessions";
-const IS_TEST = process.env.NODE_ENV === "test";
 
 function isFetchMocked(): boolean {
   return typeof fetch === "function" && "mock" in fetch;
@@ -16,7 +16,7 @@ export const studentEvaluationService = {
     studentName = "Aluno",
     tags: string[] = []
   ): Promise<StudentEvaluationData> {
-    if (!IS_TEST || !isFetchMocked()) {
+    if (!USE_REAL_API || (IS_TEST && !isFetchMocked())) {
       return studentEvaluationMock.getEvaluation(
         sessionId,
         studentId,
@@ -55,7 +55,7 @@ export const studentEvaluationService = {
   async saveStudentEvaluation(
     data: StudentEvaluationData
   ): Promise<StudentEvaluationData> {
-    if (!IS_TEST || !isFetchMocked()) {
+    if (!USE_REAL_API || (IS_TEST && !isFetchMocked())) {
       return studentEvaluationMock.saveEvaluation(data);
     }
 

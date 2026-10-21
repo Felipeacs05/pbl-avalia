@@ -2,13 +2,13 @@
 import type { ProblemDetails } from "../types/problem";
 import { problemDetailsMock, createProblemInMock, deleteProblemInMock } from "../mocks/problem.mock"; 
 import type { Problem } from "../types/discipline"; 
+import { USE_REAL_API } from "./apiMode";
 
 const BASE_URL = "/api/v1/problems";
-const IS_TEST = process.env.NODE_ENV === "test";
 
 export const problemService = {
   async fetchProblemDetails(problemId: string): Promise<ProblemDetails | null> {
-    if (!IS_TEST) {
+    if (!USE_REAL_API) {
       return new Promise((resolve) =>
         setTimeout(() => {
           const found = problemDetailsMock[problemId] ?? null;
@@ -30,7 +30,7 @@ export const problemService = {
     disciplineId: string,
     input: { title: string; description: string }
   ): Promise<Problem> {
-    if (!IS_TEST) {
+    if (!USE_REAL_API) {
       return new Promise((resolve, reject) =>
         setTimeout(() => {
           try {
@@ -51,7 +51,7 @@ export const problemService = {
   },
 
   async deleteProblem(problemId: string): Promise<void> {
-    if (!IS_TEST) {
+    if (!USE_REAL_API) {
       return new Promise((resolve) =>
         setTimeout(() => {
           deleteProblemInMock(problemId);
@@ -64,7 +64,7 @@ export const problemService = {
   },
 
   async startSession(problemId: string): Promise<{ sessionId: string }> {
-    if (!IS_TEST) {
+    if (!USE_REAL_API) {
       return new Promise((resolve) =>
         setTimeout(() => {
           const sessionId = `session_${Date.now()}`;
@@ -80,7 +80,7 @@ export const problemService = {
   },
 
   async releaseSelfEvaluation(problemId: string): Promise<void> {
-    if (!IS_TEST) {
+    if (!USE_REAL_API) {
       return new Promise((resolve) => setTimeout(() => resolve(), 500));
     }
     await fetch(`${BASE_URL}/${problemId}/self-evaluation/release`, {
