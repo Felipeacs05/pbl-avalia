@@ -46,3 +46,16 @@ export interface PeerEvaluationItem {
 export interface PeerEvaluationSubmission {
   evaluations: PeerEvaluationItem[];
 }
+
+export interface SelfEvaluationGradeReview {
+  id: string;
+  studentId: string;
+  studentName: string;
+  avatarUrl?: string;
+  score: number | null;
+  nota_original: number | null;
+  ajustado_por_tutor: boolean;
+  justification?: string | null;
+  comment?: string;
+  status: "submitted" | "pending";
+}

@@ -12,6 +12,7 @@ import { PastSessionsList } from "../../../../../components/features/problem-det
 import { ReleaseEvaluationButton } from "../../../../../components/features/problem-details/ReleaseEvaluationButton";
 import { ReleaseEvaluationModal } from "../../../../../components/features/evaluations/ReleaseEvaluationModal";
 import { Toast } from "../../../../../components/ui/Toast";
+import type { Session } from "../../../../../types/problem";
 import { FileQuestion, CheckCircle2 } from "lucide-react";
 
 export default function ProblemDetailsPage() {
@@ -58,6 +59,12 @@ export default function ProblemDetailsPage() {
     }
   };
 
+  const handleSelectPastSession = (session: Session) => {
+    router.push(
+      `/teacher-rooms/${roomId}/problems/${problemId}/sessions/${session.id}/review`
+    );
+  };
+
   const handleConfirmRelease = async () => {
     const updated = await confirmRelease();
     if (updated) {
@@ -87,7 +94,6 @@ export default function ProblemDetailsPage() {
       {/* Sticky header with navigation */}
       <ProblemDetailsHeader
         disciplineTag={disciplineTag}
-        // ====== ALTERADO POR CLAUDE ====== (volta sempre para as disciplinas da sala; o back() causava o loop com a sessão)
         onBack={() => router.push(`/teacher-rooms/${roomId}/disciplines`)}
         onShare={() => {
           if (navigator.share) {
@@ -155,7 +161,10 @@ export default function ProblemDetailsPage() {
               )}
 
               {/* Past Sessions */}
-              <PastSessionsList sessions={problem.sessions} />
+              <PastSessionsList
+                sessions={problem.sessions}
+                onSelectSession={handleSelectPastSession}
+              />
             </div>
 
             {/* Fixed-bottom footer action */}
@@ -213,7 +222,10 @@ export default function ProblemDetailsPage() {
 
             {/* Right column: Session history */}
             <div className="w-1/2 overflow-y-auto max-h-[calc(100vh-8rem)]">
-              <PastSessionsList sessions={problem.sessions} />
+              <PastSessionsList
+                sessions={problem.sessions}
+                onSelectSession={handleSelectPastSession}
+              />
             </div>
           </div>
         </>
