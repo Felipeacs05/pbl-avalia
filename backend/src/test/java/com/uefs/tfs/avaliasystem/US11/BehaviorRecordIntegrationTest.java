@@ -86,16 +86,16 @@ class BehaviorRecordIntegrationTest {
     @PersistenceContext
     private EntityManager entityManager;
 
-    private static final String TAGS_ROUTE = "/api/v1/behavior-tags";
+    private static final String TAGS_ROUTE = "/api/v1/rooms/{roomId}/behavior-tags";
     private static final String RECORDS_ROUTE = "/api/v1/sessions/{sessionId}/students/{studentId}/behavior-records";
     private static final String NOT_TUTOR_MESSAGE = "Apenas o tutor responsável pela sala pode registrar comportamentos.";
     private static final String TEXT_TOO_LONG_MESSAGE = "O texto deve ter no máximo 500 caracteres.";
 
-    // Sufixo nos nomes: tags semeadas pela implementação podem coexistir no banco de teste
     private static final String TAG_SUFFIX = " US11";
 
     private User tutor;
     private User student;
+    private Room room;
     private TutoringSession session;
     private BehaviorTag lateTag;
 
@@ -103,12 +103,12 @@ class BehaviorRecordIntegrationTest {
     void setUp() {
         tutor = persistUser("Tutor Integração");
         student = persistUser("Aluno Integração");
-        Room room = persistRoom("Sala do Comportamento", tutor);
+        room = persistRoom("Sala do Comportamento", tutor);
         persistStudentMember(room, student);
         session = persistSession(room);
         // Inseridas fora de ordem de propósito: a ordem da listagem precisa vir do banco
-        persistTag("Celular fora de contexto" + TAG_SUFFIX);
-        lateTag = persistTag("Atraso" + TAG_SUFFIX);
+        persistTag(room, "Celular fora de contexto" + TAG_SUFFIX);
+        lateTag = persistTag(room, "Atraso" + TAG_SUFFIX);
         entityManager.flush();
         // Sem isto o Service recebe a entidade do cache; limpando, ele carrega do H2 como em produção
         entityManager.clear();
@@ -124,7 +124,7 @@ class BehaviorRecordIntegrationTest {
     @DisplayName("Deve registrar o comportamento com uma tag obtida da listagem, gravando-o pelas três camadas com o horário do servidor")
     void createBehaviorRecord_WithTagFromListing_PersistsThroughFullStack() throws Exception {
         // 1º toque do fluxo: a tela recebe as tags do banco, em ordem alfabética
-        String tagsBody = mockMvc.perform(get(TAGS_ROUTE)
+        String tagsBody = mockMvc.perform(get(TAGS_ROUTE, room.getId())
                         .with(authenticatedAs(tutor.getId().toString())))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
@@ -345,8 +345,9 @@ class BehaviorRecordIntegrationTest {
         return tutoringSessionRepository.save(newSession);
     }
 
-    private BehaviorTag persistTag(String name) {
+    private BehaviorTag persistTag(Room room, String name) {
         BehaviorTag tag = new BehaviorTag();
+        tag.setRoom(room);
         tag.setName(name);
         return behaviorTagRepository.save(tag);
     }

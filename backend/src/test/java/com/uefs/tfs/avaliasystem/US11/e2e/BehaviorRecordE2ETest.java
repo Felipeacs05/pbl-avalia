@@ -100,11 +100,11 @@ class BehaviorRecordE2ETest {
     private static final String NOT_TUTOR_MESSAGE = "Apenas o tutor responsável pela sala pode registrar comportamentos.";
     private static final String TEXT_TOO_LONG_MESSAGE = "O texto deve ter no máximo 500 caracteres.";
 
-    // Sufixo nos nomes: tags semeadas pela implementação coexistem no banco e não podem ser apagadas no tearDown
     private static final String TAG_SUFFIX = " US11 E2E";
 
     private User tutor;
     private User student;
+    private Room room;
     private TutoringSession session;
     private UUID lateTagId;
     private final List<UUID> createdTagIds = new ArrayList<>();
@@ -114,18 +114,17 @@ class BehaviorRecordE2ETest {
         transactionTemplate = new TransactionTemplate(transactionManager);
         tutor = persistUser("Tutor E2E");
         student = persistUser("Aluno E2E");
-        Room room = persistRoom("Sala do Comportamento E2E", tutor);
+        room = persistRoom("Sala do Comportamento E2E", tutor);
         persistStudentMember(room, student);
         session = persistSession(room);
-        persistTag("Celular fora de contexto" + TAG_SUFFIX);
-        lateTagId = persistTag("Atraso" + TAG_SUFFIX);
+        persistTag(room, "Celular fora de contexto" + TAG_SUFFIX);
+        lateTagId = persistTag(room, "Atraso" + TAG_SUFFIX);
     }
 
     // Sem @Transactional: o servidor atende em outra thread. Limpeza na ordem das FKs.
     @AfterEach
     void tearDown() {
         behaviorRecordRepository.deleteAll();
-        // Só as tags criadas aqui: as semeadas pertencem à aplicação
         behaviorTagRepository.deleteAllById(createdTagIds);
         createdTagIds.clear();
         tutoringSessionRepository.deleteAll();
@@ -155,7 +154,7 @@ class BehaviorRecordE2ETest {
     void behaviorJourney_ListTagsTapTagTwiceThenAddText_WorksEndToEnd() {
         // 1) A tela carrega as tags predefinidas, em ordem alfabética
         ResponseEntity<BehaviorTagResponse[]> tagsResponse = restTemplate.exchange(
-                url("/api/v1/behavior-tags"), HttpMethod.GET,
+                url("/api/v1/rooms/" + room.getId() + "/behavior-tags"), HttpMethod.GET,
                 new HttpEntity<>(headersFor(tutor)), BehaviorTagResponse[].class);
 
         assertEquals(HttpStatus.OK, tagsResponse.getStatusCode());
@@ -341,8 +340,9 @@ class BehaviorRecordE2ETest {
         return tutoringSessionRepository.save(newSession);
     }
 
-    private UUID persistTag(String name) {
+    private UUID persistTag(Room room, String name) {
         BehaviorTag tag = new BehaviorTag();
+        tag.setRoom(room);
         tag.setName(name);
         UUID id = behaviorTagRepository.save(tag).getId();
         createdTagIds.add(id);
