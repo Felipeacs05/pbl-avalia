@@ -8,6 +8,7 @@ import com.uefs.tfs.avaliasystem.repository.AssessmentRepository;
 import com.uefs.tfs.avaliasystem.repository.ProblemRepository;
 import com.uefs.tfs.avaliasystem.repository.UserRepository;
 import com.uefs.tfs.avaliasystem.service.SelfAssessmentService;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +31,7 @@ class SelfAssessmentServiceTest {
     @Mock private ProblemRepository problemRepository;
     @Mock private AssessmentRepository assessmentRepository;
     @Mock private UserRepository userRepository;
+
 
     @Test
     @DisplayName("[US13] submeterNota_Aberto_Sucesso")

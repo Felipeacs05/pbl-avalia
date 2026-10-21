@@ -12,12 +12,13 @@ import type {
   SessionRoleRequestError,
 } from "../types/sessionRole";
 import { sessionRoleMock } from "../mocks/sessionRole.mock";
+import { USE_REAL_API } from "./apiMode";
 
 const BASE_URL = "/api/v1/sessions";
 
 // Mesmo padrão dos outros serviços: fora dos testes usa o mock.
 // Quando o endpoint estiver no ar, basta remover o desvio para o mock em assignRole.
-const IS_TEST = process.env.NODE_ENV === "test";
+const USE_MOCKS = !USE_REAL_API;
 
 const NETWORK_MESSAGE = "Não foi possível atribuir o papel. Verifique sua conexão e tente novamente.";
 const GENERIC_MESSAGE = "Não foi possível atribuir o papel. Tente novamente.";
@@ -45,7 +46,7 @@ export const sessionRoleService = {
     studentId: string,
     extraGrade: number,
   ): Promise<SessionRoleAssignment> {
-    if (!IS_TEST) return sessionRoleMock.assignRole(sessionId, role, studentId, extraGrade);
+    if (USE_MOCKS) return sessionRoleMock.assignRole(sessionId, role, studentId, extraGrade);
 
     let response: Response;
     try {
@@ -68,7 +69,7 @@ export const sessionRoleService = {
    * DELETE /api/v1/sessions/{sessionId}/roles/{role}
    */
   async removeRole(sessionId: string, role: SessionRole): Promise<void> {
-    if (!IS_TEST) return sessionRoleMock.removeRole(sessionId, role);
+    if (USE_MOCKS) return sessionRoleMock.removeRole(sessionId, role);
 
     let response: Response;
     try {

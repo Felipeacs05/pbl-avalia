@@ -1,9 +1,0 @@
-node_modules/ 
-dist/ 
-.env 
-target/ 
-*.class 
-.idea/ 
-.vscode/ 
-*.iml 
-*:Zone.Identifier

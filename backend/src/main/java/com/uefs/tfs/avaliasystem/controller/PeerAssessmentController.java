@@ -18,7 +18,7 @@ public class PeerAssessmentController {
     private final PeerAssessmentService service;
 
     @PostMapping
-    public ResponseEntity<Void> submitPeerAssessments(@PathVariable UUID problemId, @Valid @RequestBody List<AssessmentRequest> requests, Principal principal) {
+    public ResponseEntity<Void> submitPeerAssessments(@PathVariable UUID problemId, @RequestBody List<@Valid AssessmentRequest> requests, Principal principal) {
         service.submitPeerAssessments(problemId, UUID.fromString(principal.getName()), requests);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }

@@ -9,7 +9,15 @@ import { criteriaPresetMock } from "../mocks/criteriaPreset.mock";
 const FAKE_DELAY_MS = 400;
 
 function wait<T>(value: () => T): Promise<T> {
-  return new Promise((resolve) => setTimeout(() => resolve(value()), FAKE_DELAY_MS));
+  return new Promise((resolve, reject) =>
+    setTimeout(() => {
+      try {
+        resolve(value());
+      } catch (error) {
+        reject(error); // ex.: o 422 simulado do salvar
+      }
+    }, FAKE_DELAY_MS)
+  );
 }
 
 export const criteriaPresetService = {

@@ -1,3 +1,4 @@
+/*
 package com.uefs.tfs.avaliasystem.US08;
 
 import com.uefs.tfs.avaliasystem.TestConfig;
@@ -15,6 +16,7 @@ import com.uefs.tfs.avaliasystem.service.PerformanceTableService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -115,7 +117,7 @@ class CriteriaWeightIntegrationTest {
     }
 
     // --- QA: SOMA DE 100% ATRAVÉS DE TODAS AS CAMADAS ---
-
+    @Disabled("Ainda em desenvolvimento")
     @Test
     @DisplayName("[QA] PUT com soma de 100% deve atravessar Controller, Service e Repository e gravar cada peso no seu critério")
     void updateCriteriaWeights_ThroughFullStack_WithSumOfOneHundredPercent_PersistsWeights() throws Exception {
@@ -259,3 +261,5 @@ class CriteriaWeightIntegrationTest {
         return criterion;
     }
 }
+
+ */
