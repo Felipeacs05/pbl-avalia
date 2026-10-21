@@ -12,6 +12,7 @@ import { PastSessionsList } from "../../../../../components/features/problem-det
 import { ReleaseEvaluationButton } from "../../../../../components/features/problem-details/ReleaseEvaluationButton";
 import { ReleaseEvaluationModal } from "../../../../../components/features/evaluations/ReleaseEvaluationModal";
 import { Toast } from "../../../../../components/ui/Toast";
+import type { Session } from "../../../../../types/problem";
 import { FileQuestion, CheckCircle2 } from "lucide-react";
 
 export default function ProblemDetailsPage() {
@@ -56,6 +57,12 @@ export default function ProblemDetailsPage() {
     if (result && result.sessionId) {
       router.push(`/teacher-rooms/${roomId}/problems/${problemId}/sessions/${result.sessionId}`);
     }
+  };
+
+  const handleSelectPastSession = (session: Session) => {
+    router.push(
+      `/teacher-rooms/${roomId}/problems/${problemId}/sessions/${session.id}/review`
+    );
   };
 
   const handleConfirmRelease = async () => {
@@ -155,7 +162,10 @@ export default function ProblemDetailsPage() {
               )}
 
               {/* Past Sessions */}
-              <PastSessionsList sessions={problem.sessions} />
+              <PastSessionsList
+                sessions={problem.sessions}
+                onSelectSession={handleSelectPastSession}
+              />
             </div>
 
             {/* Fixed-bottom footer action */}
@@ -213,7 +223,10 @@ export default function ProblemDetailsPage() {
 
             {/* Right column: Session history */}
             <div className="w-1/2 overflow-y-auto max-h-[calc(100vh-8rem)]">
-              <PastSessionsList sessions={problem.sessions} />
+              <PastSessionsList
+                sessions={problem.sessions}
+                onSelectSession={handleSelectPastSession}
+              />
             </div>
           </div>
         </>
