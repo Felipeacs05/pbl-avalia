@@ -1,7 +1,7 @@
 // src/components/features/performance-tables/CriteriaScoreCard.tsx
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Check, X, Minus, Plus } from "lucide-react";
 
 interface CriteriaScoreCardProps {
@@ -30,15 +30,29 @@ export function CriteriaScoreCard({
   onScoreChange,
   min = 0,
   max = 100,
-  step = 5,
+  step = 1,
   tone = "blue",
   scorePrefix = "",
 }: CriteriaScoreCardProps) {
   const isBlue = tone === "blue";
 
   // soma/subtrai "step" sem passar dos limites
+  const clamp = (value: number) => Math.min(max, Math.max(min, value));
   const changeScore = (delta: number) => {
-    onScoreChange?.(Math.min(max, Math.max(min, score + delta)));
+    onScoreChange?.(clamp(score + delta));
+  };
+
+  // Texto digitado: enquanto o campo está sendo editado (ex.: vazio), ele manda; ao sair, volta à nota
+  const [draft, setDraft] = useState<string | null>(null);
+  const handleType = (text: string) => {
+    if (text.trim() === "") {
+      setDraft("");
+      return;
+    }
+    const typed = Number(text);
+    if (Number.isNaN(typed)) return;
+    setDraft(null);
+    onScoreChange?.(clamp(Math.round(typed)));
   };
   const stepButtonClass =
     "w-8 h-8 rounded-full flex items-center justify-center border border-white/30 text-white/90 hover:bg-white/15 hover:text-white transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent";
@@ -110,15 +124,24 @@ export function CriteriaScoreCard({
             >
               <Minus size={16} />
             </button>
-            {/* aria-live: o leitor de tela anuncia a nota nova a cada clique */}
-            <span
-              aria-live="polite"
-              aria-label={`Nota de ${title}: ${scorePrefix}${score}%`}
-              className={`min-w-[4.25rem] text-center border rounded-xl px-2.5 py-1.5 text-white font-bold text-sm tracking-wide shadow-inner ${badgeTone}`}
+            <label
+              className={`flex items-center gap-0.5 border rounded-xl px-2.5 py-1.5 text-white font-bold text-sm tracking-wide shadow-inner ${badgeTone}`}
             >
               {scorePrefix}
-              {score}%
-            </span>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={min}
+                max={max}
+                step={step}
+                value={draft ?? String(score)}
+                onChange={(e) => handleType(e.target.value)}
+                onBlur={() => setDraft(null)}
+                aria-label={`Nota de ${title}`}
+                className="w-12 bg-transparent text-center text-white font-bold text-sm outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              />
+              %
+            </label>
             <button
               type="button"
               onClick={() => changeScore(step)}

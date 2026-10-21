@@ -12,6 +12,7 @@ import { useCriteriaPreset } from "../../../hooks/useCriteriaPreset";
 import type { PresetCriterion } from "../../../types/performanceTable";
 import { Toast } from "../../ui/Toast";
 import { PresetCriterionCard } from "./PresetCriterionCard";
+import { PresetToggleCard } from "./PresetToggleCard";
 import { CriterionFormModal } from "./CriterionFormModal";
 
 interface CriteriaPresetPageProps {
@@ -43,6 +44,7 @@ export function CriteriaPresetPage({
     addCriterion,
     updateCriterion,
     removeCriterion,
+    toggleCriterion,
     savePreset,
   } = useCriteriaPreset(presetId);
 
@@ -60,7 +62,10 @@ export function CriteriaPresetPage({
   const roomCodeTag = room ? `${room.code} - ${room.semester ?? "2026.2"}` : "TEC499 - 2026.2";
 
   // Soma dos pesos (%): só informativa, quem recusa total diferente de 100% é o back-end (422), como na US08
-  const totalWeight = criteria.reduce((sum, c) => sum + c.weight, 0);
+  // Auto Avaliação e Avaliação em pares são toggles: ficam fora da lista de critérios e da soma
+  const weightedCriteria = criteria.filter((c) => !c.isToggle);
+  const toggleCriteria = criteria.filter((c) => c.isToggle);
+  const totalWeight = weightedCriteria.reduce((sum, c) => sum + c.weight, 0);
   const is100 = totalWeight === 100;
 
   // Nomes dos outros critérios, para o modal bloquear nome repetido
@@ -113,14 +118,33 @@ export function CriteriaPresetPage({
           </div>
         ) : (
           <>
+            {toggleCriteria.length > 0 && (
+              <section className="flex flex-col gap-2.5" aria-labelledby="toggles-title">
+                <h2 id="toggles-title" className="text-xs font-bold text-gray-500 tracking-wider uppercase px-1">
+                  Avaliações
+                </h2>
+                <ul className="flex flex-col gap-2.5 list-none p-0">
+                  {toggleCriteria.map((c) => (
+                    <li key={c.id}>
+                      <PresetToggleCard
+                        title={c.name}
+                        isChecked={Boolean(c.enabled)}
+                        onToggle={() => toggleCriterion(c.id)}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
             <section className="flex flex-col gap-2.5" aria-labelledby="criteria-title">
               <h2 id="criteria-title" className="text-xs font-bold text-gray-500 tracking-wider uppercase px-1">
                 Critérios
               </h2>
-              {criteria.length === 0 ? (
+              {weightedCriteria.length === 0 ? (
                 <p className="text-xs italic text-gray-400 px-1">Nenhum critério cadastrado.</p>
               ) : (
-                <ul className="flex flex-col gap-2.5 list-none p-0">{criteria.map(renderCard)}</ul>
+                <ul className="flex flex-col gap-2.5 list-none p-0">{weightedCriteria.map(renderCard)}</ul>
               )}
 
               <button

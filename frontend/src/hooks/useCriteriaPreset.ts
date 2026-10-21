@@ -54,6 +54,12 @@ export function useCriteriaPreset(presetId: string) {
     setHasChanges(true);
   }, []);
 
+  // Liga/desliga Auto Avaliação e Avaliação em pares
+  const toggleCriterion = useCallback((id: string) => {
+    setCriteria((prev) => prev.map((c) => (c.id === id ? { ...c, enabled: !c.enabled } : c)));
+    setHasChanges(true);
+  }, []);
+
   // Proteção extra: critério fixo (ex.: Papel) não sai nem se a função for chamada por engano
   const removeCriterion = useCallback((id: string) => {
     setCriteria((prev) => prev.filter((c) => c.id !== id || !c.isRemovable));
@@ -93,6 +99,7 @@ export function useCriteriaPreset(presetId: string) {
     addCriterion,
     updateCriterion,
     removeCriterion,
+    toggleCriterion,
     savePreset,
   };
 }

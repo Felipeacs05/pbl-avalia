@@ -26,14 +26,7 @@ export const studentEvaluationMock = {
       sessionId,
       studentId,
       studentName,
-      criteria: {
-        comportamento: 100,
-        participacao: 100,
-        segmentos: 100,
-        papelPassed: true,
-        notaPapel: 100,
-        notaAdicional: 0,
-      },
+      criteria: {}, // critério sem nota salva vale 100 na tela
       tags: initialTags,
       message: "",
       updatedAt: new Date().toISOString(),
