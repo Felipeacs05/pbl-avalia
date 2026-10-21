@@ -38,4 +38,7 @@ public class RoomMember {
     @JoinColumn(name = "team_id")
     private Team team;
 
+    public String getName() {
+        return user != null ? user.getName() : null;
+    }
 }
