@@ -1,13 +1,13 @@
 // src/services/roomService.ts
 import type { Room } from "../types/room";
 import { roomsMock } from "../mocks/rooms.mock";
+import { USE_REAL_API } from "./apiMode";
 
 const BASE_URL = "/api/v1/rooms";
-const IS_TEST = process.env.NODE_ENV === "test";
 
 export const roomService = {
   async fetchRooms(): Promise<Room[]> {
-    if (!IS_TEST) {
+    if (!USE_REAL_API) {
       return new Promise((res) =>
         setTimeout(
           () =>
@@ -29,7 +29,7 @@ export const roomService = {
   },
 
   async createRoom(name: string): Promise<{ code: string; joinLink: string }> {
-    if (!IS_TEST) {
+    if (!USE_REAL_API) {
       return new Promise((res) =>
         setTimeout(() => {
           const code = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -47,7 +47,7 @@ export const roomService = {
   },
 
   async updateRoom(id: string, name: string): Promise<void> {
-    if (!IS_TEST) return new Promise((res) => setTimeout(() => res(), 500));
+    if (!USE_REAL_API) return new Promise((res) => setTimeout(() => res(), 500));
     await fetch(`${BASE_URL}/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -56,7 +56,7 @@ export const roomService = {
   },
 
   async deleteRoom(id: string): Promise<void> {
-    if (!IS_TEST) return new Promise((res) => setTimeout(() => res(), 500));
+    if (!USE_REAL_API) return new Promise((res) => setTimeout(() => res(), 500));
     await fetch(`${BASE_URL}/${id}`, { method: "DELETE" });
   },
 };
