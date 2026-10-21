@@ -3,6 +3,7 @@ package com.uefs.tfs.avaliasystem.US12.e2e;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
@@ -30,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *  - A chave do token no localStorage é "token".
  *  - O toast de erro menciona erro/falha/conexão.
  */
+@Tag("e2e")
 class ToggleOfflineSeleniumTest {
 
     private static final String BASE_URL = System.getProperty("e2e.baseUrl", "http://localhost:5173");
