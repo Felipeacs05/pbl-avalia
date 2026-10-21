@@ -5,7 +5,7 @@ import React from "react";
 import { ArrowLeft } from "lucide-react";
 import { useCriteriaWeights } from "../../../hooks/useCriteriaWeights";
 import { CriteriaWeightsForm } from "./CriteriaWeightsForm";
-import { Toast } from "../../ui/Toast"; // ====== ALTERADO POR CLAUDE ======
+import { Toast } from "../../ui/Toast";
 
 export interface CriteriaWeightsPageProps {
   performanceTableId: string;
@@ -16,13 +16,12 @@ export function CriteriaWeightsPage({
   performanceTableId,
   onBack,
 }: CriteriaWeightsPageProps) {
-  // ====== ALTERADO POR CLAUDE ====== (successMessage e clearSuccessMessage)
   const { criteria, isLoading, error, saveWeights, successMessage, clearSuccessMessage } =
     useCriteriaWeights(performanceTableId);
 
   return (
     <div className="w-full min-h-screen bg-[#F5F5F7] text-gray-800 flex flex-col font-sans">
-      {/* ====== ALTERADO POR CLAUDE ====== (aviso de sucesso ao salvar) */}
+      {/* aviso de sucesso ao salvar */}
       {successMessage && (
         <Toast message={successMessage} type="success" onClose={clearSuccessMessage} />
       )}

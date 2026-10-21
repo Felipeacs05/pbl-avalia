@@ -111,6 +111,15 @@ export function createProblemInMock(
   };
   return problem;
 }
+// Atualiza título e descrição do problema (lista da disciplina e detalhes). Fica em memória.
+export function updateProblemInMock(problemId: string, input: { title: string; description: string }): void {
+  gradeMock.forEach((discipline) => {
+    discipline.problems = discipline.problems.map((p) => (p.id === problemId ? { ...p, ...input } : p));
+  });
+  if (problemDetailsMock[problemId]) {
+    problemDetailsMock[problemId] = { ...problemDetailsMock[problemId], ...input };
+  }
+}
 // Exclui o problema da disciplina e dos detalhes. Fica em memória: F5 traz de volta os problemas iniciais.
 export function deleteProblemInMock(problemId: string): void {
   gradeMock.forEach((discipline) => {

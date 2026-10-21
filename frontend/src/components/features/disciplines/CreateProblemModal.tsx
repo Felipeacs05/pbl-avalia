@@ -1,7 +1,8 @@
 // src/components/features/disciplines/CreateProblemModal.tsx
 
-// Modal "Criar Problema"
-// Não chama a API sozinho: avisa a página pelo onSubmit, e a página cria e navega.
+// Modal "Criar Problema" (e "Editar Problema", quando recebe `problem`)
+// Não chama a API sozinho: avisa a página pelo onSubmit, e a página cria/salva e navega.
+// Na edição, também dá acesso ao Pré-set de Critérios do problema.
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -10,13 +11,16 @@ import { X } from "lucide-react";
 const TITLE_MAX_LENGTH = 100;
 
 interface CreateProblemModalProps {
+  problem?: { title: string; description: string }; // quando existe, o modal está editando este problema
   onClose: () => void;
   onSubmit: (input: { title: string; description: string }) => Promise<void>;
+  onEditPreset?: () => void; // só na edição: abre o Pré-set de Critérios
 }
 
-export function CreateProblemModal({ onClose, onSubmit }: CreateProblemModalProps) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+export function CreateProblemModal({ problem, onClose, onSubmit, onEditPreset }: CreateProblemModalProps) {
+  const isEditing = Boolean(problem);
+  const [title, setTitle] = useState(problem?.title ?? "");
+  const [description, setDescription] = useState(problem?.description ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -31,7 +35,7 @@ export function CreateProblemModal({ onClose, onSubmit }: CreateProblemModalProp
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Título vazio ou só com espaços não cria o problema
+    // Título vazio ou só com espaços não salva o problema
     if (!title.trim()) {
       setError("O título do problema não pode ficar vazio.");
       return;
@@ -39,10 +43,10 @@ export function CreateProblemModal({ onClose, onSubmit }: CreateProblemModalProp
     setError(null);
     setIsSubmitting(true);
     try {
-      // Quem fecha o modal é a navegação para o Pré-set (feita pela página)
+      // Quem fecha o modal é a página (navegando para o Pré-set na criação, ou fechando na edição)
       await onSubmit({ title: title.trim(), description: description.trim() });
     } catch {
-      setError("Não foi possível criar o problema. Tente novamente.");
+      setError(`Não foi possível ${isEditing ? "salvar" : "criar"} o problema. Tente novamente.`);
       setIsSubmitting(false);
     }
   };
@@ -70,10 +74,12 @@ export function CreateProblemModal({ onClose, onSubmit }: CreateProblemModalProp
         </button>
 
         <h2 id="create-problem-title" className="text-xl font-bold mb-1">
-          Criar Problema
+          {isEditing ? "Editar Problema" : "Criar Problema"}
         </h2>
         <p className="text-xs text-white/70 mb-4">
-          O problema nasce com o preset de critérios, que você ajusta na Tabela de Desempenho.
+          {isEditing
+            ? "Altere o nome do problema ou o pré-set de critérios."
+            : "O problema nasce com o preset de critérios, que você ajusta na Tabela de Desempenho."}
         </p>
 
         {error && (
@@ -124,8 +130,19 @@ export function CreateProblemModal({ onClose, onSubmit }: CreateProblemModalProp
           disabled={isSubmitting}
           className="w-full bg-[#757DC3] hover:bg-[#636BAE] text-white py-3 rounded-xl font-bold text-sm shadow-md transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? "Criando..." : "Criar"}
+          {isSubmitting ? (isEditing ? "Salvando..." : "Criando...") : isEditing ? "Salvar" : "Criar"}
         </button>
+
+        {isEditing && onEditPreset && (
+          <button
+            type="button"
+            onClick={onEditPreset}
+            disabled={isSubmitting}
+            className="w-full mt-3 border border-white/40 hover:bg-white/10 text-white py-3 rounded-xl font-bold text-sm transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            Editar pré-set de critérios
+          </button>
+        )}
       </form>
     </div>
   );

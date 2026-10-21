@@ -23,7 +23,6 @@ export function EvaluationSessionView({
   roomId,
   sessionId,
   onBack,
-  onEditPreset,
   onGenerateReport,
   onCloseSession,
   onConfigureEvaluation,
@@ -95,18 +94,9 @@ export function EvaluationSessionView({
           </div>
         ) : null}
 
-        {/* 3 Botões de Ação do Rodapé (Figma) */}
+        {/* Botões de Ação do Rodapé */}
         <div className="w-full pt-4 pb-6 mt-auto flex flex-col gap-3">
-          {/* Botão 1: Editar Pré-set de avaliação */}
-          <button
-            type="button"
-            onClick={onEditPreset}
-            className="w-full bg-[#757DC3] hover:bg-[#6870B5] active:scale-[0.99] text-white py-3.5 px-6 rounded-2xl font-semibold text-base shadow-sm transition-all text-center cursor-pointer"
-          >
-            Editar Pré-set de avaliação
-          </button>
-
-          {/* Botão 2: Gerar Relatório da sessão */}
+          {/* Botão 1: Gerar Relatório da sessão */}
           <button
             type="button"
             onClick={onGenerateReport}
@@ -116,7 +106,7 @@ export function EvaluationSessionView({
             <span>Gerar Relatório da sessão</span>
           </button>
 
-          {/* Botão 3: Fechar Sessão */}
+          {/* Botão 2: Fechar Sessão */}
           <button
             type="button"
             onClick={onCloseSession}

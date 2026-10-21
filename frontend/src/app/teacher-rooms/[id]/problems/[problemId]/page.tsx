@@ -87,7 +87,7 @@ export default function ProblemDetailsPage() {
       {/* Sticky header with navigation */}
       <ProblemDetailsHeader
         disciplineTag={disciplineTag}
-        // ====== ALTERADO POR CLAUDE ====== (volta sempre para as disciplinas da sala; o back() causava o loop com a sessão)
+        // volta sempre para as disciplinas da sala; o back() causava o loop com a sessão
         onBack={() => router.push(`/teacher-rooms/${roomId}/disciplines`)}
         onShare={() => {
           if (navigator.share) {
