@@ -1,16 +1,16 @@
 // src/services/photoRosterService.ts
 import type { Student } from "../types/student";
 import { photoRosterMock } from "../mocks/photoRosterMock";
+import { USE_REAL_API } from "./apiMode";
 
 const BASE_URL = "/api/v1/rooms";
-const IS_TEST = process.env.NODE_ENV === "test";
 
 export const photoRosterService = {
   /**
    * Fetches the enrolled students for a specific room/class.
    */
   async getStudentsByRoom(roomId: string): Promise<Student[]> {
-    if (!IS_TEST) {
+    if (!USE_REAL_API) {
       return new Promise((resolve) => {
         setTimeout(() => {
           resolve(photoRosterMock.getStudents(roomId));
@@ -39,7 +39,7 @@ export const photoRosterService = {
     roomId: string,
     studentId: string
   ): Promise<Student[]> {
-    if (!IS_TEST) {
+    if (!USE_REAL_API) {
       return new Promise((resolve) => {
         setTimeout(() => {
           resolve(photoRosterMock.removeStudent(roomId, studentId));

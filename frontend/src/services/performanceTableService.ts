@@ -3,9 +3,9 @@ import type {
   CriterionWeight,
   PerformanceTable,
 } from "../types/performanceTable";
+import { IS_TEST, USE_REAL_API } from "./apiMode";
 
 const BASE_URL = "/api/v1/performance-tables";
-const IS_TEST = process.env.NODE_ENV === "test";
 
 // Mock em memória para desenvolvimento e fallback fora do ambiente de teste
 const memoryTables = new Map<string, PerformanceTable>([
@@ -49,7 +49,7 @@ function isFetchMocked(): boolean {
 
 export const performanceTableService = {
   async fetchPerformanceTable(tableId: string): Promise<PerformanceTable> {
-    if (!IS_TEST || !isFetchMocked()) {
+    if (!USE_REAL_API || (IS_TEST && !isFetchMocked())) {
       const existing = memoryTables.get(tableId) || memoryTables.get("default")!;
       return { ...existing, criteriaList: [...existing.criteriaList] };
     }
@@ -74,7 +74,7 @@ export const performanceTableService = {
     tableId: string,
     weights: CriterionWeight[]
   ): Promise<PerformanceTable> {
-    if (!IS_TEST || !isFetchMocked()) {
+    if (!USE_REAL_API || (IS_TEST && !isFetchMocked())) {
       const sum = weights.reduce((acc, curr) => acc + curr.criteriaWeight, 0);
       if (Math.abs(sum - 1.0) > 1e-6) {
         throw {
