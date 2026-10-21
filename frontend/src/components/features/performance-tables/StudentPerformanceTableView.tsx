@@ -31,7 +31,7 @@ export function StudentPerformanceTableView({
 
   // Localiza o aluno correspondente ao ID
   const currentStudent = roster?.students.find((s) => s.id === studentId);
-  // ====== ALTERADO POR CLAUDE ====== (antes caía no nome fixo "Luana Angélica")
+  // antes caía no nome fixo "Luana Angélica"
   const studentName = currentStudent?.name || "Aluno";
   const studentTags = currentStudent?.tags || [];
 
@@ -73,7 +73,7 @@ export function StudentPerformanceTableView({
     notaAdicional: 0,
   };
 
-  // ====== ALTERADO POR CLAUDE ====== (sem tags de exemplo: mostra só as marcações reais da sessão)
+  // sem tags de exemplo: mostra só as marcações reais da sessão
   const tags = evaluation?.tags ?? [];
 
   const message = evaluation?.message || "";
@@ -156,21 +156,21 @@ export function StudentPerformanceTableView({
                   title="Comportamento"
                   weightLabel="Peso 1"
                   score={criteria.comportamento}
-                  onScoreChange={(value) => updateCriterionScore("comportamento", value)} // ====== ALTERADO POR CLAUDE ======
+                  onScoreChange={(value) => updateCriterionScore("comportamento", value)}
                 />
 
                 <CriteriaScoreCard
                   title="Participação"
                   weightLabel="Peso 1"
                   score={criteria.participacao}
-                  onScoreChange={(value) => updateCriterionScore("participacao", value)} // ====== ALTERADO POR CLAUDE ======
+                  onScoreChange={(value) => updateCriterionScore("participacao", value)}
                 />
 
                 <CriteriaScoreCard
                   title="Segmentos"
                   weightLabel="Peso 1"
                   score={criteria.segmentos}
-                  onScoreChange={(value) => updateCriterionScore("segmentos", value)} // ====== ALTERADO POR CLAUDE ======
+                  onScoreChange={(value) => updateCriterionScore("segmentos", value)}
                 />
 
                 <CriteriaScoreCard
@@ -197,7 +197,7 @@ export function StudentPerformanceTableView({
                 title="Papel"
                 weightLabel=""
                 score={criteria.notaPapel}
-                onScoreChange={(value) => updateCriterionScore("notaPapel", value)} // ====== ALTERADO POR CLAUDE ======
+                onScoreChange={(value) => updateCriterionScore("notaPapel", value)}
               />
             </section>
 
@@ -217,7 +217,7 @@ export function StudentPerformanceTableView({
                 tone="gray"
                 scorePrefix="+ "
                 score={criteria.notaAdicional}
-                onScoreChange={(value) => updateCriterionScore("notaAdicional", value)} // ====== ALTERADO POR CLAUDE ======
+                onScoreChange={(value) => updateCriterionScore("notaAdicional", value)}
               />
             </section>
 
@@ -227,7 +227,7 @@ export function StudentPerformanceTableView({
                 Marcações Recebidas pelo aluno durante a sessão
               </h2>
               <div className="w-full bg-white rounded-2xl border border-gray-200/90 p-4 min-h-[90px] flex flex-wrap gap-2 content-start shadow-xs">
-                {/* ====== ALTERADO POR CLAUDE ====== (aviso quando o aluno não recebeu marcações) */}
+                {/* aviso quando o aluno não recebeu marcações */}
                 {tags.length === 0 && (
                   <p className="text-xs italic text-gray-400">Nenhuma marcação recebida nesta sessão.</p>
                 )}

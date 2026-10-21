@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { Check, X, Minus, Plus } from "lucide-react"; // ====== ALTERADO POR CLAUDE ====== (Minus e Plus)
+import { Check, X, Minus, Plus } from "lucide-react";
 
 interface CriteriaScoreCardProps {
   title: string;
@@ -11,7 +11,7 @@ interface CriteriaScoreCardProps {
   type?: "score" | "toggle";
   togglePassed?: boolean;
   onToggle?: (passed: boolean) => void;
-  // ====== ALTERADO POR CLAUDE ====== (antes: onScoreClick, que só alternava entre 2 valores fixos)
+  // antes: onScoreClick, que só alternava entre 2 valores fixos
   onScoreChange?: (score: number) => void;
   min?: number;
   max?: number;
@@ -27,7 +27,7 @@ export function CriteriaScoreCard({
   type = "score",
   togglePassed = true,
   onToggle,
-  onScoreChange, // ====== ALTERADO POR CLAUDE ======
+  onScoreChange,
   min = 0,
   max = 100,
   step = 5,
@@ -36,7 +36,7 @@ export function CriteriaScoreCard({
 }: CriteriaScoreCardProps) {
   const isBlue = tone === "blue";
 
-  // ====== ALTERADO POR CLAUDE ====== (soma/subtrai "step" sem passar dos limites)
+  // soma/subtrai "step" sem passar dos limites
   const changeScore = (delta: number) => {
     onScoreChange?.(Math.min(max, Math.max(min, score + delta)));
   };
@@ -99,7 +99,7 @@ export function CriteriaScoreCard({
             </button>
           </div>
         ) : (
-          // ====== ALTERADO POR CLAUDE ====== (− nota + no lugar do botão que alternava valores)
+          // − nota + no lugar do botão que alternava valores
           <div className="flex items-center gap-1.5">
             <button
               type="button"

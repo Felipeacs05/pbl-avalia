@@ -1,6 +1,6 @@
 // src/services/problemService.ts
 import type { ProblemDetails } from "../types/problem";
-import { problemDetailsMock, createProblemInMock, deleteProblemInMock } from "../mocks/problem.mock"; 
+import { problemDetailsMock, createProblemInMock, updateProblemInMock, deleteProblemInMock } from "../mocks/problem.mock"; 
 import type { Problem } from "../types/discipline"; 
 
 const BASE_URL = "/api/v1/problems";
@@ -48,6 +48,24 @@ export const problemService = {
     });
     if (!response.ok) throw new Error("Falha ao criar o problema.");
     return response.json();
+  },
+
+  // Edita título e descrição do problema (o pré-set de critérios é editado na tela própria)
+  async updateProblem(problemId: string, input: { title: string; description: string }): Promise<void> {
+    if (!IS_TEST) {
+      return new Promise((resolve) =>
+        setTimeout(() => {
+          updateProblemInMock(problemId, input);
+          resolve();
+        }, 400)
+      );
+    }
+    const response = await fetch(`${BASE_URL}/${problemId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    if (!response.ok) throw new Error("Falha ao editar o problema.");
   },
 
   async deleteProblem(problemId: string): Promise<void> {

@@ -43,7 +43,6 @@ export interface StudentEvaluationData {
 export interface PresetCriterion {
   id: string;
   name: string;
-  weight: number;       // peso inteiro, ex.: 1 -> "Peso 1"
-  isOptional: boolean;  // true = seção "Critérios opcionais"
-  isRemovable: boolean; // false = não mostra a lixeira (ex.: Papel)
+  weight: number;       // percentual inteiro de 0 a 100, ex.: 20 -> "20%"
+  isRemovable: boolean; // false = critério fixo (ex.: Papel): sem lixeira e sem editar o nome
 }

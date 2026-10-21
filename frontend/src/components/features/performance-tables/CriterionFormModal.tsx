@@ -9,8 +9,8 @@ import { X, ListChecks } from "lucide-react";
 import type { PresetCriterion } from "../../../types/performanceTable";
 import type { CriterionInput } from "../../../hooks/useCriteriaPreset";
 
-const MIN_WEIGHT = 1;
-const MAX_WEIGHT = 10;
+const MIN_WEIGHT = 0;
+const MAX_WEIGHT = 100; // percentual
 
 // Subtarefa: bloqueia nome vazio ou só com espaços.
 // Também bloqueia nome repetido, para não existirem dois critérios iguais na tabela.
@@ -33,6 +33,7 @@ interface CriterionFormModalProps {
 
 export function CriterionFormModal({ isOpen, criterion, existingNames, onClose, onSubmit }: CriterionFormModalProps) {
   const isEditing = Boolean(criterion);
+  const isNameLocked = Boolean(criterion) && !criterion!.isRemovable; // critério fixo (Papel): só o peso muda
   const [name, setName] = useState(criterion?.name ?? "");
   // Peso guardado como texto: assim dá para apagar o campo e digitar outro número
   const [weightText, setWeightText] = useState(String(criterion?.weight ?? MIN_WEIGHT));
@@ -54,7 +55,7 @@ export function CriterionFormModal({ isOpen, criterion, existingNames, onClose, 
   // O form também cobre o Enter no campo de nome
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const validationError = validateCriterionName(name, existingNames);
+    const validationError = isNameLocked ? null : validateCriterionName(name, existingNames);
     const weight = Number(weightText);
     const isWeightValid = Number.isInteger(weight) && weight >= MIN_WEIGHT && weight <= MAX_WEIGHT;
     setError(validationError);
@@ -113,10 +114,11 @@ export function CriterionFormModal({ isOpen, criterion, existingNames, onClose, 
             }}
             placeholder="Ex.: Pesquisa"
             maxLength={60}
-            autoFocus
+            readOnly={isNameLocked}
+            autoFocus={!isNameLocked}
             aria-invalid={Boolean(error)}
             aria-describedby={error ? "criterion-name-error" : undefined}
-            className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 ${
+            className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 read-only:bg-gray-100 read-only:text-gray-500 ${
               error ? "border-red-400 focus:ring-red-300" : "border-gray-300 focus:ring-[#4354A0]"
             }`}
           />
@@ -130,10 +132,11 @@ export function CriterionFormModal({ isOpen, criterion, existingNames, onClose, 
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between gap-3">
             <label htmlFor="criterion-weight" className="text-sm font-semibold text-gray-700">
-              Peso
+              Peso (%)
             </label>
             <input
               id="criterion-weight"
+              autoFocus={isNameLocked}
               type="number"
               inputMode="numeric"
               min={MIN_WEIGHT}
@@ -146,7 +149,7 @@ export function CriterionFormModal({ isOpen, criterion, existingNames, onClose, 
               }}
               aria-invalid={Boolean(weightError)}
               aria-describedby={weightError ? "criterion-weight-error" : undefined}
-              className={`w-20 px-3 py-2 text-center rounded-xl border font-bold text-sm text-gray-800 focus:outline-none focus:ring-2 ${
+              className={`w-24 px-3 py-2 text-center rounded-xl border font-bold text-sm text-gray-800 focus:outline-none focus:ring-2 ${
                 weightError ? "border-red-400 focus:ring-red-300" : "border-gray-300 focus:ring-[#4354A0]"
               }`}
             />

@@ -15,13 +15,12 @@ export const studentEvaluationMock = {
     const key = keyOf(sessionId, studentId);
     const stored = evaluationsStore.get(key);
     if (stored) {
-      // ====== ALTERADO POR CLAUDE ======
       // Nome e tags vêm da chamada da sessão (fonte da verdade), não do cache.
       // Antes o cache guardava o nome provisório e as tags de exemplo da 1ª busca, feita antes de a lista de alunos carregar.
       return { ...stored, studentName, tags: existingTags };
     }
 
-    const initialTags = existingTags; // ====== ALTERADO POR CLAUDE ====== (sem tags de exemplo)
+    const initialTags = existingTags; // sem tags de exemplo
 
     const initialData: StudentEvaluationData = {
       sessionId,
