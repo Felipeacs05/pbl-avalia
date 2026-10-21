@@ -8,10 +8,10 @@ import {
   ATTENDANCE_STATUS_OPTIONS,
   PRESENT_LIKE_STATUSES,
 } from "./attendanceStatusOptions";
-// ícone de tags, papel da US10 e modal de presença
-import { ClipboardCheck, Tags } from "lucide-react";
+// ícone de tags e papel da US10
+import { Tags } from "lucide-react";
+import { ToggleIconButton } from "../../ui/ToggleIconButton";
 import { AssignRoleModal, type OccupiedRoleInfo } from "./AssignRoleModal";
-import { AttendanceStatusModal } from "./AttendanceStatusModal";
 import { StudentTagsModal } from "./StudentTagsModal";
 import type { SessionRole } from "../../../types/sessionRole";
 import { SessionRoleIcon } from "../session-roles/SessionRoleIcon";
@@ -59,7 +59,6 @@ export function AttendanceStudentRow({
 }: AttendanceStudentRowProps) {
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const [isTagsModalOpen, setIsTagsModalOpen] = useState(false);
-  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [localTags, setLocalTags] = useState<string[]>(student.tags || []);
 
   const isPresentLike =
@@ -71,9 +70,6 @@ export function AttendanceStudentRow({
     ? `bg-[#3B4C9B] ${roleBorder ?? "border-[#4F5FB5]"} text-white`
     : `bg-[#71717A] ${roleBorder ?? "border-[#27272A]"} text-white`;
   const isSaving = student.isSaving || Boolean(roleState?.isSaving);
-  // só presentes/atrasados recebem papel
-  const canOpenRoleModal = isPresentLike || role !== null;
-  const statusOption = ATTENDANCE_STATUS_OPTIONS.find((o) => o.status === student.status);
 
   const handleSaveTags = (newTags: string[]) => {
     setLocalTags(newTags);
@@ -134,15 +130,10 @@ export function AttendanceStudentRow({
           <button
             type="button"
             onClick={() => setIsRoleModalOpen(true)}
-            disabled={!canOpenRoleModal}
             aria-label={`Papel de ${student.name}`}
             aria-pressed={isRoleModalOpen}
-            title={
-              canOpenRoleModal
-                ? `Definir papel na sessão (atual: ${displayRole})`
-                : "Só alunos presentes ou atrasados podem receber papel"
-            }
-            className={`min-h-11 min-w-11 w-11 h-11 rounded-full flex items-center justify-center transition-all active:scale-95 cursor-pointer focus-visible:outline-2 focus-visible:outline-white disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 ${actionButtonTone}`}
+            title={`Definir papel na sessão (atual: ${displayRole})`}
+            className={`min-h-11 min-w-11 w-11 h-11 rounded-full flex items-center justify-center transition-all active:scale-95 cursor-pointer focus-visible:outline-2 focus-visible:outline-white ${actionButtonTone}`}
           >
             <SessionRoleIcon role={role} size={20} />
           </button>
@@ -162,22 +153,21 @@ export function AttendanceStudentRow({
             )}
           </button>
 
-          {/* Botão 3: Presença (US09) — mostra só o ícone do status atual e abre o modal */}
-          <button
-            type="button"
-            onClick={() => setIsStatusModalOpen(true)}
-            aria-label={`Presença de ${student.name}: ${statusOption?.label ?? "não registrada"}`}
-            aria-haspopup="dialog"
-            title={statusOption ? `Presença: ${statusOption.label}` : "Registrar presença"}
-            className={`min-h-11 min-w-11 w-11 h-11 rounded-full flex items-center justify-center transition-all active:scale-95 cursor-pointer focus-visible:outline-2 focus-visible:outline-white ${
-              statusOption ? "bg-white text-[#3B4C9B]" : actionButtonTone
-            }`}
-          >
-            {statusOption ? statusOption.icon : <ClipboardCheck size={20} aria-hidden="true" />}
-          </button>
+          {/* Botões de Presença e Chamada (US09), como nos testes */}
+          {ATTENDANCE_STATUS_OPTIONS.map(({ status, label, icon }) => (
+            <ToggleIconButton
+              key={status}
+              icon={icon}
+              label={label}
+              pressed={student.status === status}
+              variant={isPresentLike ? "glass" : "solid"}
+              onClick={() => void onChangeStatus(student.id, status)}
+            />
+          ))}
         </div>
       </li>
 
+      {/* só presente ou atrasado recebe papel, aplicada dentro do modal) */}
       {isRoleModalOpen && (
         <AssignRoleModal
           isOpen
@@ -189,16 +179,6 @@ export function AttendanceStudentRow({
           canReceiveRole={isPresentLike}
           onClose={() => setIsRoleModalOpen(false)}
           onSaveRole={(newRole, extraGrade) => onSaveRole?.(student.id, newRole, extraGrade)}
-        />
-      )}
-
-      {isStatusModalOpen && (
-        <AttendanceStatusModal
-          isOpen
-          studentName={student.name}
-          currentStatus={student.status}
-          onClose={() => setIsStatusModalOpen(false)}
-          onConfirm={(status) => void onChangeStatus(student.id, status)}
         />
       )}
 
