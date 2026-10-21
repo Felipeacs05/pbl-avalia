@@ -26,7 +26,6 @@ export function FeedbackFormModal({
 }: FeedbackFormModalProps) {
   const [targetType, setTargetType] = useState<FeedbackTargetType>("INDIVIDUAL");
   const [selectedStudentId, setSelectedStudentId] = useState<string>("");
-  const [gradeText, setGradeText] = useState<string>("");
   const [message, setMessage] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -50,11 +49,6 @@ export function FeedbackFormModal({
     setIsSubmitting(true);
     setError(null);
 
-    const parsedGrade =
-      gradeText.trim() !== ""
-        ? Number(gradeText.trim().replace(",", "."))
-        : undefined;
-
     try {
       await onSubmit({
         problemId,
@@ -62,10 +56,6 @@ export function FeedbackFormModal({
         targetType,
         studentId: isIndividual ? selectedStudentId : undefined,
         message: message.trim(),
-        grade:
-          parsedGrade !== undefined && !Number.isNaN(parsedGrade)
-            ? parsedGrade
-            : undefined,
       });
       onClose();
     } catch (err: unknown) {
@@ -183,26 +173,6 @@ export function FeedbackFormModal({
               </select>
             </div>
           )}
-
-          <div>
-            <label
-              htmlFor="feedback-grade"
-              className="block text-xs font-semibold mb-1.5"
-            >
-              Nota do Feedback (opcional)
-            </label>
-            <input
-              id="feedback-grade"
-              type="text"
-              inputMode="decimal"
-              data-testid="feedback-grade"
-              value={gradeText}
-              onChange={(e) => setGradeText(e.target.value)}
-              disabled={isSubmitting}
-              placeholder="Ex: 8.5"
-              className="w-full bg-white text-gray-900 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#757DC3]"
-            />
-          </div>
 
           <div>
             <label
