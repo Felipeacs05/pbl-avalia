@@ -23,7 +23,7 @@ export function StudentFeedbacksModal({
       data-testid="student-feedbacks-backdrop"
     >
       <div
-        className="bg-[#1B2559] w-full max-w-md rounded-[2rem] p-5 text-white shadow-2xl relative max-h-[85vh] flex flex-col"
+        className="bg-[#1B2559] w-full max-w-md md:max-w-lg rounded-[2rem] p-5 text-white shadow-2xl relative max-h-[85vh] flex flex-col border border-white/10"
         role="dialog"
         aria-modal="true"
         aria-labelledby="student-feedbacks-title"
@@ -43,14 +43,14 @@ export function StudentFeedbacksModal({
             type="button"
             onClick={onClose}
             aria-label="Fechar"
-            className="text-white/80 hover:text-white p-1.5 transition-colors cursor-pointer"
+            className="text-white/80 hover:text-white p-1.5 rounded-full hover:bg-white/10 transition-colors cursor-pointer"
           >
             <X size={22} />
           </button>
         </div>
 
-        {/* Lista de Feedbacks (Geral e Privado) */}
-        <div className="space-y-3 overflow-y-auto pr-1 flex-1">
+        {/* Lista de Feedbacks com scrollbar discreta e elegante */}
+        <div className="space-y-3 overflow-y-auto pr-1.5 flex-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/25 [&::-webkit-scrollbar-thumb]:rounded-full">
           {feedbacks.map((item) => {
             const isClass = item.targetType === "CLASS";
             const hasGradeAdjustment =

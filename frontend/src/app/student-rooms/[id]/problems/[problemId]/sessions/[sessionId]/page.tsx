@@ -3,7 +3,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, MessageSquare, UserCheck, Users } from "lucide-react";
+import { MessageSquare, UserCheck, Users } from "lucide-react";
+import { ProblemDetailsHeader } from "../../../../../../../components/features/problem-details/ProblemDetailsHeader";
 import { SelfAssessmentGrade } from "../../../../../../../components/features/grade-adjustment/SelfAssessmentGrade";
 import { SessionQuickTagsCard } from "../../../../../../../components/features/feedback/SessionQuickTagsCard";
 import { StudentFeedbacksModal } from "../../../../../../../components/features/feedback/StudentFeedbacksModal";
@@ -60,40 +61,37 @@ export default function StudentSessionDashboardPage() {
       ? "03/04"
       : MOCK_SESSION_SUMMARY.sessionDate;
 
+  const handleOpenMyFeedbacks = () => {
+    void refreshFeedbacks();
+    setIsFeedbacksModalOpen(true);
+  };
+
   return (
-    <main className="w-full min-h-screen bg-[#F5F5F7] font-sans flex flex-col pb-10">
-      {/* Header superior */}
-      <header className="w-full px-4 sm:px-6 pt-4 pb-2 flex items-center justify-between max-w-md mx-auto">
-        <button
-          type="button"
-          onClick={() =>
-            router.push(`/student-rooms/${roomId}/problems/${problemId}`)
+    <main className="w-full min-h-screen bg-[#F5F5F5] font-sans relative flex flex-col">
+      {/* Header responsivo igual ao fluxo do professor */}
+      <ProblemDetailsHeader
+        disciplineTag={MOCK_SESSION_SUMMARY.roomCode}
+        onBack={() =>
+          router.push(`/student-rooms/${roomId}/problems/${problemId}`)
+        }
+        onShare={() => {
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(window.location.href);
           }
-          aria-label="Voltar para sessões realizadas"
-          className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-200/60 active:scale-95 transition-all text-gray-900 cursor-pointer"
-        >
-          <ArrowLeft size={24} />
-        </button>
+        }}
+      />
 
-        <div className="bg-[#BAC2E6] text-[#2E3A70] text-xs font-bold px-8 py-1.5 rounded-full tracking-wide select-none border border-[#96A2D8]">
-          {MOCK_SESSION_SUMMARY.roomCode}
-        </div>
-
-        <div className="w-10" aria-hidden="true" />
-      </header>
-
-      <div className="w-full max-w-md mx-auto px-5 pt-2 flex flex-col gap-5">
-        {/* Título do Problema e Data da Sessão */}
+      {/* ===== MOBILE LAYOUT (< md — proporção 9:16) ===== */}
+      <div className="flex-1 flex flex-col md:hidden px-5 pt-5 pb-10 space-y-5">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 leading-snug underline decoration-gray-200 underline-offset-4">
             {MOCK_SESSION_SUMMARY.problemTitle}
           </h1>
-          <p className="text-xl font-bold text-gray-900 mt-1">
+          <p className="text-lg font-bold text-gray-800 mt-1">
             Sessão de {sessionDateLabel}
           </p>
         </div>
 
-        {/* Card Branco "SUA NOTA DA SESSÃO" com alerta condicional da US15 */}
         <SelfAssessmentGrade
           score={displayScore}
           modifiedByTutor={isModifiedByTutor}
@@ -103,19 +101,14 @@ export default function StudentSessionDashboardPage() {
           justification={myAssessment.justification}
         />
 
-        {/* Grade com os 3 botões de ação conforme Figma Print 3 */}
         <div className="grid grid-cols-3 gap-3">
-          {/* Botão 1: Meu feedback (abre o modal Meus Feedbacks) */}
           <button
             type="button"
-            onClick={() => {
-              void refreshFeedbacks();
-              setIsFeedbacksModalOpen(true);
-            }}
-            data-testid="open-my-feedbacks-btn"
-            className="rounded-2xl bg-[#BCC4E8] hover:bg-[#AEB7E2] border-2 border-[#D5DAF2] py-3 px-2 flex flex-col items-center justify-center gap-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
+            onClick={handleOpenMyFeedbacks}
+            data-testid="open-my-feedbacks-btn-mobile"
+            className="rounded-2xl bg-[#BCC4E8] hover:bg-[#AEB7E2] border-2 border-[#D5DAF2] py-3.5 px-2 flex flex-col items-center justify-center gap-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
           >
-            <MessageSquare size={26} className="text-gray-900" strokeWidth={2.2} />
+            <MessageSquare size={24} className="text-gray-900" strokeWidth={2.2} />
             <span className="text-xs font-bold text-gray-900 leading-tight text-center">
               Meu
               <br />
@@ -123,26 +116,24 @@ export default function StudentSessionDashboardPage() {
             </span>
           </button>
 
-          {/* Botão 2: Autoavaliação */}
           <button
             type="button"
             onClick={() => router.push("/selfevaluation")}
-            className="rounded-2xl bg-[#9E9E9E] hover:bg-[#8E8E8E] border-2 border-[#757575] py-3 px-2 flex flex-col items-center justify-center gap-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
+            className="rounded-2xl bg-[#E2E4EC] hover:bg-[#D5D8E4] border-2 border-[#C8CCDC] py-3.5 px-2 flex flex-col items-center justify-center gap-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
           >
-            <UserCheck size={26} className="text-[#555555]" strokeWidth={2.2} />
-            <span className="text-xs font-bold text-[#555555] leading-tight text-center">
+            <UserCheck size={24} className="text-[#3E4875]" strokeWidth={2.2} />
+            <span className="text-xs font-bold text-[#3E4875] leading-tight text-center">
               Autoavaliação
             </span>
           </button>
 
-          {/* Botão 3: Avaliação por pares */}
           <button
             type="button"
             onClick={() => router.push("/peerevaluation")}
-            className="rounded-2xl bg-[#9E9E9E] hover:bg-[#8E8E8E] border-2 border-[#757575] py-3 px-2 flex flex-col items-center justify-center gap-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
+            className="rounded-2xl bg-[#E2E4EC] hover:bg-[#D5D8E4] border-2 border-[#C8CCDC] py-3.5 px-2 flex flex-col items-center justify-center gap-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
           >
-            <Users size={26} className="text-[#555555]" strokeWidth={2.2} />
-            <span className="text-xs font-bold text-[#555555] leading-tight text-center">
+            <Users size={24} className="text-[#3E4875]" strokeWidth={2.2} />
+            <span className="text-xs font-bold text-[#3E4875] leading-tight text-center">
               Avaliação por
               <br />
               pares
@@ -150,11 +141,76 @@ export default function StudentSessionDashboardPage() {
           </button>
         </div>
 
-        {/* Card Roxo "Feedback" com as pílulas de observações rápidas da sessão */}
         <SessionQuickTagsCard tags={MOCK_SESSION_SUMMARY.quickTags} />
       </div>
 
-      {/* Modal escuro "Meus Feedbacks" conforme Figma Print 4 */}
+      {/* ===== DESKTOP LAYOUT (>= md — 2 colunas igual ao professor) ===== */}
+      <div className="hidden md:flex flex-1 max-w-6xl mx-auto w-full px-6 pt-8 pb-8 gap-8">
+        {/* Coluna Esquerda: Resumo da Sessão + Nota + Ações */}
+        <div className="w-1/2 flex flex-col gap-5">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 w-full">
+            <h1 className="text-2xl font-bold text-gray-900 leading-tight mb-2">
+              {MOCK_SESSION_SUMMARY.problemTitle}
+            </h1>
+            <div className="w-full h-px bg-gray-200 mb-3" />
+            <p className="text-sm font-semibold text-[#4354A0]">
+              Sessão de {sessionDateLabel}
+            </p>
+          </div>
+
+          <SelfAssessmentGrade
+            score={displayScore}
+            modifiedByTutor={isModifiedByTutor}
+            ajustado_por_tutor={isModifiedByTutor}
+            originalGrade={myAssessment.originalGrade}
+            nota_original={myAssessment.nota_original}
+            justification={myAssessment.justification}
+          />
+
+          <div className="grid grid-cols-3 gap-3.5">
+            <button
+              type="button"
+              onClick={handleOpenMyFeedbacks}
+              data-testid="open-my-feedbacks-btn"
+              className="rounded-2xl bg-[#BCC4E8] hover:bg-[#AEB7E2] border-2 border-[#D5DAF2] py-4 px-3 flex flex-col items-center justify-center gap-2 shadow-xs transition-all hover:shadow-md active:scale-95 cursor-pointer"
+            >
+              <MessageSquare size={26} className="text-[#182860]" strokeWidth={2.2} />
+              <span className="text-xs sm:text-sm font-bold text-[#182860] leading-tight text-center">
+                Meu feedback
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => router.push("/selfevaluation")}
+              className="rounded-2xl bg-white hover:bg-[#EEEDF8] border-2 border-gray-200 hover:border-[#757DC3]/50 py-4 px-3 flex flex-col items-center justify-center gap-2 shadow-xs transition-all hover:shadow-md active:scale-95 cursor-pointer"
+            >
+              <UserCheck size={26} className="text-[#4354A0]" strokeWidth={2.2} />
+              <span className="text-xs sm:text-sm font-bold text-gray-700 leading-tight text-center">
+                Autoavaliação
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => router.push("/peerevaluation")}
+              className="rounded-2xl bg-white hover:bg-[#EEEDF8] border-2 border-gray-200 hover:border-[#757DC3]/50 py-4 px-3 flex flex-col items-center justify-center gap-2 shadow-xs transition-all hover:shadow-md active:scale-95 cursor-pointer"
+            >
+              <Users size={26} className="text-[#4354A0]" strokeWidth={2.2} />
+              <span className="text-xs sm:text-sm font-bold text-gray-700 leading-tight text-center">
+                Avaliação por pares
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Coluna Direita: Card de Marcações Rápidas da Sessão */}
+        <div className="w-1/2">
+          <SessionQuickTagsCard tags={MOCK_SESSION_SUMMARY.quickTags} />
+        </div>
+      </div>
+
+      {/* Modal escuro "Meus Feedbacks" */}
       {isFeedbacksModalOpen && (
         <StudentFeedbacksModal
           feedbacks={feedbacks}
