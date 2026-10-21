@@ -15,39 +15,44 @@ export function CriteriaWeightsForm({
   onSubmit,
   errorMessage,
 }: CriteriaWeightsFormProps) {
+  // ====== ALTERADO POR CLAUDE ====== (pesos guardados como texto: dá para apagar o campo e digitar outro número)
   const buildMap = (list: Criterion[]) => {
-    const map: Record<string, number> = {};
+    const map: Record<string, string> = {};
     list.forEach((c) => {
-      map[c.criterionId] = Math.round(c.criteriaWeight * 100);
+      map[c.criterionId] = String(Math.round(c.criteriaWeight * 100));
     });
     return map;
   };
 
-  // Guarda os pesos em percentual inteiro (ex: 40 para 0.40)
-  const [weightsMap, setWeightsMap] = useState<Record<string, number>>(() =>
+  // Guarda os pesos em percentual inteiro (ex: "40" para 0.40)
+  const [weightsMap, setWeightsMap] = useState<Record<string, string>>(() =>
     buildMap(criteria)
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleWeightChange = (criterionId: string, val: string) => {
-    const parsed = val === "" ? 0 : Number(val);
-    setWeightsMap((prev) => ({
-      ...prev,
-      [criterionId]: isNaN(parsed) ? 0 : parsed,
-    }));
+    setWeightsMap((prev) => ({ ...prev, [criterionId]: val })); // ====== ALTERADO POR CLAUDE ======
   };
 
-  const totalSum = Object.values(weightsMap).reduce((acc, curr) => acc + curr, 0);
+  // ====== ALTERADO POR CLAUDE ====== (cada peso precisa ser inteiro de 0 a 100; campo vazio conta como inválido)
+  const isValidWeight = (val: string) => {
+    const n = Number(val);
+    return val.trim() !== "" && Number.isInteger(n) && n >= 0 && n <= 100;
+  };
+  const allValid = criteria.every((c) => isValidWeight(weightsMap[c.criterionId] ?? ""));
+  const totalSum = criteria.reduce((acc, c) => acc + (Number(weightsMap[c.criterionId]) || 0), 0);
   const is100 = totalSum === 100;
+  const canSubmit = allValid && is100; // ====== ALTERADO POR CLAUDE ======
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canSubmit) return; // ====== ALTERADO POR CLAUDE ====== (proteção extra, ex.: Enter no campo)
     setIsSubmitting(true);
     try {
       const payload: CriterionWeight[] = criteria.map((c) => ({
         criterionId: c.criterionId,
         // Converte de volta para decimal (0.0 - 1.0) para o backend
-        criteriaWeight: (weightsMap[c.criterionId] ?? 0) / 100,
+        criteriaWeight: Number(weightsMap[c.criterionId] ?? 0) / 100, // ====== ALTERADO POR CLAUDE ====== (texto -> número)
       }));
       await onSubmit(payload);
     } finally {
@@ -69,7 +74,8 @@ export function CriteriaWeightsForm({
       <div className="flex flex-col gap-3">
         {criteria.map((criterion) => {
           const inputId = `criterion-${criterion.criterionId}`;
-          const currentVal = weightsMap[criterion.criterionId] ?? 0;
+          const currentVal = weightsMap[criterion.criterionId] ?? ""; // ====== ALTERADO POR CLAUDE ======
+          const isInvalid = !isValidWeight(currentVal); // ====== ALTERADO POR CLAUDE ======
 
           return (
             <div
@@ -96,11 +102,16 @@ export function CriteriaWeightsForm({
                   type="number"
                   min="0"
                   max="100"
+                  step="1"
+                  inputMode="numeric"
                   value={currentVal}
                   onChange={(e) =>
                     handleWeightChange(criterion.criterionId, e.target.value)
                   }
-                  className="w-20 px-3 py-2 text-center rounded-xl border border-gray-300 font-bold text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#757DC3]"
+                  aria-invalid={isInvalid} // ====== ALTERADO POR CLAUDE ======
+                  className={`w-20 px-3 py-2 text-center rounded-xl border font-bold text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#757DC3] ${
+                    isInvalid ? "border-red-400" : "border-gray-300"
+                  }`}
                   aria-label={criterion.criteriaName}
                 />
                 <span className="text-sm font-bold text-gray-500">%</span>
@@ -122,9 +133,18 @@ export function CriteriaWeightsForm({
         </span>
       </div>
 
+      {/* ====== ALTERADO POR CLAUDE ====== (explica por que o botão está desativado) */}
+      {!canSubmit && (
+        <p className="text-xs text-center text-gray-500 font-medium">
+          {!allValid
+            ? "Cada peso deve ser um número inteiro de 0 a 100."
+            : "A soma dos pesos deve ser exatamente 100% para salvar."}
+        </p>
+      )}
+
       <button
         type="submit"
-        disabled={isSubmitting}
+        disabled={isSubmitting || !canSubmit} // ====== ALTERADO POR CLAUDE ======
         className="w-full bg-[#757DC3] hover:bg-[#6870B5] active:scale-[0.99] text-white py-3.5 px-6 rounded-2xl font-semibold text-base shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-2"
       >
         <span>{isSubmitting ? "Salvando..." : "Salvar Pesos"}</span>

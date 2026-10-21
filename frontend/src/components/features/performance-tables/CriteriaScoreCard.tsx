@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { Check, X } from "lucide-react";
+import { Check, X, Minus, Plus } from "lucide-react"; // ====== ALTERADO POR CLAUDE ====== (Minus e Plus)
 
 interface CriteriaScoreCardProps {
   title: string;
@@ -11,7 +11,11 @@ interface CriteriaScoreCardProps {
   type?: "score" | "toggle";
   togglePassed?: boolean;
   onToggle?: (passed: boolean) => void;
-  onScoreClick?: () => void;
+  // ====== ALTERADO POR CLAUDE ====== (antes: onScoreClick, que só alternava entre 2 valores fixos)
+  onScoreChange?: (score: number) => void;
+  min?: number;
+  max?: number;
+  step?: number;
   tone?: "blue" | "gray";
   scorePrefix?: string;
 }
@@ -23,11 +27,21 @@ export function CriteriaScoreCard({
   type = "score",
   togglePassed = true,
   onToggle,
-  onScoreClick,
+  onScoreChange, // ====== ALTERADO POR CLAUDE ======
+  min = 0,
+  max = 100,
+  step = 5,
   tone = "blue",
   scorePrefix = "",
 }: CriteriaScoreCardProps) {
   const isBlue = tone === "blue";
+
+  // ====== ALTERADO POR CLAUDE ====== (soma/subtrai "step" sem passar dos limites)
+  const changeScore = (delta: number) => {
+    onScoreChange?.(Math.min(max, Math.max(min, score + delta)));
+  };
+  const stepButtonClass =
+    "w-8 h-8 rounded-full flex items-center justify-center border border-white/30 text-white/90 hover:bg-white/15 hover:text-white transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent";
 
   const cardTone = isBlue
     ? "bg-[#3B4C9B] border-[#4F5FB5]"
@@ -85,15 +99,36 @@ export function CriteriaScoreCard({
             </button>
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={onScoreClick}
-            aria-label={`Nota de ${title}: ${scorePrefix}${score}%`}
-            className={`border rounded-xl px-4 py-1.5 text-white font-bold text-sm tracking-wide shadow-inner transition-colors cursor-pointer ${badgeTone}`}
-          >
-            {scorePrefix}
-            {score}%
-          </button>
+          // ====== ALTERADO POR CLAUDE ====== (− nota + no lugar do botão que alternava valores)
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => changeScore(-step)}
+              disabled={score <= min}
+              aria-label={`Diminuir nota de ${title}`}
+              className={stepButtonClass}
+            >
+              <Minus size={16} />
+            </button>
+            {/* aria-live: o leitor de tela anuncia a nota nova a cada clique */}
+            <span
+              aria-live="polite"
+              aria-label={`Nota de ${title}: ${scorePrefix}${score}%`}
+              className={`min-w-[4.25rem] text-center border rounded-xl px-2.5 py-1.5 text-white font-bold text-sm tracking-wide shadow-inner ${badgeTone}`}
+            >
+              {scorePrefix}
+              {score}%
+            </span>
+            <button
+              type="button"
+              onClick={() => changeScore(step)}
+              disabled={score >= max}
+              aria-label={`Aumentar nota de ${title}`}
+              className={stepButtonClass}
+            >
+              <Plus size={16} />
+            </button>
+          </div>
         )}
       </div>
     </div>

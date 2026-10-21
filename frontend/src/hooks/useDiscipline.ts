@@ -71,5 +71,10 @@ export function useDisciplines(roomId: string) {
     };
   }, [fetchDisciplines]);
 
-  return { disciplines, isLoading };
+  // recarrega a lista, exemplo: depois de excluir um problema
+  const refetch = useCallback(async () => {
+    setDisciplines(await fetchDisciplines());
+  }, [fetchDisciplines]);
+
+  return { disciplines, isLoading, refetch };
 }

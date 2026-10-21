@@ -42,6 +42,7 @@ export function EvaluationStudentRow({
     >
       <Avatar
         src={student.avatarUrl}
+        name={student.name}
         sizeClassName="w-11 h-11 sm:w-12 sm:h-12"
         dimmed={!isPresentLike}
       />

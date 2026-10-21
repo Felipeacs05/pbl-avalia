@@ -1,14 +1,19 @@
 package com.uefs.tfs.avaliasystem.repository;
 
+import com.uefs.tfs.avaliasystem.model.Role;
 import com.uefs.tfs.avaliasystem.model.RoomMember;
 import com.uefs.tfs.avaliasystem.model.User;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+import java.util.UUID;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -45,4 +50,8 @@ public interface RoomMemberRepository extends JpaRepository<RoomMember, UUID> {
             ORDER BY rm.user.name
             """)
     List<User> findAvailableStudentsByRoomId(@Param("roomId") UUID roomId);
+
+
+    // US18: carômetro paginado, apenas alunos ativos, em ordem alfabética
+    Page<RoomMember> findByRoomIdAndRoleAndActiveTrueOrderByUserNameAsc(UUID roomId, Role role, Pageable pageable);
 }
