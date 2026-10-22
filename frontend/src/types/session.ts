@@ -1,12 +1,10 @@
 // src/types/session.ts
 import type { SessionStudent } from "./attendance";
 
-/** Situação das notas da sessão: depois de fechadas, não podem mais ser alteradas. */
+/** Alunos da sessão que já têm as notas publicadas (o professor pode atualizar ou despublicar). */
 export interface SessionGradesStatus {
   sessionId: string;
-  isClosed: boolean;
-  /** Quando as notas foram fechadas (ISO 8601). */
-  closedAt?: string;
+  publishedStudentIds: string[];
 }
 
 /** Sessão aberta de um problema, com a lista de alunos para a chamada. */

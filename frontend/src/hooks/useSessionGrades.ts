@@ -4,21 +4,21 @@
 import { useCallback, useEffect, useState } from "react";
 import { sessionGradesService } from "../services/sessionGradesService";
 
-// Situação das notas da sessão (abertas ou fechadas) e a ação de fechá-las.
+// Quais alunos da sessão já têm as notas publicadas, e as ações de publicar/atualizar e despublicar.
 export function useSessionGrades(sessionId: string) {
-  const [isClosed, setIsClosed] = useState(false);
+  const [publishedIds, setPublishedIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
-  const [isClosing, setIsClosing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     let mounted = true;
     sessionGradesService
       .getStatus(sessionId)
       .then((status) => {
-        if (mounted) setIsClosed(status.isClosed);
+        if (mounted) setPublishedIds(new Set(status.publishedStudentIds));
       })
       .catch(() => {
-        // sem resposta, a sessão segue aberta (o back-end ainda recusa alteração em sessão fechada)
+        // sem resposta, nada aparece como publicado
       })
       .finally(() => {
         if (mounted) setIsLoading(false);
@@ -28,16 +28,28 @@ export function useSessionGrades(sessionId: string) {
     };
   }, [sessionId]);
 
-  // Devolve true se fechou; em erro, lança para o modal de confirmação mostrar a falha
-  const closeGrades = useCallback(async (): Promise<void> => {
-    setIsClosing(true);
-    try {
-      const status = await sessionGradesService.closeGrades(sessionId);
-      setIsClosed(status.isClosed);
-    } finally {
-      setIsClosing(false);
-    }
-  }, [sessionId]);
+  // Em erro, lança para a tela mostrar a falha
+  const run = useCallback(
+    async (action: (studentIds: string[]) => ReturnType<typeof sessionGradesService.publishGrades>, studentIds: string[]) => {
+      setIsSubmitting(true);
+      try {
+        const status = await action(studentIds);
+        setPublishedIds(new Set(status.publishedStudentIds));
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    []
+  );
 
-  return { isClosed, isLoading, isClosing, closeGrades };
+  const publishGrades = useCallback(
+    (studentIds: string[]) => run((ids) => sessionGradesService.publishGrades(sessionId, ids), studentIds),
+    [run, sessionId]
+  );
+  const unpublishGrades = useCallback(
+    (studentIds: string[]) => run((ids) => sessionGradesService.unpublishGrades(sessionId, ids), studentIds),
+    [run, sessionId]
+  );
+
+  return { publishedIds, isLoading, isSubmitting, publishGrades, unpublishGrades };
 }

@@ -1,6 +1,5 @@
 // src/mocks/studentEvaluation.mock.ts
 import type { StudentEvaluationData } from "../types/performanceTable";
-import { sessionGradesMock } from "./sessionGrades.mock";
 
 const evaluationsStore = new Map<string, StudentEvaluationData>();
 
@@ -38,10 +37,6 @@ export const studentEvaluationMock = {
   },
 
   saveEvaluation(data: StudentEvaluationData): StudentEvaluationData {
-    // Simula o 409 do back-end: nota de sessão com notas fechadas não muda mais
-    if (sessionGradesMock.isClosed(data.sessionId)) {
-      throw new Error("As notas desta sessão já foram fechadas.");
-    }
     const key = keyOf(data.sessionId, data.studentId);
     const updated: StudentEvaluationData = {
       ...data,
