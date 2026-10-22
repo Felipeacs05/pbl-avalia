@@ -1,11 +1,14 @@
 // src/components/features/attendance/EvaluationSessionView.tsx
 "use client";
 
-import React from "react";
-import { ArrowLeft, BarChart3 } from "lucide-react";
+import React, { useCallback, useState } from "react";
+import { ArrowLeft, BarChart3, Lock } from "lucide-react";
 import { useRooms } from "../../../hooks/useRooms";
 import { useSessionRoster } from "../../../hooks/useSessionRoster";
 import type { SessionStudent } from "../../../types/attendance";
+import { useSessionGrades } from "../../../hooks/useSessionGrades";
+import { ConfirmModal } from "../../ui/ConfirmModal";
+import { Toast } from "../../ui/Toast";
 import { EvaluationStudentList } from "./EvaluationStudentList";
 
 interface EvaluationSessionViewProps {
@@ -29,6 +32,18 @@ export function EvaluationSessionView({
 }: EvaluationSessionViewProps) {
   const { rooms } = useRooms();
   const { roster, dateLabel, isLoading, error } = useSessionRoster(sessionId);
+  const { isClosed, isLoading: isLoadingGrades, closeGrades } = useSessionGrades(sessionId);
+
+  // Fechar notas pede confirmação: depois de enviadas, não podem mais ser alteradas
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const clearToast = useCallback(() => setToastMessage(null), []); // função estável: o Toast reinicia o timer se ela mudar
+
+  const handleConfirmCloseGrades = async () => {
+    await closeGrades(); // se falhar, o modal mostra o erro e continua aberto
+    setIsConfirmOpen(false);
+    setToastMessage("Notas da sessão fechadas e enviadas.");
+  };
 
   const room = roomId ? rooms.find((r) => r.id === roomId) : null;
   const roomCodeTag = room
@@ -37,6 +52,7 @@ export function EvaluationSessionView({
 
   return (
     <div className="w-full min-h-screen bg-[#F5F5F7] text-gray-800 flex flex-col justify-between font-sans">
+      {toastMessage && <Toast message={toastMessage} type="success" onClose={clearToast} />}
       {/* Top Header */}
       <header className="w-full bg-white/80 backdrop-blur-md border-b border-gray-200/70 sticky top-0 z-40 px-4 sm:px-6 py-3 flex items-center justify-between">
         <button
@@ -68,6 +84,12 @@ export function EvaluationSessionView({
           <p className="mt-4 text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
             Dia {dateLabel || "24/03"}
           </p>
+          {isClosed && (
+            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-gray-200 px-3 py-1 text-xs font-semibold text-gray-700">
+              <Lock size={14} />
+              Notas fechadas: somente consulta
+            </p>
+          )}
         </div>
 
         {/* Content: Loading, Error or Student List */}
@@ -106,16 +128,42 @@ export function EvaluationSessionView({
             <span>Gerar Relatório da sessão</span>
           </button>
 
-          {/* Botão 2: Fechar Sessão */}
+          {/* Botão 2: Fechar notas da sessão (a sessão fica aberta até este clique) */}
+          <button
+            type="button"
+            onClick={() => setIsConfirmOpen(true)}
+            disabled={isClosed || isLoadingGrades}
+            className="w-full bg-[#757DC3] hover:bg-[#6870B5] active:scale-[0.99] text-white py-3.5 px-6 rounded-2xl font-semibold text-base shadow-sm transition-all text-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
+          >
+            {isClosed ? "Notas da sessão fechadas" : "Fechar notas da sessão"}
+          </button>
+
+          {/* Botão 3: Sair da sessão (só sai da tela, não fecha as notas) */}
           <button
             type="button"
             onClick={onCloseSession}
             className="w-full bg-[#757DC3] hover:bg-[#6870B5] active:scale-[0.99] text-white py-3.5 px-6 rounded-2xl font-semibold text-base shadow-sm transition-all text-center cursor-pointer"
           >
-            Fechar Sessão
+            Sair da sessão
           </button>
         </div>
       </main>
+
+      {isConfirmOpen && (
+        <ConfirmModal
+          title="Fechar notas da sessão"
+          message={
+            <>
+              Ao fechar as notas, elas serão enviadas e <strong>não poderão mais ser alteradas</strong>. Deseja
+              continuar?
+            </>
+          }
+          confirmLabel="Fechar notas"
+          variant="danger"
+          onConfirm={handleConfirmCloseGrades}
+          onClose={() => setIsConfirmOpen(false)}
+        />
+      )}
     </div>
   );
 }

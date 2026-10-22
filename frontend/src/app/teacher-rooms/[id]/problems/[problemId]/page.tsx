@@ -59,6 +59,10 @@ export default function ProblemDetailsPage() {
     }
   };
 
+  const handleEvaluateSession = (sessionId: string) => {
+    router.push(`/teacher-rooms/${roomId}/problems/${problemId}/sessions/${sessionId}/evaluate`);
+  };
+
   const handleSelectPastSession = (session: Session) => {
     router.push(
       `/teacher-rooms/${roomId}/problems/${problemId}/sessions/${session.id}/review`
@@ -165,6 +169,7 @@ export default function ProblemDetailsPage() {
               <PastSessionsList
                 sessions={problem.sessions}
                 onSelectSession={handleSelectPastSession}
+                onEvaluateSession={handleEvaluateSession}
               />
             </div>
 
@@ -226,6 +231,7 @@ export default function ProblemDetailsPage() {
               <PastSessionsList
                 sessions={problem.sessions}
                 onSelectSession={handleSelectPastSession}
+                onEvaluateSession={handleEvaluateSession}
               />
             </div>
           </div>
