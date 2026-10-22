@@ -1,6 +1,6 @@
 // src/services/problemService.ts
 import type { ProblemDetails } from "../types/problem";
-import { problemDetailsMock, createProblemInMock, updateProblemInMock, deleteProblemInMock } from "../mocks/problem.mock"; 
+import { problemDetailsMock, createProblemInMock, createSessionInMock, updateProblemInMock, deleteProblemInMock } from "../mocks/problem.mock"; 
 import type { Problem } from "../types/discipline"; 
 import { USE_REAL_API } from "./apiMode";
 
@@ -52,7 +52,7 @@ export const problemService = {
 
   // Edita título e descrição do problema (o pré-set de critérios é editado na tela própria)
   async updateProblem(problemId: string, input: { title: string; description: string }): Promise<void> {
-    if (!IS_TEST) {
+    if (!USE_REAL_API) {
       return new Promise((resolve) =>
         setTimeout(() => {
           updateProblemInMock(problemId, input);
@@ -83,10 +83,14 @@ export const problemService = {
 
   async startSession(problemId: string): Promise<{ sessionId: string }> {
     if (!USE_REAL_API) {
-      return new Promise((resolve) =>
+      // Cria a sessão dentro do problema e a mantém ativa (em andamento) na lista
+      return new Promise((resolve, reject) =>
         setTimeout(() => {
-          const sessionId = `session_${Date.now()}`;
-          resolve({ sessionId });
+          try {
+            resolve({ sessionId: createSessionInMock(problemId).id });
+          } catch (error) {
+            reject(error);
+          }
         }, 600)
       );
     }
