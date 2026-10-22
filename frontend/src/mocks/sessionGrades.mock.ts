@@ -1,32 +1,26 @@
 // src/mocks/sessionGrades.mock.ts
-// Simula o back-end do fechamento de notas da sessão enquanto o endpoint não existe.
-// Em memória: recarregar a página (F5) reabre as sessões.
+// Simula o back-end da publicação de notas da sessão enquanto o endpoint não existe.
+// Em memória: recarregar a página (F5) despublica tudo.
 import type { SessionGradesStatus } from "../types/session";
-import { problemDetailsMock } from "./problem.mock";
 
-const closedSessions = new Map<string, string>(); // sessionId -> closedAt
+const publishedBySession = new Map<string, Set<string>>(); // sessionId -> ids dos alunos publicados
 
 export const sessionGradesMock = {
   getStatus(sessionId: string): SessionGradesStatus {
-    const closedAt = closedSessions.get(sessionId);
-    return { sessionId, isClosed: closedAt !== undefined, closedAt };
+    return { sessionId, publishedStudentIds: Array.from(publishedBySession.get(sessionId) ?? []) };
   },
 
-  isClosed(sessionId: string): boolean {
-    return closedSessions.has(sessionId);
+  // Publicar de novo um aluno já publicado atualiza as notas dele
+  publishGrades(sessionId: string, studentIds: string[]): SessionGradesStatus {
+    const published = publishedBySession.get(sessionId) ?? new Set<string>();
+    studentIds.forEach((id) => published.add(id));
+    publishedBySession.set(sessionId, published);
+    return sessionGradesMock.getStatus(sessionId);
   },
 
-  closeGrades(sessionId: string): SessionGradesStatus {
-    if (!closedSessions.has(sessionId)) closedSessions.set(sessionId, new Date().toISOString());
-
-    // A sessão só deixa de estar "em andamento" quando as notas são fechadas
-    Object.values(problemDetailsMock).forEach((problem) => {
-      problem.sessions = problem.sessions.map((session) =>
-        session.id === sessionId
-          ? { ...session, status: "completed", statusLabel: "Notas fechadas" }
-          : session,
-      );
-    });
+  unpublishGrades(sessionId: string, studentIds: string[]): SessionGradesStatus {
+    const published = publishedBySession.get(sessionId);
+    studentIds.forEach((id) => published?.delete(id));
     return sessionGradesMock.getStatus(sessionId);
   },
 };

@@ -2,12 +2,11 @@
 "use client";
 
 import React, { useCallback, useState } from "react";
-import { ArrowLeft, BarChart3, Lock } from "lucide-react";
+import { ArrowLeft, BarChart3 } from "lucide-react";
 import { useRooms } from "../../../hooks/useRooms";
 import { useSessionRoster } from "../../../hooks/useSessionRoster";
 import type { SessionStudent } from "../../../types/attendance";
 import { useSessionGrades } from "../../../hooks/useSessionGrades";
-import { ConfirmModal } from "../../ui/ConfirmModal";
 import { Toast } from "../../ui/Toast";
 import { EvaluationStudentList } from "./EvaluationStudentList";
 
@@ -32,17 +31,46 @@ export function EvaluationSessionView({
 }: EvaluationSessionViewProps) {
   const { rooms } = useRooms();
   const { roster, dateLabel, isLoading, error } = useSessionRoster(sessionId);
-  const { isClosed, isLoading: isLoadingGrades, closeGrades } = useSessionGrades(sessionId);
+  const { publishedIds, isLoading: isLoadingGrades, isSubmitting, publishGrades, unpublishGrades } =
+    useSessionGrades(sessionId);
 
-  // Fechar notas pede confirmação: depois de enviadas, não podem mais ser alteradas
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const clearToast = useCallback(() => setToastMessage(null), []); // função estável: o Toast reinicia o timer se ela mudar
+  // Alunos marcados com o check: são eles que recebem a ação dos botões de publicar/atualizar/despublicar
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const toggleSelect = (student: SessionStudent) =>
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(student.id)) next.add(student.id);
+      return next;
+    });
 
-  const handleConfirmCloseGrades = async () => {
-    await closeGrades(); // se falhar, o modal mostra o erro e continua aberto
-    setIsConfirmOpen(false);
-    setToastMessage("Notas da sessão fechadas e enviadas.");
+  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const clearToast = useCallback(() => setToast(null), []); // função estável: o Toast reinicia o timer se ela mudar
+
+  // Depois da primeira publicação o botão passa a se chamar "Atualizar notas"
+  const hasPublished = publishedIds.size > 0;
+  const selectedList = Array.from(selectedIds);
+  const canPublish = selectedList.length > 0 && !isSubmitting && !isLoadingGrades;
+  const canUnpublish = selectedList.some((id) => publishedIds.has(id)) && !isSubmitting;
+
+  const handlePublish = async () => {
+    try {
+      await publishGrades(selectedList);
+      setToast({
+        type: "success",
+        message: hasPublished ? "Notas atualizadas para os alunos selecionados." : "Notas publicadas para os alunos selecionados.",
+      });
+    } catch (error) {
+      setToast({ type: "error", message: error instanceof Error ? error.message : "Não foi possível publicar as notas." });
+    }
+  };
+
+  const handleUnpublish = async () => {
+    try {
+      await unpublishGrades(selectedList.filter((id) => publishedIds.has(id)));
+      setToast({ type: "success", message: "Notas despublicadas." });
+    } catch (error) {
+      setToast({ type: "error", message: error instanceof Error ? error.message : "Não foi possível despublicar as notas." });
+    }
   };
 
   const room = roomId ? rooms.find((r) => r.id === roomId) : null;
@@ -52,7 +80,7 @@ export function EvaluationSessionView({
 
   return (
     <div className="w-full min-h-screen bg-[#F5F5F7] text-gray-800 flex flex-col justify-between font-sans">
-      {toastMessage && <Toast message={toastMessage} type="success" onClose={clearToast} />}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={clearToast} />}
       {/* Top Header */}
       <header className="w-full bg-white/80 backdrop-blur-md border-b border-gray-200/70 sticky top-0 z-40 px-4 sm:px-6 py-3 flex items-center justify-between">
         <button
@@ -84,12 +112,9 @@ export function EvaluationSessionView({
           <p className="mt-4 text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
             Dia {dateLabel || "24/03"}
           </p>
-          {isClosed && (
-            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-gray-200 px-3 py-1 text-xs font-semibold text-gray-700">
-              <Lock size={14} />
-              Notas fechadas: somente consulta
-            </p>
-          )}
+          <p className="mt-2 text-center text-xs text-gray-500">
+            Marque os alunos que receberão as ações de publicar notas.
+          </p>
         </div>
 
         {/* Content: Loading, Error or Student List */}
@@ -112,6 +137,9 @@ export function EvaluationSessionView({
             <EvaluationStudentList
               students={roster.students}
               onConfigureEvaluation={onConfigureEvaluation}
+              selectedIds={selectedIds}
+              publishedIds={publishedIds}
+              onToggleSelect={toggleSelect}
             />
           </div>
         ) : null}
@@ -128,17 +156,27 @@ export function EvaluationSessionView({
             <span>Gerar Relatório da sessão</span>
           </button>
 
-          {/* Botão 2: Fechar notas da sessão (a sessão fica aberta até este clique) */}
+          {/* Botão 2: Publicar notas (vira "Atualizar notas" depois da 1ª publicação), só para os alunos marcados */}
           <button
             type="button"
-            onClick={() => setIsConfirmOpen(true)}
-            disabled={isClosed || isLoadingGrades}
+            onClick={handlePublish}
+            disabled={!canPublish}
             className="w-full bg-[#757DC3] hover:bg-[#6870B5] active:scale-[0.99] text-white py-3.5 px-6 rounded-2xl font-semibold text-base shadow-sm transition-all text-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
           >
-            {isClosed ? "Notas da sessão fechadas" : "Fechar notas da sessão"}
+            {hasPublished ? "Atualizar notas" : "Publicar notas"}
           </button>
 
-          {/* Botão 3: Sair da sessão (só sai da tela, não fecha as notas) */}
+          {/* Botão 3: Despublicar notas dos alunos marcados que já estão publicados */}
+          <button
+            type="button"
+            onClick={handleUnpublish}
+            disabled={!canUnpublish}
+            className="w-full bg-[#757DC3] hover:bg-[#6870B5] active:scale-[0.99] text-white py-3.5 px-6 rounded-2xl font-semibold text-base shadow-sm transition-all text-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
+          >
+            Despublicar notas
+          </button>
+
+          {/* Botão 4: Sair da sessão (só sai da tela) */}
           <button
             type="button"
             onClick={onCloseSession}
@@ -148,22 +186,6 @@ export function EvaluationSessionView({
           </button>
         </div>
       </main>
-
-      {isConfirmOpen && (
-        <ConfirmModal
-          title="Fechar notas da sessão"
-          message={
-            <>
-              Ao fechar as notas, elas serão enviadas e <strong>não poderão mais ser alteradas</strong>. Deseja
-              continuar?
-            </>
-          }
-          confirmLabel="Fechar notas"
-          variant="danger"
-          onConfirm={handleConfirmCloseGrades}
-          onClose={() => setIsConfirmOpen(false)}
-        />
-      )}
     </div>
   );
 }

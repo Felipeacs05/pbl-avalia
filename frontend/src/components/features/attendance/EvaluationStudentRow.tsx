@@ -3,18 +3,24 @@
 
 import React from "react";
 import { Avatar } from "../../ui/Avatar";
-import { Settings } from "lucide-react";
+import { Check, Settings } from "lucide-react";
 import type { SessionStudent } from "../../../types/attendance";
 import { PRESENT_LIKE_STATUSES } from "./attendanceStatusOptions";
 
 interface EvaluationStudentRowProps {
   student: SessionStudent;
   onConfigureEvaluation?: (student: SessionStudent) => void;
+  isSelected?: boolean; // marcado para o disparo de publicar/atualizar/despublicar
+  isPublished?: boolean; // notas já publicadas para este aluno
+  onToggleSelect?: (student: SessionStudent) => void;
 }
 
 export function EvaluationStudentRow({
   student,
   onConfigureEvaluation,
+  isSelected = false,
+  isPublished = false,
+  onToggleSelect,
 }: EvaluationStudentRowProps) {
   const isPresentLike =
     student.status !== null && PRESENT_LIKE_STATUSES.includes(student.status);
@@ -38,8 +44,23 @@ export function EvaluationStudentRow({
 
   return (
     <li
-      className={`w-full rounded-full border-2 p-1.5 pr-3 sm:p-2 sm:pr-4 flex items-center gap-2 sm:gap-3.5 shadow-sm transition-colors duration-200 ${rowTone}`}
+      // selecionado: contorno azul; não selecionado: balão mais apagado
+      className={`w-full rounded-full border-2 p-1.5 pr-3 sm:p-2 sm:pr-4 flex items-center gap-2 sm:gap-3.5 shadow-sm transition-all duration-200 ${rowTone} ${
+        isSelected ? "ring-4 ring-[#0099FF] ring-offset-2 ring-offset-[#F5F5F7]" : "opacity-70"
+      }`}
     >
+      <button
+        type="button"
+        onClick={() => onToggleSelect?.(student)}
+        aria-pressed={isSelected}
+        aria-label={`Selecionar ${student.name} para publicar as notas`}
+        className={`w-7 h-7 shrink-0 rounded-full border-2 flex items-center justify-center transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-white ${
+          isSelected ? "bg-[#0099FF] border-[#0099FF] text-white" : "bg-transparent border-white/70 text-transparent"
+        }`}
+      >
+        <Check size={16} strokeWidth={3} />
+      </button>
+
       <Avatar
         src={student.avatarUrl}
         name={student.name}
@@ -50,6 +71,11 @@ export function EvaluationStudentRow({
       <div className="min-w-0 flex-1 leading-tight">
         <p className="truncate text-sm sm:text-base font-bold tracking-tight">
           {student.name}
+          {isPublished && (
+            <span className="ml-2 align-middle rounded-full bg-white/25 px-2 py-0.5 text-[10px] font-semibold">
+              Publicada
+            </span>
+          )}
         </p>
         <p className="truncate text-[11px] sm:text-xs opacity-85 mt-0.5">
           {subtitle}
