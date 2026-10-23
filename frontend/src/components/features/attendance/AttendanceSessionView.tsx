@@ -78,7 +78,7 @@ export function AttendanceSessionView({
           </div>
         ) : roster ? (
           <div className="w-full flex-1">
-            {/* ====== ALTERADO POR CLAUDE ====== (conteúdo com papéis) */}
+            {/* conteúdo com papéis */}
             <SessionContent key={roster.id} roster={roster} />
           </div>
         ) : null}
@@ -98,7 +98,6 @@ export function AttendanceSessionView({
   );
 }
 
-// ====== ALTERADO POR CLAUDE ======
 /** Chamada + papéis (US10). Fica separado com key = sessão porque os hooks só leem os alunos na montagem. */
 function SessionContent({ roster }: { roster: SessionRoster }) {
   const initialRoleStudents = useMemo(() => roster.students.map(toSessionRoleStudent), [roster]);

@@ -1,5 +1,4 @@
 // src/app/teacher-rooms/[id]/page.tsx
-// ====== ALTERADO POR CLAUDE ====== (nomes traduzidos para inglês)
 import { redirect } from "next/navigation";
 
 interface RoomPageProps {

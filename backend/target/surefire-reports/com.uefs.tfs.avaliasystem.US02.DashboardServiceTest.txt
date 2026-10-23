@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.uefs.tfs.avaliasystem.US02.DashboardServiceTest
+-------------------------------------------------------------------------------
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.134 s -- in com.uefs.tfs.avaliasystem.US02.DashboardServiceTest

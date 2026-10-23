@@ -9,7 +9,7 @@ export function useCriteriaWeights(performanceTableId: string) {
   const [criteria, setCriteria] = useState<Criterion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null); // ====== ALTERADO POR CLAUDE ======
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -50,7 +50,7 @@ export function useCriteriaWeights(performanceTableId: string) {
         );
         setCriteria(refetched.criteriaList);
         setError(null);
-        setSuccessMessage("Pesos salvos com sucesso!"); // ====== ALTERADO POR CLAUDE ====== (antes não havia aviso)
+        setSuccessMessage("Pesos salvos com sucesso!");
       } catch (err) {
         const message =
           typeof err === "object" && err !== null && "message" in err
@@ -62,7 +62,6 @@ export function useCriteriaWeights(performanceTableId: string) {
     [performanceTableId]
   );
 
-  // ====== ALTERADO POR CLAUDE ======
   const clearSuccessMessage = useCallback(() => setSuccessMessage(null), []);
 
   return {
@@ -70,7 +69,7 @@ export function useCriteriaWeights(performanceTableId: string) {
     isLoading,
     error,
     saveWeights,
-    successMessage, // ====== ALTERADO POR CLAUDE ======
+    successMessage,
     clearSuccessMessage,
   };
 }

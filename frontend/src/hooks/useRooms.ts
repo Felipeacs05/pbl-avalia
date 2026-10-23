@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { Room } from "../types/room";
 import { roomService } from "../services/roomService";
+import { USE_REAL_API } from "@/services/apiMode";
 
 export function useRooms() {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -42,7 +43,7 @@ export function useRooms() {
         tutor: "Marlus Rios",
       },
     ]);
-    if (process.env.NODE_ENV === "test") await fetchAllRooms();
+    if (USE_REAL_API) await fetchAllRooms();
   };
 
   const updateRoom = async (id: string, name: string) => {
@@ -50,13 +51,13 @@ export function useRooms() {
     setRooms((prev) =>
       prev.map((room) => (room.id === id ? { ...room, name } : room))
     );
-    if (process.env.NODE_ENV === "test") await fetchAllRooms();
+    if (USE_REAL_API) await fetchAllRooms();
   };
 
   const deleteRoom = async (id: string) => {
     await roomService.deleteRoom(id);
     setRooms((prev) => prev.filter((room) => room.id !== id));
-    if (process.env.NODE_ENV === "test") await fetchAllRooms();
+    if (USE_REAL_API) await fetchAllRooms();
   };
 
   return { rooms, isLoading, createRoom, updateRoom, deleteRoom };
