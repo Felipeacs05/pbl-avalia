@@ -9,11 +9,13 @@ import { SessionCard } from "./SessionCard";
 interface PastSessionsListProps {
   sessions: Session[];
   onSelectSession?: (session: Session) => void;
+  onEvaluateSession?: (sessionId: string) => void;
 }
 
 export function PastSessionsList({
   sessions,
   onSelectSession,
+  onEvaluateSession,
 }: PastSessionsListProps) {
   return (
     <section className="w-full">
@@ -36,6 +38,7 @@ export function PastSessionsList({
               session={session}
               index={index}
               onSelectSession={onSelectSession}
+              onEvaluate={onEvaluateSession && (() => onEvaluateSession(session.id))}
             />
           ))}
         </div>
