@@ -11,9 +11,12 @@ import { ProblemInfoCard } from "../../../../../components/features/problem-deta
 import { PastSessionsList } from "../../../../../components/features/problem-details/PastSessionsList";
 import { ReleaseEvaluationButton } from "../../../../../components/features/problem-details/ReleaseEvaluationButton";
 import { ReleaseEvaluationModal } from "../../../../../components/features/evaluations/ReleaseEvaluationModal";
+import { FeedbackFormModal } from "../../../../../components/features/feedback/FeedbackFormModal";
+import { useFeedback } from "../../../../../hooks/useFeedback";
+import { MOCK_FEEDBACK_STUDENTS } from "../../../../../mocks/feedback.mock";
 import { Toast } from "../../../../../components/ui/Toast";
 import type { Session } from "../../../../../types/problem";
-import { FileQuestion, CheckCircle2 } from "lucide-react";
+import { FileQuestion, CheckCircle2, MessageSquarePlus } from "lucide-react";
 
 export default function ProblemDetailsPage() {
   const params = useParams();
@@ -42,6 +45,8 @@ export default function ProblemDetailsPage() {
   } = useEvaluationManager(problemId);
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState<boolean>(false);
+  const { sendFeedback } = useFeedback(problemId);
 
   const room = rooms.find((r) => r.id === roomId);
   const isLoading = isLoadingRooms || isLoadingProblem;
@@ -169,13 +174,22 @@ export default function ProblemDetailsPage() {
             </div>
 
             {/* Fixed-bottom footer action */}
-            <div className="sticky bottom-0 bg-[#F5F5F5] border-t border-gray-200/60 px-5 py-4">
+            <div className="sticky bottom-0 bg-[#F5F5F5] border-t border-gray-200/60 px-5 py-4 space-y-3">
               <ReleaseEvaluationButton
                 onClick={openModal}
                 isLoading={isLoadingEvaluation}
                 isReleased={evaluationStatus.isReleased}
                 activeType={evaluationStatus.activeType}
               />
+              <button
+                type="button"
+                onClick={() => setIsFeedbackModalOpen(true)}
+                data-testid="open-feedback-modal-btn-mobile"
+                className="w-full py-3.5 rounded-2xl font-semibold text-sm shadow-sm transition-all flex items-center justify-center gap-2 bg-[#4354A0] hover:bg-[#364485] text-white active:scale-[0.98] cursor-pointer"
+              >
+                <MessageSquarePlus size={18} />
+                <span>Enviar Feedback</span>
+              </button>
             </div>
           </div>
 
@@ -219,6 +233,16 @@ export default function ProblemDetailsPage() {
                 isReleased={evaluationStatus.isReleased}
                 activeType={evaluationStatus.activeType}
               />
+
+              <button
+                type="button"
+                onClick={() => setIsFeedbackModalOpen(true)}
+                data-testid="open-feedback-modal-btn"
+                className="w-full py-3.5 rounded-2xl font-semibold text-sm shadow-sm transition-all flex items-center justify-center gap-2 bg-[#4354A0] hover:bg-[#364485] text-white active:scale-[0.98] cursor-pointer"
+              >
+                <MessageSquarePlus size={18} />
+                <span>Enviar Feedback</span>
+              </button>
             </div>
 
             {/* Right column: Session history */}
@@ -241,6 +265,23 @@ export default function ProblemDetailsPage() {
         onConfirm={handleConfirmRelease}
         isSubmitting={isSubmittingEvaluation}
       />
+
+      {/* Feedback Form Modal (US16) */}
+      {isFeedbackModalOpen && (
+        <FeedbackFormModal
+          problemId={problemId}
+          students={MOCK_FEEDBACK_STUDENTS}
+          onClose={() => setIsFeedbackModalOpen(false)}
+          onSubmit={async (payload) => {
+            await sendFeedback(payload);
+            setToastMessage(
+              payload.targetType === "CLASS"
+                ? "Feedback enviado para toda a turma com sucesso!"
+                : "Feedback individual enviado com sucesso!"
+            );
+          }}
+        />
+      )}
     </main>
   );
 }
