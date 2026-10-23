@@ -16,6 +16,7 @@ com\uefs\tfs\avaliasystem\exception\TooManyAttemptsException.class
 com\uefs\tfs\avaliasystem\dto\ClassReportResponse.class
 com\uefs\tfs\avaliasystem\service\AssessmentReleaseService.class
 com\uefs\tfs\avaliasystem\config\SecurityConfig.class
+com\uefs\tfs\avaliasystem\controller\AttendanceController.class
 com\uefs\tfs\avaliasystem\service\GroupService.class
 com\uefs\tfs\avaliasystem\dto\ClassReportResponse$StudentReportRow.class
 com\uefs\tfs\avaliasystem\service\JoinAttemptLimiter$State.class
@@ -29,6 +30,7 @@ com\uefs\tfs\avaliasystem\controller\GradeAdjustmentController.class
 com\uefs\tfs\avaliasystem\dto\GroupMemberRequest.class
 com\uefs\tfs\avaliasystem\dto\LoginResponse.class
 com\uefs\tfs\avaliasystem\model\Assessment.class
+com\uefs\tfs\avaliasystem\security\FeedbackSecurity.class
 com\uefs\tfs\avaliasystem\dto\GradeAdjustmentResponse.class
 com\uefs\tfs\avaliasystem\dto\ClassReportResponse$ReportWarning.class
 com\uefs\tfs\avaliasystem\dto\ProblemResponse.class
@@ -43,7 +45,6 @@ com\uefs\tfs\avaliasystem\exception\UserNotFoundException.class
 com\uefs\tfs\avaliasystem\exception\AssessmentNotFoundException.class
 com\uefs\tfs\avaliasystem\model\TutoringSession.class
 com\uefs\tfs\avaliasystem\repository\TutoringSessionRepository.class
-com\uefs\tfs\avaliasystem\Security\RoomSecurity.class
 com\uefs\tfs\avaliasystem\dto\GroupMemberResponse.class
 com\uefs\tfs\avaliasystem\dto\PageResponse.class
 com\uefs\tfs\avaliasystem\service\JwtService.class
@@ -64,6 +65,7 @@ com\uefs\tfs\avaliasystem\dto\SessionRoleAssignmentResponse.class
 com\uefs\tfs\avaliasystem\service\ClassRosterService.class
 com\uefs\tfs\avaliasystem\dto\ClassReportResponse$WithdrawnStudentRow.class
 com\uefs\tfs\avaliasystem\model\GroupMember.class
+com\uefs\tfs\avaliasystem\security\PerformanceTableSecurity.class
 com\uefs\tfs\avaliasystem\dto\ReportDocument.class
 com\uefs\tfs\avaliasystem\controller\RoomController.class
 com\uefs\tfs\avaliasystem\exception\InvalidWeightSumException.class
@@ -75,6 +77,7 @@ com\uefs\tfs\avaliasystem\config\E2eSecurityConfig.class
 com\uefs\tfs\avaliasystem\dto\SessionReportResponse$SessionStudentRow.class
 com\uefs\tfs\avaliasystem\dto\SessionReportResponse.class
 com\uefs\tfs\avaliasystem\dto\RegisterUserRequest.class
+com\uefs\tfs\avaliasystem\dto\AttendanceResponse.class
 com\uefs\tfs\avaliasystem\dto\ClassReportResponse$ProblemSummary.class
 com\uefs\tfs\avaliasystem\model\AttendanceStatus.class
 com\uefs\tfs\avaliasystem\dto\FeedbackDTO.class
@@ -90,9 +93,11 @@ com\uefs\tfs\avaliasystem\config\E2eSecurityConfig$UserIdHeaderAuthenticationFil
 com\uefs\tfs\avaliasystem\controller\SelfAssessmentController.class
 com\uefs\tfs\avaliasystem\model\Group.class
 com\uefs\tfs\avaliasystem\service\PeerAssessmentService.class
-com\uefs\tfs\avaliasystem\Security\PerformanceTableSecurity.class
+com\uefs\tfs\avaliasystem\model\Attendance.class
 com\uefs\tfs\avaliasystem\service\UserService.class
 com\uefs\tfs\avaliasystem\exception\InvalidRegisterException.class
+com\uefs\tfs\avaliasystem\security\RoomSecurity.class
+com\uefs\tfs\avaliasystem\service\AttendanceService.class
 com\uefs\tfs\avaliasystem\dto\JoinRoomRequest.class
 com\uefs\tfs\avaliasystem\controller\DashboardController.class
 com\uefs\tfs\avaliasystem\model\ExportFormat.class
@@ -100,10 +105,10 @@ com\uefs\tfs\avaliasystem\dto\CriteriaWeightsRequest.class
 com\uefs\tfs\avaliasystem\dto\CriterionWeightRequest.class
 com\uefs\tfs\avaliasystem\controller\FeedbackController.class
 com\uefs\tfs\avaliasystem\model\PasswordResetToken.class
+com\uefs\tfs\avaliasystem\repository\AttendanceRepository.class
 com\uefs\tfs\avaliasystem\config\ClockConfig.class
 com\uefs\tfs\avaliasystem\exception\ExportTimeoutException.class
 com\uefs\tfs\avaliasystem\repository\UserRepository.class
-com\uefs\tfs\avaliasystem\Security\FeedbackSecurity.class
 com\uefs\tfs\avaliasystem\e2e\E2eSeedController.class
 com\uefs\tfs\avaliasystem\dto\GroupResponse.class
 com\uefs\tfs\avaliasystem\dto\DashboardResponse.class
@@ -116,6 +121,7 @@ com\uefs\tfs\avaliasystem\repository\AssessmentRepository.class
 com\uefs\tfs\avaliasystem\dto\LoginRequest.class
 com\uefs\tfs\avaliasystem\model\RoomMember.class
 com\uefs\tfs\avaliasystem\service\GradeAdjustmentService.class
+com\uefs\tfs\avaliasystem\dto\AttendanceRequest.class
 com\uefs\tfs\avaliasystem\service\JoinAttemptLimiter.class
 com\uefs\tfs\avaliasystem\dto\RegisterUserResponse.class
 com\uefs\tfs\avaliasystem\repository\SessionRoleAssignmentRepository.class
