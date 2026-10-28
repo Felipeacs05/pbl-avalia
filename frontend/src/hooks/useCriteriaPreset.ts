@@ -41,17 +41,22 @@ export function useCriteriaPreset(presetId: string) {
     };
   }, [presetId]);
 
-  // Critério novo entra na seção de opcionais (onde fica o botão "Adicionar Critério" no Figma)
   const addCriterion = useCallback((input: CriterionInput) => {
     setCriteria((prev) => [
       ...prev,
-      { id: createLocalId(), name: input.name, weight: input.weight, isOptional: true, isRemovable: true },
+      { id: createLocalId(), name: input.name, weight: input.weight, isRemovable: true },
     ]);
     setHasChanges(true);
   }, []);
 
   const updateCriterion = useCallback((id: string, input: CriterionInput) => {
     setCriteria((prev) => prev.map((c) => (c.id === id ? { ...c, ...input } : c)));
+    setHasChanges(true);
+  }, []);
+
+  // Liga/desliga Auto Avaliação e Avaliação em pares
+  const toggleCriterion = useCallback((id: string) => {
+    setCriteria((prev) => prev.map((c) => (c.id === id ? { ...c, enabled: !c.enabled } : c)));
     setHasChanges(true);
   }, []);
 
@@ -70,8 +75,12 @@ export function useCriteriaPreset(presetId: string) {
       setHasChanges(false);
       setToast({ type: "success", message: "Pré-set salvo com sucesso!" });
       return true;
-    } catch {
-      setToast({ type: "error", message: "Não foi possível salvar o pré-set. Tente novamente." });
+    } catch (error) {
+      // Mostra a recusa do back-end (ex.: soma diferente de 100%); sem mensagem, usa o texto genérico
+      setToast({
+        type: "error",
+        message: error instanceof Error ? error.message : "Não foi possível salvar o pré-set. Tente novamente.",
+      });
       return false;
     } finally {
       setIsSaving(false);
@@ -90,6 +99,7 @@ export function useCriteriaPreset(presetId: string) {
     addCriterion,
     updateCriterion,
     removeCriterion,
+    toggleCriterion,
     savePreset,
   };
 }

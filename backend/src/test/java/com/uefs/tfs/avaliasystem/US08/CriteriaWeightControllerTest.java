@@ -1,7 +1,7 @@
 
 package com.uefs.tfs.avaliasystem.US08;
 
-import com.uefs.tfs.avaliasystem.Security.PerformanceTableSecurity;
+import com.uefs.tfs.avaliasystem.security.PerformanceTableSecurity;
 import com.uefs.tfs.avaliasystem.TestConfig;
 import com.uefs.tfs.avaliasystem.config.SecurityConfig;
 import com.uefs.tfs.avaliasystem.controller.PerformanceTableController;

@@ -86,7 +86,7 @@ export const sessionMock = {
     });
   },
 
-  // ====== ALTERADO POR CLAUDE ====== (extraGrade opcional, usado pela US10)
+  // extraGrade opcional, usado pela US10
   updateStudentRole(
     sessionId: string,
     studentId: string,
@@ -101,7 +101,6 @@ export const sessionMock = {
     }
   },
 
-  // ====== ALTERADO POR CLAUDE ======
   // Alunos da sessão já carregados (cópia), para o mock de papéis checar quem tem cada papel.
   getStudents(sessionId: string): SessionStudent[] {
     return [...studentsByKey.entries()]

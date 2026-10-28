@@ -1,4 +1,3 @@
-
 package com.uefs.tfs.avaliasystem.exception;
 
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +8,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
@@ -63,6 +63,12 @@ public class GlobalExceptionHandler {
         body.put("errors", errors);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<Map<String, Object>> handleHandlerMethodValidationException(HandlerMethodValidationException ex) {
+        log.warn("Method validation error: {}", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, "Validation failed");
     }
 
     @ExceptionHandler(MissingServletRequestPartException.class)

@@ -6,18 +6,23 @@
 //   SELF_EVALUATION_MOCK_PROBLEM_ID = "prob_2" -> não liberada (botão desativado)
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ClipboardCheck, Lock } from "lucide-react";
 import { useEvaluationManager } from "../../hooks/useEvaluationManager";
 import { useMyGroup } from "../../hooks/useMyGroup";
 import { SelfEvaluationModal } from "../../components/features/evaluations/SelfEvaluationModal";
+import { SelfAssessmentGrade } from "../../components/features/grade-adjustment/SelfAssessmentGrade";
 import { Toast } from "../../components/ui/Toast";
 import {
   selfEvaluationMock,
   SELF_EVALUATION_MOCK_PROBLEM_ID,
   SELF_EVALUATION_MOCK_ROOM_ID,
 } from "../../mocks/selfEvaluation.mock";
+import { gradeAdjustmentMock } from "../../mocks/gradeAdjustment.mock";
 import { authMockSuccess } from "../../mocks/auth.mock";
+import type { SubmittedSelfAssessment } from "../../types/gradeAdjustment";
+
+const DEFAULT_STUDENT_ASSESSMENT_ID = "151e1515-e15b-15d5-a515-151515151515";
 
 export default function SelfEvaluationPage() {
   // quando a tela entrar no fluxo do app, ler estes valores da rota (useParams).
@@ -33,6 +38,23 @@ export default function SelfEvaluationPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [myAssessment, setMyAssessment] = useState<SubmittedSelfAssessment>(() =>
+    gradeAdjustmentMock.getAssessmentById(DEFAULT_STUDENT_ASSESSMENT_ID)
+  );
+
+  // Sincroniza no cliente com o ajuste salvo pelo tutor (localStorage / mock)
+  useEffect(() => {
+    const syncAssessment = () => {
+      setMyAssessment(gradeAdjustmentMock.getAssessmentById(DEFAULT_STUDENT_ASSESSMENT_ID));
+    };
+    syncAssessment();
+    window.addEventListener("storage", syncAssessment);
+    window.addEventListener("focus", syncAssessment);
+    return () => {
+      window.removeEventListener("storage", syncAssessment);
+      window.removeEventListener("focus", syncAssessment);
+    };
+  }, []);
 
   // Botão ativado só quando o tipo liberado pelo tutor é a autoavaliação
   const isSelfEvaluationOpen = evaluationStatus.activeType === "self_evaluation";
@@ -41,7 +63,21 @@ export default function SelfEvaluationPage() {
     <main className="w-full min-h-screen bg-[#F5F5F5] font-sans flex flex-col items-center justify-center px-5">
       {toastMessage && <Toast message={toastMessage} type="success" onClose={() => setToastMessage(null)} />}
 
-      <div className="w-full max-w-sm flex flex-col items-center gap-3">
+      <div className="w-full max-w-sm flex flex-col items-center gap-4">
+        {/* Card "SUA NOTA DA SESSÃO" com alerta condicional "Nota Modificada pelo Tutor" (US15) */}
+        <SelfAssessmentGrade
+          score={myAssessment.score}
+          modifiedByTutor={Boolean(
+            myAssessment.modifiedByTutor ?? myAssessment.ajustado_por_tutor
+          )}
+          ajustado_por_tutor={Boolean(
+            myAssessment.ajustado_por_tutor ?? myAssessment.modifiedByTutor
+          )}
+          originalGrade={myAssessment.originalGrade}
+          nota_original={myAssessment.nota_original}
+          justification={myAssessment.justification}
+        />
+
         {/* disabled: enquanto carrega ou se a autoavaliação não estiver liberada.
             Mesmo visual do botão "Liberar Avaliações" da tela do tutor. */}
         <button
