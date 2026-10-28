@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { useRooms } from "@/hooks/useRooms";
 import { roomService } from "@/services/roomService";
-import { makeOtherRoom, makeRoom, ROOM_ID } from "../fixtures";
+import { makeOtherRoom, makeRoom } from "../fixtures";
 
 vi.mock("@/services/roomService", () => ({
   roomService: {
@@ -13,69 +13,87 @@ vi.mock("@/services/roomService", () => ({
   },
 }));
 
-const service = vi.mocked(roomService);
-
-async function renderLoadedHook() {
-  const hook = renderHook(() => useRooms());
-  await waitFor(() => expect(hook.result.current.isLoading).toBe(false));
-  return hook;
-}
+const mockService = vi.mocked(roomService);
 
 describe("[US03] useRooms", () => {
   beforeEach(() => {
-    service.createRoom.mockResolvedValue({ code: "A1B2C", joinLink: "app/join/A1B2C" });
-    service.updateRoom.mockResolvedValue(undefined);
-    service.deleteRoom.mockResolvedValue(undefined);
+    vi.clearAllMocks();
   });
 
-  it("should load the user's rooms on mount", async () => {
-    service.fetchRooms.mockResolvedValue([makeRoom()]);
+  it("Deve carregar as salas no mount e desativar o isLoading", async () => {
+    const initialRooms = [makeRoom(), makeOtherRoom()];
+    mockService.fetchRooms.mockResolvedValueOnce(initialRooms);
 
     const { result } = renderHook(() => useRooms());
 
     expect(result.current.isLoading).toBe(true);
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.rooms).toEqual([makeRoom()]);
-    expect(service.fetchRooms).toHaveBeenCalledTimes(1);
-  });
 
-  it("createRoom should forward the name to the service and show the new room in the list", async () => {
-    service.fetchRooms.mockResolvedValueOnce([]).mockResolvedValueOnce([makeRoom()]);
-    const { result } = await renderLoadedHook();
-
-    await act(async () => {
-      await result.current.createRoom("Software Engineering Module");
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
     });
 
-    expect(service.createRoom).toHaveBeenCalledTimes(1);
-    expect(service.createRoom).toHaveBeenCalledWith("Software Engineering Module");
-    await waitFor(() => expect(result.current.rooms).toEqual([makeRoom()]));
+    expect(result.current.rooms).toEqual(initialRooms);
+    expect(mockService.fetchRooms).toHaveBeenCalledTimes(1);
   });
 
-  it("updateRoom should forward id and new name to the service and reflect the new name in the list", async () => {
-    const updated = makeRoom({ name: "Updated Module" });
-    service.fetchRooms.mockResolvedValueOnce([makeRoom()]).mockResolvedValueOnce([updated]);
-    const { result } = await renderLoadedHook();
-
-    await act(async () => {
-      await result.current.updateRoom(ROOM_ID, "Updated Module");
+  it("Deve criar uma nova sala, adicionar à lista local e disparar createRoom no service", async () => {
+    mockService.fetchRooms.mockResolvedValueOnce([makeRoom()]);
+    mockService.createRoom.mockResolvedValueOnce({
+      code: "NEW123",
+      joinLink: "app/join/NEW123",
     });
 
-    expect(service.updateRoom).toHaveBeenCalledTimes(1);
-    expect(service.updateRoom).toHaveBeenCalledWith(ROOM_ID, "Updated Module");
-    await waitFor(() => expect(result.current.rooms[0].name).toBe("Updated Module"));
+    const { result } = renderHook(() => useRooms());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.createRoom("Compiladores");
+    });
+
+    expect(mockService.createRoom).toHaveBeenCalledWith("Compiladores");
+    expect(result.current.rooms.some((r) => r.name === "Compiladores")).toBe(true);
   });
 
-  it("deleteRoom should forward the id to the service and remove the room from the list", async () => {
-    service.fetchRooms.mockResolvedValueOnce([makeRoom(), makeOtherRoom()]).mockResolvedValueOnce([makeOtherRoom()]);
-    const { result } = await renderLoadedHook();
+  it("Deve atualizar o nome de uma sala existente e refletir a alteração no estado", async () => {
+    const originalRoom = makeRoom({ id: "room-1", name: "Nome Antigo" });
+    mockService.fetchRooms.mockResolvedValueOnce([originalRoom]);
+    mockService.updateRoom.mockResolvedValueOnce(undefined);
 
-    await act(async () => {
-      await result.current.deleteRoom(ROOM_ID);
+    const { result } = renderHook(() => useRooms());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
     });
 
-    expect(service.deleteRoom).toHaveBeenCalledTimes(1);
-    expect(service.deleteRoom).toHaveBeenCalledWith(ROOM_ID);
-    await waitFor(() => expect(result.current.rooms).toEqual([makeOtherRoom()]));
+    await act(async () => {
+      await result.current.updateRoom("room-1", "Nome Atualizado");
+    });
+
+    expect(mockService.updateRoom).toHaveBeenCalledWith("room-1", "Nome Atualizado");
+    expect(result.current.rooms.find((r) => r.id === "room-1")?.name).toBe("Nome Atualizado");
+  });
+
+  it("Deve excluir uma sala da lista após a chamada de deleteRoom", async () => {
+    const room1 = makeRoom({ id: "room-1" });
+    const room2 = makeOtherRoom({ id: "room-2" });
+    mockService.fetchRooms.mockResolvedValueOnce([room1, room2]);
+    mockService.deleteRoom.mockResolvedValueOnce(undefined);
+
+    const { result } = renderHook(() => useRooms());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.deleteRoom("room-1");
+    });
+
+    expect(mockService.deleteRoom).toHaveBeenCalledWith("room-1");
+    expect(result.current.rooms.some((r) => r.id === "room-1")).toBe(false);
+    expect(result.current.rooms).toHaveLength(1);
   });
 });

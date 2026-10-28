@@ -1,8 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { roomService } from "@/services/roomService";
-import { makeRoom, ROOM_ID } from "../fixtures";
+import { makeOtherRoom, makeRoom, ROOM_ID } from "../fixtures";
 
-function jsonResponse(body: unknown, status: number): Response {
+function jsonResponse(body: unknown, status: number = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: { "Content-Type": "application/json" },
@@ -20,54 +20,60 @@ function sentBody(init: RequestInit): unknown {
   return JSON.parse(String(init.body));
 }
 
-beforeEach(() => {
-  vi.stubGlobal("fetch", vi.fn());
-});
-
 describe("[US03] roomService", () => {
-  it("fetchRooms should GET /api/v1/rooms and return the user's rooms", async () => {
-    vi.mocked(fetch).mockResolvedValue(jsonResponse([makeRoom()], 200));
-
-    const rooms = await roomService.fetchRooms();
-
-    const { url, init } = singleFetchCall();
-    expect(url).toMatch(/\/api\/v1\/rooms$/);
-    expect(init.method ?? "GET").toBe("GET");
-    expect(rooms).toEqual([makeRoom()]);
+  beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn());
   });
 
-  it("createRoom should POST only the name and return the generated code and join link", async () => {
-    vi.mocked(fetch).mockResolvedValue(jsonResponse({ code: "A1B2C", joinLink: "app/join/A1B2C" }, 201));
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
 
-    const created = await roomService.createRoom("Software Engineering Module");
+  it("Deve buscar todas as salas via GET /api/v1/rooms no caminho de API real", async () => {
+    const expectedRooms = [makeRoom(), makeOtherRoom()];
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(expectedRooms, 200));
+
+    const result = await roomService.fetchRooms();
 
     const { url, init } = singleFetchCall();
-    expect(url).toMatch(/\/api\/v1\/rooms$/);
+    expect(url).toBe("/api/v1/rooms");
+    expect(init.method).toBe("GET");
+    expect(result).toEqual(expectedRooms);
+  });
+
+  it("Deve criar uma nova sala via POST /api/v1/rooms com o nome e devolver o código e link gerados", async () => {
+    const createdPayload = { code: "ABC123", joinLink: "app/join/ABC123" };
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(createdPayload, 201));
+
+    const result = await roomService.createRoom("Sistemas Operacionais");
+
+    const { url, init } = singleFetchCall();
+    expect(url).toBe("/api/v1/rooms");
     expect(init.method).toBe("POST");
     expect(new Headers(init.headers).get("Content-Type")).toMatch(/application\/json/);
-    expect(sentBody(init)).toEqual({ name: "Software Engineering Module" });
-    expect(created).toEqual({ code: "A1B2C", joinLink: "app/join/A1B2C" });
+    expect(sentBody(init)).toEqual({ name: "Sistemas Operacionais" });
+    expect(result).toEqual(createdPayload);
   });
 
-  it("updateRoom should PUT the new name to the room's route", async () => {
-    vi.mocked(fetch).mockResolvedValue(jsonResponse({ code: "A1B2C", joinLink: "app/join/A1B2C" }, 200));
+  it("Deve atualizar o nome da sala via PUT /api/v1/rooms/{id}", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(null, { status: 204 }));
 
-    await expect(roomService.updateRoom(ROOM_ID, "Updated Module")).resolves.toBeUndefined();
+    await roomService.updateRoom(ROOM_ID, "Nome Novo");
 
     const { url, init } = singleFetchCall();
-    expect(url).toMatch(new RegExp(`/api/v1/rooms/${ROOM_ID}$`));
+    expect(url).toBe(`/api/v1/rooms/${ROOM_ID}`);
     expect(init.method).toBe("PUT");
     expect(new Headers(init.headers).get("Content-Type")).toMatch(/application\/json/);
-    expect(sentBody(init)).toEqual({ name: "Updated Module" });
+    expect(sentBody(init)).toEqual({ name: "Nome Novo" });
   });
 
-  it("deleteRoom should DELETE the room's route and resolve on 204", async () => {
-    vi.mocked(fetch).mockResolvedValue(new Response(null, { status: 204 }));
+  it("Deve excluir a sala via DELETE /api/v1/rooms/{id}", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(null, { status: 204 }));
 
-    await expect(roomService.deleteRoom(ROOM_ID)).resolves.toBeUndefined();
+    await roomService.deleteRoom(ROOM_ID);
 
     const { url, init } = singleFetchCall();
-    expect(url).toMatch(new RegExp(`/api/v1/rooms/${ROOM_ID}$`));
+    expect(url).toBe(`/api/v1/rooms/${ROOM_ID}`);
     expect(init.method).toBe("DELETE");
   });
 });
