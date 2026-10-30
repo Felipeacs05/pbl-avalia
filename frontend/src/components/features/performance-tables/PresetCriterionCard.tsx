@@ -18,7 +18,7 @@ export function PresetCriterionCard({ criterion, onEdit, onRemove }: PresetCrite
     <div className="w-full rounded-2xl border border-[#4F5FB5] bg-[#3B4C9B] px-4 py-3 flex items-center justify-between gap-3 text-white shadow-sm">
       <div className="min-w-0 flex-1">
         <p className="truncate text-base font-bold tracking-tight">{criterion.name}</p>
-        <p className="text-xs font-medium text-indigo-200 mt-0.5">Peso {criterion.weight}</p>
+        <p className="text-xs font-medium text-indigo-200 mt-0.5">Peso {criterion.weight}%</p>
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
@@ -30,7 +30,7 @@ export function PresetCriterionCard({ criterion, onEdit, onRemove }: PresetCrite
         >
           <Edit size={18} />
         </button>
-        {/* Sem lixeira para critério fixo (no Figma, o Papel só pode ser editado) */}
+        {/* Sem lixeira para critério fixo (o Papel só pode ter o peso editado) */}
         {criterion.isRemovable && (
           <button
             type="button"

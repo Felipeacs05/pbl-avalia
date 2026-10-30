@@ -2,10 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type {
-  StudentEvaluationCriteria,
-  StudentEvaluationData,
-} from "../types/performanceTable";
+import type { StudentEvaluationData } from "../types/performanceTable";
 import { studentEvaluationService } from "../services/studentEvaluationService";
 
 const EMPTY_TAGS: string[] = [];
@@ -47,30 +44,15 @@ export function useStudentEvaluation(
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, studentId, studentName, tagsKey]);
 
-  const updateCriterionScore = useCallback(
-    (field: keyof Omit<StudentEvaluationCriteria, "papelPassed">, value: number) => {
-      setEvaluation((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          criteria: {
-            ...prev.criteria,
-            [field]: value,
-          },
-        };
-      });
-    },
-    []
-  );
-
-  const togglePapelPassed = useCallback((passed: boolean) => {
+  // criterionId: id do critério do Pré-set
+  const updateCriterionScore = useCallback((criterionId: string, value: number) => {
     setEvaluation((prev) => {
       if (!prev) return prev;
       return {
         ...prev,
         criteria: {
           ...prev.criteria,
-          papelPassed: passed,
+          [criterionId]: value,
         },
       };
     });
@@ -115,7 +97,6 @@ export function useStudentEvaluation(
     toastType,
     clearToast,
     updateCriterionScore,
-    togglePapelPassed,
     setMessage,
     saveEvaluation,
   };

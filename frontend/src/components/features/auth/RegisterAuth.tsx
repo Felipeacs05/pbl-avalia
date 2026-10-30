@@ -102,7 +102,7 @@ export function RegisterAuth() {
             <input
             id="image"
             type="file"
-            accept="image/*"
+            accept="image/png, image/jpeg, image/jpg"
             onChange={handleImageChange}
             disabled={loading}
             className="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-[#CDD3EE] file:text-[#182860] hover:file:bg-[#b5beeb] transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
@@ -117,7 +117,7 @@ export function RegisterAuth() {
         <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#757DC3] hover:bg-[#636BAE] text-white py-3 rounded-xl font-semibold text-sm shadow-sm transition-colors flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed mt-4"
+            className="w-full min-h-11 min-w-11 bg-[#757DC3] hover:bg-[#636BAE] text-white py-3 rounded-xl font-semibold text-sm shadow-sm transition-colors flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed mt-4"
         >
             {loading ? "Criando conta..." : "Cadastrar"}
         </button>

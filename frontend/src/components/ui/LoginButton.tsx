@@ -2,22 +2,22 @@
 
 import React from "react";
 
-interface LoginButtonProps{
+interface LoginButtonProps {
     text: string;
     onClick?: () => void;
     type?: 'button' | 'submit';
     disabled?: boolean;
 }
 
-export function LoginButton({text, onClick, type = 'submit', disabled}:LoginButtonProps){
-    return(
+export function LoginButton({ text, onClick, type = 'submit', disabled }: LoginButtonProps) {
+    return (
         <button
-        type={type}
-        onClick={onClick}
-        disabled = {disabled}
-        className="w-full bg-[#757DC3] hover:bg-[#636BAE] text-white py-3 rounded-xl font-semibold text-sm shadow-sm transition-colors flex items-center justify-center gap-2"
+            type={type}
+            onClick={onClick}
+            disabled={disabled}
+            className="w-full min-h-11 min-w-11 bg-[#757DC3] hover:bg-[#636BAE] text-white py-3 rounded-xl font-semibold text-sm shadow-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
         >
             {text}
         </button>
-    )
+    );
 }

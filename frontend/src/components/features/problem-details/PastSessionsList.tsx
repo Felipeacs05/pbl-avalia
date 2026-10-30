@@ -8,9 +8,15 @@ import { SessionCard } from "./SessionCard";
 
 interface PastSessionsListProps {
   sessions: Session[];
+  onSelectSession?: (session: Session) => void;
+  onEvaluateSession?: (sessionId: string) => void;
 }
 
-export function PastSessionsList({ sessions }: PastSessionsListProps) {
+export function PastSessionsList({
+  sessions,
+  onSelectSession,
+  onEvaluateSession,
+}: PastSessionsListProps) {
   return (
     <section className="w-full">
       <h2 className="text-lg font-bold text-gray-800 text-center md:text-left mb-4">
@@ -27,7 +33,13 @@ export function PastSessionsList({ sessions }: PastSessionsListProps) {
       ) : (
         <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 lg:grid-cols-1 lg:space-y-4 lg:gap-0">
           {sessions.map((session, index) => (
-            <SessionCard key={session.id} session={session} index={index} />
+            <SessionCard
+              key={session.id}
+              session={session}
+              index={index}
+              onSelectSession={onSelectSession}
+              onEvaluate={onEvaluateSession && (() => onEvaluateSession(session.id))}
+            />
           ))}
         </div>
       )}
