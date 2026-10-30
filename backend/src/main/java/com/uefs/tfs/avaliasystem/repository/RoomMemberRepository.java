@@ -29,7 +29,7 @@ public interface RoomMemberRepository extends JpaRepository<RoomMember, UUID> {
 
     List<RoomMember> findAllByRoomIdAndActiveTrueOrderByUserNameAsc(UUID roomId);
 
-<<<<<<< HEAD
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT rm FROM RoomMember rm WHERE rm.room.id = :roomId AND rm.user.id = :userId")
     Optional<RoomMember> findByRoomIdAndUserIdForUpdate(
@@ -55,6 +55,10 @@ public interface RoomMemberRepository extends JpaRepository<RoomMember, UUID> {
 
 =======
 >>>>>>> origin/develop
+    boolean existsByRoomIdAndUserIdAndActiveTrue(UUID roomId, UUID userId);
+
+    List<RoomMember> findAllByRoomIdAndActiveTrueOrderByUserNameAsc(UUID roomId);
+
     // US18: carômetro paginado, apenas alunos ativos, em ordem alfabética
     Page<RoomMember> findByRoomIdAndRoleAndActiveTrueOrderByUserNameAsc(UUID roomId, Role role, Pageable pageable);
 
