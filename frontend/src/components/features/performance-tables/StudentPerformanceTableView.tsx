@@ -2,11 +2,13 @@
 "use client";
 
 import React from "react";
+import { useParams } from "next/navigation";
 import { ArrowLeft, Plus, Share2 } from "lucide-react";
 import { useRooms } from "../../../hooks/useRooms";
 import { useSessionRoster } from "../../../hooks/useSessionRoster";
 import { useCopyLink } from "../../../hooks/useCopyLink";
 import { useStudentEvaluation } from "../../../hooks/useStudentEvaluation";
+import { useCriteriaPreset } from "../../../hooks/useCriteriaPreset";
 import { Toast } from "../../ui/Toast";
 import { CriteriaScoreCard } from "./CriteriaScoreCard";
 
@@ -20,6 +22,7 @@ interface StudentPerformanceTableViewProps {
 
 export function StudentPerformanceTableView({
   roomId,
+  problemId,
   sessionId,
   studentId,
   onBack,
@@ -31,9 +34,16 @@ export function StudentPerformanceTableView({
 
   // Localiza o aluno correspondente ao ID
   const currentStudent = roster?.students.find((s) => s.id === studentId);
-  // ====== ALTERADO POR CLAUDE ====== (antes caía no nome fixo "Luana Angélica")
+  // antes caía no nome fixo "Luana Angélica"
   const studentName = currentStudent?.name || "Aluno";
   const studentTags = currentStudent?.tags || [];
+
+  const routeParams = useParams<{ problemId?: string }>();
+  const { criteria: presetCriteria, isLoading: isPresetLoading } = useCriteriaPreset(
+    problemId ?? routeParams?.problemId ?? ""
+  );
+  // Os cards de nota vêm do CRUD do Pré-set (mesma lista, nome e peso)
+  const weightedCriteria = presetCriteria.filter((c) => !c.isToggle);
 
   // Hook de gestão do estado da avaliação do aluno
   const {
@@ -44,7 +54,6 @@ export function StudentPerformanceTableView({
     toastType,
     clearToast,
     updateCriterionScore,
-    togglePapelPassed,
     setMessage,
     saveEvaluation,
   } = useStudentEvaluation(sessionId, studentId, studentName, studentTags);
@@ -64,21 +73,14 @@ export function StudentPerformanceTableView({
     await saveEvaluation();
   };
 
-  const criteria = evaluation?.criteria || {
-    comportamento: 100,
-    participacao: 100,
-    segmentos: 100,
-    papelPassed: true,
-    notaPapel: 100,
-    notaAdicional: 0,
-  };
+  const scores = evaluation?.criteria ?? {};
 
-  // ====== ALTERADO POR CLAUDE ====== (sem tags de exemplo: mostra só as marcações reais da sessão)
+  // sem tags de exemplo: mostra só as marcações reais da sessão
   const tags = evaluation?.tags ?? [];
 
   const message = evaluation?.message || "";
 
-  const isLoading = isRosterLoading || isEvaluationLoading;
+  const isLoading = isRosterLoading || isEvaluationLoading || isPresetLoading;
 
   return (
     <div className="w-full min-h-screen bg-[#F5F5F7] text-gray-800 flex flex-col justify-between font-sans">
@@ -152,73 +154,16 @@ export function StudentPerformanceTableView({
               </h2>
 
               <div className="flex flex-col gap-2.5">
-                <CriteriaScoreCard
-                  title="Comportamento"
-                  weightLabel="Peso 1"
-                  score={criteria.comportamento}
-                  onScoreChange={(value) => updateCriterionScore("comportamento", value)} // ====== ALTERADO POR CLAUDE ======
-                />
-
-                <CriteriaScoreCard
-                  title="Participação"
-                  weightLabel="Peso 1"
-                  score={criteria.participacao}
-                  onScoreChange={(value) => updateCriterionScore("participacao", value)} // ====== ALTERADO POR CLAUDE ======
-                />
-
-                <CriteriaScoreCard
-                  title="Segmentos"
-                  weightLabel="Peso 1"
-                  score={criteria.segmentos}
-                  onScoreChange={(value) => updateCriterionScore("segmentos", value)} // ====== ALTERADO POR CLAUDE ======
-                />
-
-                <CriteriaScoreCard
-                  title="Papel"
-                  weightLabel="Peso 1"
-                  type="toggle"
-                  togglePassed={criteria.papelPassed}
-                  onToggle={togglePapelPassed}
-                />
+                {weightedCriteria.map((c) => (
+                  <CriteriaScoreCard
+                    key={c.id}
+                    title={c.name}
+                    weightLabel={`Peso ${c.weight}%`}
+                    score={scores[c.id] ?? 100}
+                    onScoreChange={(value) => updateCriterionScore(c.id, value)}
+                  />
+                ))}
               </div>
-            </section>
-
-            {/* Seção Nota pelo Papel */}
-            <section className="flex flex-col gap-2">
-              <div className="flex items-center justify-between px-1">
-                <span className="text-sm font-bold text-gray-600">
-                  Nota pelo Papel
-                </span>
-                <span className="text-xs font-medium text-gray-400">
-                  Pontuação na função
-                </span>
-              </div>
-              <CriteriaScoreCard
-                title="Papel"
-                weightLabel=""
-                score={criteria.notaPapel}
-                onScoreChange={(value) => updateCriterionScore("notaPapel", value)} // ====== ALTERADO POR CLAUDE ======
-              />
-            </section>
-
-            {/* Seção Nota adicional pelo Papel */}
-            <section className="flex flex-col gap-2">
-              <div className="flex items-center justify-between px-1">
-                <span className="text-sm font-bold text-gray-600">
-                  Nota adicional pelo Papel
-                </span>
-                <span className="text-xs font-medium text-gray-400">
-                  Pontuação na função
-                </span>
-              </div>
-              <CriteriaScoreCard
-                title="Adicional"
-                weightLabel=""
-                tone="gray"
-                scorePrefix="+ "
-                score={criteria.notaAdicional}
-                onScoreChange={(value) => updateCriterionScore("notaAdicional", value)} // ====== ALTERADO POR CLAUDE ======
-              />
             </section>
 
             {/* Seção Marcações Recebidas */}
@@ -227,7 +172,7 @@ export function StudentPerformanceTableView({
                 Marcações Recebidas pelo aluno durante a sessão
               </h2>
               <div className="w-full bg-white rounded-2xl border border-gray-200/90 p-4 min-h-[90px] flex flex-wrap gap-2 content-start shadow-xs">
-                {/* ====== ALTERADO POR CLAUDE ====== (aviso quando o aluno não recebeu marcações) */}
+                {/* aviso quando o aluno não recebeu marcações */}
                 {tags.length === 0 && (
                   <p className="text-xs italic text-gray-400">Nenhuma marcação recebida nesta sessão.</p>
                 )}

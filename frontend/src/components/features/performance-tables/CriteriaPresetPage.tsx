@@ -12,6 +12,7 @@ import { useCriteriaPreset } from "../../../hooks/useCriteriaPreset";
 import type { PresetCriterion } from "../../../types/performanceTable";
 import { Toast } from "../../ui/Toast";
 import { PresetCriterionCard } from "./PresetCriterionCard";
+import { PresetToggleCard } from "./PresetToggleCard";
 import { CriterionFormModal } from "./CriterionFormModal";
 
 interface CriteriaPresetPageProps {
@@ -43,6 +44,7 @@ export function CriteriaPresetPage({
     addCriterion,
     updateCriterion,
     removeCriterion,
+    toggleCriterion,
     savePreset,
   } = useCriteriaPreset(presetId);
 
@@ -59,8 +61,12 @@ export function CriteriaPresetPage({
   const room = rooms.find((r) => r.id === roomId);
   const roomCodeTag = room ? `${room.code} - ${room.semester ?? "2026.2"}` : "TEC499 - 2026.2";
 
-  const requiredCriteria = criteria.filter((c) => !c.isOptional);
-  const optionalCriteria = criteria.filter((c) => c.isOptional);
+  // Soma dos pesos (%): só informativa, quem recusa total diferente de 100% é o back-end (422), como na US08
+  // Auto Avaliação e Avaliação em pares são toggles: ficam fora da lista de critérios e da soma
+  const weightedCriteria = criteria.filter((c) => !c.isToggle);
+  const toggleCriteria = criteria.filter((c) => c.isToggle);
+  const totalWeight = weightedCriteria.reduce((sum, c) => sum + c.weight, 0);
+  const is100 = totalWeight === 100;
 
   // Nomes dos outros critérios, para o modal bloquear nome repetido
   const editingId = modal.mode === "edit" ? modal.criterion.id : null;
@@ -112,25 +118,33 @@ export function CriteriaPresetPage({
           </div>
         ) : (
           <>
-            <section className="flex flex-col gap-2.5" aria-labelledby="required-criteria-title">
-              <h2 id="required-criteria-title" className="text-xs font-bold text-gray-500 tracking-wider uppercase px-1">
+            {toggleCriteria.length > 0 && (
+              <section className="flex flex-col gap-2.5" aria-labelledby="toggles-title">
+                <h2 id="toggles-title" className="text-xs font-bold text-gray-500 tracking-wider uppercase px-1">
+                  Avaliações
+                </h2>
+                <ul className="flex flex-col gap-2.5 list-none p-0">
+                  {toggleCriteria.map((c) => (
+                    <li key={c.id}>
+                      <PresetToggleCard
+                        title={c.name}
+                        isChecked={Boolean(c.enabled)}
+                        onToggle={() => toggleCriterion(c.id)}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            <section className="flex flex-col gap-2.5" aria-labelledby="criteria-title">
+              <h2 id="criteria-title" className="text-xs font-bold text-gray-500 tracking-wider uppercase px-1">
                 Critérios
               </h2>
-              {requiredCriteria.length === 0 ? (
-                <p className="text-xs italic text-gray-400 px-1">Nenhum critério obrigatório.</p>
+              {weightedCriteria.length === 0 ? (
+                <p className="text-xs italic text-gray-400 px-1">Nenhum critério cadastrado.</p>
               ) : (
-                <ul className="flex flex-col gap-2.5 list-none p-0">{requiredCriteria.map(renderCard)}</ul>
-              )}
-            </section>
-
-            <section className="flex flex-col gap-2.5" aria-labelledby="optional-criteria-title">
-              <h2 id="optional-criteria-title" className="text-xs font-bold text-gray-500 tracking-wider uppercase px-1">
-                Critérios opcionais
-              </h2>
-              {optionalCriteria.length === 0 ? (
-                <p className="text-xs italic text-gray-400 px-1">Nenhum critério opcional.</p>
-              ) : (
-                <ul className="flex flex-col gap-2.5 list-none p-0">{optionalCriteria.map(renderCard)}</ul>
+                <ul className="flex flex-col gap-2.5 list-none p-0">{weightedCriteria.map(renderCard)}</ul>
               )}
 
               <button
@@ -143,7 +157,22 @@ export function CriteriaPresetPage({
               </button>
             </section>
 
+            <div className="w-full bg-white rounded-2xl border border-gray-200 p-4 flex items-center justify-between shadow-xs">
+              <span className="text-sm font-bold text-gray-700">Soma Total:</span>
+              <span
+                role="status"
+                className={`font-bold text-base transition-colors ${is100 ? "text-green-600" : "text-red-600"}`}
+              >
+                {totalWeight}%
+              </span>
+            </div>
+
             <div className="w-full pt-6 pb-6 mt-auto flex flex-col gap-2">
+              {!is100 && (
+                <p className="text-xs text-center text-gray-500 font-medium">
+                  A soma dos pesos deve ser 100%. Se não for, o servidor recusa o envio.
+                </p>
+              )}
               {hasChanges && (
                 <p className="text-xs text-center text-gray-500">Há alterações não salvas.</p>
               )}
