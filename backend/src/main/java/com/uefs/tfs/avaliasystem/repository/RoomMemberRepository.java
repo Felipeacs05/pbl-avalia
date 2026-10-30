@@ -12,6 +12,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import jakarta.persistence.LockModeType;
+
 import java.util.Optional;
 import java.util.UUID;
 import java.util.Collection;
@@ -25,6 +27,23 @@ public interface RoomMemberRepository extends JpaRepository<RoomMember, UUID> {
 
     List<RoomMember> findByRoomIdAndUserIdIn(UUID roomId, Collection<UUID> userIds);
 
+    List<RoomMember> findAllByRoomIdAndActiveTrueOrderByUserNameAsc(UUID roomId);
+
+    List<RoomMember> findByRoomIdAndActiveTrueAndRole(UUID roomId, Role role);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT rm FROM RoomMember rm WHERE rm.room.id = :roomId AND rm.user.id = :userId")
+    Optional<RoomMember> findByRoomIdAndUserIdForUpdate(
+            @Param("roomId") UUID roomId,
+            @Param("userId") UUID userId
+    );
+
+    boolean existsByRoomIdAndUserIdAndActiveTrue(UUID roomId, UUID userId);
+
+    @Query("SELECT rm FROM RoomMember rm WHERE rm.room.id = :roomId AND rm.active = true AND rm.role = com.uefs.tfs.avaliasystem.model.Role.STUDENT")
+    List<RoomMember> findAvailableStudentsByRoomId(@Param("roomId") UUID roomId);
+
+    Page<RoomMember> findByRoomIdAndRoleAndActiveTrueOrderByUserNameAsc(UUID roomId, Role role, Pageable pageable);
     boolean existsByRoomIdAndUserIdAndActiveTrue(UUID roomId, UUID userId);
 
     List<RoomMember> findAllByRoomIdAndActiveTrueOrderByUserNameAsc(UUID roomId);
@@ -52,9 +71,6 @@ public interface RoomMemberRepository extends JpaRepository<RoomMember, UUID> {
             """)
     List<User> findAvailableStudentsByRoomId(@Param("roomId") UUID roomId);
 
-
-=======
->>>>>>> origin/develop
     boolean existsByRoomIdAndUserIdAndActiveTrue(UUID roomId, UUID userId);
 
     List<RoomMember> findAllByRoomIdAndActiveTrueOrderByUserNameAsc(UUID roomId);
