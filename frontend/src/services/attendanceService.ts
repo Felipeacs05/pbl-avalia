@@ -6,9 +6,9 @@ import type {
 } from "../types/attendance";
 import type { SessionRoster } from "../types/session";
 import { sessionMock } from "../mocks/session.mock";
+import { USE_REAL_API } from "./apiMode";
 
 const BASE_URL = "/api/v1/sessions";
-const IS_TEST = process.env.NODE_ENV === "test";
 
 export const ATTENDANCE_TIMEOUT_MS = 8000;
 
@@ -52,7 +52,7 @@ function normalizeError(error: unknown): AttendanceRequestError {
 
 export const attendanceService = {
   async fetchSessionRoster(sessionId: string): Promise<SessionRoster> {
-    if (!IS_TEST) return sessionMock.fetchRoster(sessionId);
+    if (!USE_REAL_API) return sessionMock.fetchRoster(sessionId);
 
     const response = await fetch(`${BASE_URL}/${sessionId}`, {
       method: "GET",
@@ -71,7 +71,7 @@ export const attendanceService = {
     studentId: string,
     status: AttendanceStatus,
   ): Promise<Attendance> {
-    if (!IS_TEST) return sessionMock.registerAttendance(sessionId, studentId, status);
+    if (!USE_REAL_API) return sessionMock.registerAttendance(sessionId, studentId, status);
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), ATTENDANCE_TIMEOUT_MS);
@@ -92,13 +92,13 @@ export const attendanceService = {
   },
 
   updateRole(sessionId: string, studentId: string, role: string | undefined): void {
-    if (!IS_TEST) {
+    if (!USE_REAL_API) {
       sessionMock.updateStudentRole(sessionId, studentId, role);
     }
   },
 
   updateTags(sessionId: string, studentId: string, tags: string[]): void {
-    if (!IS_TEST) {
+    if (!USE_REAL_API) {
       sessionMock.updateStudentTags(sessionId, studentId, tags);
     }
   },

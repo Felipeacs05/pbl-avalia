@@ -29,6 +29,7 @@ public interface RoomMemberRepository extends JpaRepository<RoomMember, UUID> {
 
     List<RoomMember> findAllByRoomIdAndActiveTrueOrderByUserNameAsc(UUID roomId);
 
+<<<<<<< HEAD
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT rm FROM RoomMember rm WHERE rm.room.id = :roomId AND rm.user.id = :userId")
     Optional<RoomMember> findByRoomIdAndUserIdForUpdate(
@@ -52,6 +53,31 @@ public interface RoomMemberRepository extends JpaRepository<RoomMember, UUID> {
     List<User> findAvailableStudentsByRoomId(@Param("roomId") UUID roomId);
 
 
+=======
+>>>>>>> origin/develop
     // US18: carômetro paginado, apenas alunos ativos, em ordem alfabética
     Page<RoomMember> findByRoomIdAndRoleAndActiveTrueOrderByUserNameAsc(UUID roomId, Role role, Pageable pageable);
+
+    //trava esse usuário durante a consulta e so libera dps q o dado é escrito
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT rm FROM RoomMember rm WHERE rm.room.id = :roomId AND rm.user.id = :userId")
+    Optional<RoomMember> findByRoomIdAndUserIdForUpdate(
+            @Param("roomId") UUID roomId,
+            @Param("userId") UUID userId
+    );
+
+    @Query("""
+            SELECT rm.user
+            FROM RoomMember rm
+            WHERE rm.room.id = :roomId
+              AND rm.active = true
+              AND NOT EXISTS (
+                  SELECT gm.id
+                  FROM GroupMember gm
+                  WHERE gm.group.room.id = :roomId
+                    AND gm.user.id = rm.user.id
+              )
+            ORDER BY rm.user.name
+            """)
+    List<User> findAvailableStudentsByRoomId(@Param("roomId") UUID roomId);
 }

@@ -28,7 +28,7 @@ export function StudentCard({ student, onAction }: StudentCardProps) {
               onError={() => setImageError(true)}
             />
           ) : (
-            // ====== ALTERADO POR CLAUDE ====== (iniciais no lugar do ícone)
+            // iniciais no lugar do ícone
             <span className="text-white/90 text-sm font-bold select-none">{getInitials(student.name)}</span>
           )}
         </div>

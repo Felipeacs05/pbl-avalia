@@ -2,7 +2,7 @@
 
 // src/components/features/auth/LoginAuth.tsx
 
-import React, { useState, SubmitEvent } from "react";
+import React, { useState } from "react";
 import { LoginButton } from "@/components/ui/LoginButton";
 import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
@@ -14,45 +14,49 @@ export function LoginAuth() {
   // Pega a função de login, o estado de carregando e o erro do Hook
   const { login, isLoading, error } = useAuth();
 
-  function handleSubmit(e: SubmitEvent) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault(); // Impede a tela de recarregar
     login({ email, password });
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-sm">
-      {/* Exibe a mensagem de erro vermelha se a senha estiver incorreta */}
+      {/* Exibe a mensagem de erro vermelha se a autenticação falhar */}
       {error && (
-        <div className="p-3 text-xs text-red-600 bg-red-100 rounded-lg border border-red-200">
+        <div role="alert" className="p-3 text-xs text-red-600 bg-red-100 rounded-lg border border-red-200">
           {error}
         </div>
       )}
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
         <input
+          id="email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
           placeholder="seu@email.com"
-          className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#757DC3] text-black placeholder-gray-500"
+          disabled={isLoading}
+          className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#757DC3] text-black placeholder-gray-500 disabled:opacity-60"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
         <input
+          id="password"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
           placeholder="••••••••"
-          className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#757DC3] text-black placeholder-gray-500"
+          disabled={isLoading}
+          className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#757DC3] text-black placeholder-gray-500 disabled:opacity-60"
         />
       </div>
 
-      <LoginButton text={isLoading ? "Entrando..." : "Entrar"} type="submit" />
+      <LoginButton text={isLoading ? "Entrando..." : "Entrar"} type="submit" disabled={isLoading} />
 
       <div className="text-center pt-2">
         <p className="text-sm text-gray-600">

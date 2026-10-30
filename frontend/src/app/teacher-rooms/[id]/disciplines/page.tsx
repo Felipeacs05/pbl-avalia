@@ -1,7 +1,7 @@
 // src/app/teacher-rooms/[id]/disciplines/page.tsx
 "use client";
 
-import React, { Suspense, useCallback, useState } from "react"; // ====== ALTERADO POR CLAUDE ====== (useState, useCallback)
+import React, { Suspense, useCallback, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useRooms } from "../../../../hooks/useRooms";
 import { useDisciplines } from "../../../../hooks/useDiscipline";
@@ -10,7 +10,6 @@ import { ProblemCard } from "../../../../components/features/disciplines/Problem
 import { DisciplineTabBar } from "../../../../components/features/disciplines/DisciplineTabBar";
 import { PhotoRosterList } from "../../../../components/PhotoRoster/PhotoRosterList";
 import { ArrowLeft, Share2, BookOpen } from "lucide-react";
-// ====== ALTERADO POR CLAUDE ======
 import { CreateProblemModal } from "../../../../components/features/disciplines/CreateProblemModal";
 import { problemService } from "../../../../services/problemService";
 import { ConfirmModal } from "../../../../components/ui/ConfirmModal";
@@ -50,6 +49,17 @@ function DisciplinesContent() {
     if (!discipline) throw new Error("Nenhuma disciplina nesta sala.");
     const created = await problemService.createProblem(discipline.id, input);
     router.push(`/teacher-rooms/${roomId}/problems/${created.id}/preset`);
+  };
+
+  // Editar problema: o mesmo modal da criação, preenchido; também leva ao Pré-set de Critérios
+  const [editingProblem, setEditingProblem] = useState<Problem | null>(null);
+
+  const handleEditProblem = async (input: { title: string; description: string }) => {
+    if (!editingProblem) return;
+    await problemService.updateProblem(editingProblem.id, input);
+    await refetch();
+    setEditingProblem(null);
+    setToastMessage(`Problema "${input.title}" atualizado.`);
   };
 
   // Botões do card: extrair e excluir abrem o modal de confirmação primeiro; editar vai direto
@@ -184,8 +194,7 @@ function DisciplinesContent() {
                       );
                     }}
                     onViewStats={() => setPendingAction({ type: "extract", problem })}
-                    // Editar vai direto para o Pré-set (mesmo fluxo da criação: salvar -> tela do problema)
-                    onEdit={() => router.push(`/teacher-rooms/${roomId}/problems/${problem.id}/preset`)}
+                    onEdit={() => setEditingProblem(problem)}
                     onDelete={() => setPendingAction({ type: "delete", problem })}
                   />
                 ))}
@@ -218,6 +227,17 @@ function DisciplinesContent() {
         />
       )}
       {toastMessage && <Toast message={toastMessage} type="success" onClose={clearToast} />}
+
+      {editingProblem && (
+        <CreateProblemModal
+          problem={editingProblem}
+          onClose={() => setEditingProblem(null)}
+          onSubmit={handleEditProblem}
+          onEditPreset={() =>
+            router.push(`/teacher-rooms/${roomId}/problems/${editingProblem.id}/preset`)
+          }
+        />
+      )}
 
       {isCreateProblemOpen && (
         <CreateProblemModal
