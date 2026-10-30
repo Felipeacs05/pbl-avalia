@@ -11,6 +11,7 @@ import com.uefs.tfs.avaliasystem.model.TutoringSession;
 import com.uefs.tfs.avaliasystem.model.User;
 import com.uefs.tfs.avaliasystem.repository.BehaviorRecordRepository;
 import com.uefs.tfs.avaliasystem.repository.BehaviorTagRepository;
+import com.uefs.tfs.avaliasystem.repository.RoomMemberRepository;
 import com.uefs.tfs.avaliasystem.repository.TutoringSessionRepository;
 import com.uefs.tfs.avaliasystem.repository.UserRepository;
 import com.uefs.tfs.avaliasystem.service.BehaviorRecordService;
@@ -24,6 +25,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -52,6 +54,9 @@ class BehaviorRecordServiceTest {
     private TutoringSessionRepository tutoringSessionRepository;
 
     @Mock
+    private RoomMemberRepository roomMemberRepository;
+
+    @Mock
     private UserRepository userRepository;
 
     // O horário vem do bean Clock (ClockConfig): mockado, o teste sabe exatamente qual instante esperar
@@ -73,10 +78,9 @@ class BehaviorRecordServiceTest {
 
     private final Instant NOW = Instant.parse("2026-10-12T14:00:00Z");
 
-    private static final String NOT_TUTOR_MESSAGE = "Apenas o tutor responsável pela sala pode registrar comportamentos.";
-
     private TutoringSession session;
     private User student;
+    private Room room;
     private BehaviorTag lateTag;
 
     @BeforeEach
@@ -85,7 +89,7 @@ class BehaviorRecordServiceTest {
         tutor.setId(TUTOR_UUID);
         tutor.setName("Tutor Responsável");
 
-        Room room = new Room();
+        room = new Room();
         room.setId(ROOM_UUID);
         room.setName("Módulo PBL 1");
         room.setTutor(tutor);
@@ -106,6 +110,7 @@ class BehaviorRecordServiceTest {
 
         lateTag = new BehaviorTag();
         lateTag.setId(TAG_UUID);
+        lateTag.setRoom(room);
         lateTag.setName("Atraso");
     }
 
@@ -116,11 +121,13 @@ class BehaviorRecordServiceTest {
     void listBehaviorTags_ReturnsTagsInRepositoryOrder() {
         BehaviorTag phoneTag = new BehaviorTag();
         phoneTag.setId(OTHER_TAG_UUID);
+        phoneTag.setRoom(room);
         phoneTag.setName("Celular fora de contexto");
 
-        Mockito.when(behaviorTagRepository.findAllByOrderByNameAsc()).thenReturn(List.of(lateTag, phoneTag));
+        Mockito.when(behaviorTagRepository.findAllByRoomIdOrderByNameAsc(ROOM_UUID))
+                .thenReturn(List.of(lateTag, phoneTag));
 
-        List<BehaviorTagResponse> tags = behaviorRecordService.listBehaviorTags();
+        List<BehaviorTagResponse> tags = behaviorRecordService.listBehaviorTags(ROOM_UUID);
 
         assertEquals(List.of(TAG_UUID, OTHER_TAG_UUID), tags.stream().map(BehaviorTagResponse::getId).toList());
         assertEquals(List.of("Atraso", "Celular fora de contexto"),
@@ -134,6 +141,8 @@ class BehaviorRecordServiceTest {
     void createBehaviorRecord_WithTagByRoomTutor_SavesRecordWithServerTimestamp() {
         Mockito.when(tutoringSessionRepository.findById(SESSION_UUID)).thenReturn(Optional.of(session));
         Mockito.when(userRepository.findById(STUDENT_UUID)).thenReturn(Optional.of(student));
+        Mockito.when(roomMemberRepository.existsByRoomIdAndUserIdAndActiveTrue(ROOM_UUID, STUDENT_UUID))
+                .thenReturn(true);
         Mockito.when(behaviorTagRepository.findById(TAG_UUID)).thenReturn(Optional.of(lateTag));
         Mockito.when(clock.instant()).thenReturn(NOW);
         // Simula o banco atribuindo o id: a resposta precisa ser montada a partir do que save devolve
@@ -170,6 +179,8 @@ class BehaviorRecordServiceTest {
     void createBehaviorRecord_SameTagTwice_SavesTwoDistinctRecords() {
         Mockito.when(tutoringSessionRepository.findById(SESSION_UUID)).thenReturn(Optional.of(session));
         Mockito.when(userRepository.findById(STUDENT_UUID)).thenReturn(Optional.of(student));
+        Mockito.when(roomMemberRepository.existsByRoomIdAndUserIdAndActiveTrue(ROOM_UUID, STUDENT_UUID))
+                .thenReturn(true);
         Mockito.when(behaviorTagRepository.findById(TAG_UUID)).thenReturn(Optional.of(lateTag));
         Mockito.when(clock.instant()).thenReturn(NOW);
         Mockito.when(behaviorRecordRepository.save(any(BehaviorRecord.class))).thenAnswer(i -> i.getArgument(0));
@@ -196,6 +207,8 @@ class BehaviorRecordServiceTest {
 
         Mockito.when(tutoringSessionRepository.findById(SESSION_UUID)).thenReturn(Optional.of(session));
         Mockito.when(userRepository.findById(STUDENT_UUID)).thenReturn(Optional.of(student));
+        Mockito.when(roomMemberRepository.existsByRoomIdAndUserIdAndActiveTrue(ROOM_UUID, STUDENT_UUID))
+                .thenReturn(true);
         Mockito.when(clock.instant()).thenReturn(NOW);
         Mockito.when(behaviorRecordRepository.save(any(BehaviorRecord.class))).thenAnswer(i -> {
             BehaviorRecord saved = i.getArgument(0);
@@ -224,16 +237,22 @@ class BehaviorRecordServiceTest {
     // --- RECUSAS ---
 
     @Test
-    @DisplayName("Deve lançar SecurityException e não gravar nada quando o usuário é tutor de outra sala")
-    void createBehaviorRecord_ByTutorOfAnotherRoom_ThrowsSecurityException() {
-        Mockito.when(tutoringSessionRepository.findById(SESSION_UUID)).thenReturn(Optional.of(session));
+    @DisplayName("Deve proteger a criação do registro com autorização do tutor da sessão")
+    void createBehaviorRecord_RequiresSessionTutorAuthorization() throws NoSuchMethodException {
+        PreAuthorize annotation = BehaviorRecordService.class
+                .getMethod(
+                        "createBehaviorRecord",
+                        UUID.class,
+                        UUID.class,
+                        BehaviorRecordRequest.class,
+                        UUID.class
+                )
+                .getAnnotation(PreAuthorize.class);
 
-        SecurityException ex = assertThrows(SecurityException.class,
-                () -> behaviorRecordService.createBehaviorRecord(
-                        SESSION_UUID, STUDENT_UUID, new BehaviorRecordRequest(TAG_UUID, null), OTHER_TUTOR_UUID));
-
-        assertEquals(NOT_TUTOR_MESSAGE, ex.getMessage());
-        // A posse é verificada antes de qualquer leitura de aluno ou tag e de qualquer escrita
-        Mockito.verifyNoInteractions(behaviorRecordRepository, behaviorTagRepository, userRepository);
+        assertNotNull(annotation);
+        assertEquals(
+                "@tutoringSessionSecurity.requireTutor(#sessionId, #requesterId)",
+                annotation.value()
+        );
     }
 }
