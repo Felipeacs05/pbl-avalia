@@ -10,6 +10,7 @@ interface SessionCardProps {
   index: number;
   onSelectSession?: (session: Session) => void;
   onEvaluate?: () => void; // abre a tela "Avaliar Alunos" desta sessão
+  onExport?: () => void; // abre a extração de relatório desta sessão
 }
 
 const GRADIENT_VARIANTS = [
@@ -23,6 +24,7 @@ export function SessionCard({
   index,
   onSelectSession,
   onEvaluate,
+  onExport,
 }: SessionCardProps) {
   const gradientClass = GRADIENT_VARIANTS[index % GRADIENT_VARIANTS.length];
 
@@ -73,9 +75,24 @@ export function SessionCard({
               <ClipboardCheck size={18} className="text-white/80" aria-hidden="true" />
             </button>
           )}
-          <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
-            <BarChart3 size={18} className="text-white/70" aria-hidden="true" />
-          </div>
+          {onExport ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onExport();
+              }}
+              aria-label={`Extrair relatório da sessão ${session.displayDate}`}
+              title="Extrair relatório da sessão"
+              className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/25 active:scale-95 transition-colors cursor-pointer"
+            >
+              <BarChart3 size={18} className="text-white/80" aria-hidden="true" />
+            </button>
+          ) : (
+            <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+              <BarChart3 size={18} className="text-white/70" aria-hidden="true" />
+            </div>
+          )}
         </div>
       </div>
     </div>

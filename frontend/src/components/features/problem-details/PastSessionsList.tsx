@@ -10,12 +10,14 @@ interface PastSessionsListProps {
   sessions: Session[];
   onSelectSession?: (session: Session) => void;
   onEvaluateSession?: (sessionId: string) => void;
+  onExportSession?: (session: Session) => void;
 }
 
 export function PastSessionsList({
   sessions,
   onSelectSession,
   onEvaluateSession,
+  onExportSession,
 }: PastSessionsListProps) {
   return (
     <section className="w-full">
@@ -39,6 +41,7 @@ export function PastSessionsList({
               index={index}
               onSelectSession={onSelectSession}
               onEvaluate={onEvaluateSession && (() => onEvaluateSession(session.id))}
+              onExport={onExportSession && (() => onExportSession(session))}
             />
           ))}
         </div>
