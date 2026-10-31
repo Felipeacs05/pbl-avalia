@@ -45,6 +45,18 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
     }
 
+    @ExceptionHandler(ExportInProgressException.class)
+    public ResponseEntity<Map<String, Object>> handleExportInProgressException(ExportInProgressException ex) {
+        log.warn("Export already in progress: {}", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(ExportTimeoutException.class)
+    public ResponseEntity<Map<String, Object>> handleExportTimeoutException(ExportTimeoutException ex) {
+        log.warn("Export timed out: {}", ex.getMessage());
+        return buildResponse(HttpStatus.GATEWAY_TIMEOUT, ex.getMessage());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
@@ -166,11 +178,13 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(status).body(body);
     }
+
     @ExceptionHandler(AssessmentNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleAssessmentNotFound(AssessmentNotFoundException ex) {
         log.warn("Assessment not found: {}", ex.getMessage());
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
+
     @ExceptionHandler(ProblemNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleProblemNotFound(ProblemNotFoundException ex) {
         log.warn("Problem not found: {}", ex.getMessage());
