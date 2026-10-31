@@ -3,7 +3,7 @@
 export interface Problem {
   id: string;
   title: string;
-  description: string;
+  description?: string;
 }
 
 export interface Discipline {

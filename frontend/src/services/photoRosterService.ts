@@ -19,14 +19,22 @@ export const photoRosterService = {
     }
 
     try {
-      const response = await fetch(`${BASE_URL}/${roomId}/students`, {
+      const response = await fetch(`${BASE_URL}/${roomId}/roster?page=0&size=100`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });
-      if (!response.ok) {
-        return photoRosterMock.getStudents(roomId);
+      if (response.ok) {
+        const page = await response.json();
+        const items = Array.isArray(page) ? page : page.content || [];
+        return items.map((item: { id: string; name: string; profileImageUrl?: string | null; initials?: string }) => ({
+          id: item.id,
+          name: item.name,
+          avatarUrl: item.profileImageUrl ?? "",
+          profileImageUrl: item.profileImageUrl ?? null,
+          initials: item.initials,
+        }));
       }
-      return await response.json();
+      return photoRosterMock.getStudents(roomId);
     } catch {
       return photoRosterMock.getStudents(roomId);
     }

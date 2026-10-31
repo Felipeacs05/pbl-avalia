@@ -3,14 +3,13 @@ import { api } from './api';
 import { authMockSuccess } from '../mocks/auth.mock';
 import { LoginCredentials } from '@/types/login';
 import { AuthResponse } from '@/types/auth';
-// false = backend funcionando true = chamada simulada
-const USE_MOCK = true;
+import { USE_REAL_API } from './apiMode';
 
 //src/services/authService.ts
 
 export const authService = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    if (USE_MOCK) {
+    if (!USE_REAL_API) {
       return new Promise((resolve, reject) => {
         setTimeout(() => {
           if (credentials.password === '123456') {

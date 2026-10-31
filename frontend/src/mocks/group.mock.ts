@@ -1,8 +1,8 @@
 import type { Group, Student } from "../types/group";
 
 export const INITIAL_GROUPS: Group[] = [
-  { id: 'g1', name: 'Grupo 1 - Alpha', members: [] },
-  { id: 'g2', name: 'Grupo 2 - Beta', members: [] },
+  { id: 'g1', name: 'Grupo 1 - Alpha', roomId: 'e22a84a6-1234-4b55-a8cd-112233445566', members: [] },
+  { id: 'g2', name: 'Grupo 2 - Beta', roomId: 'e22a84a6-1234-4b55-a8cd-112233445566', members: [] },
 ];
 
 export const INITIAL_STUDENTS: Student[] = [

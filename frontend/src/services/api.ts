@@ -1,16 +1,11 @@
 // src/services/api.ts
 import axios from 'axios';
 
-//src/services/api.ts (USO AXIOS PARA REQUISIÇÕES HTTP)
-
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1',
 });
 
-// Interceptor para injetar o token JWT em todas as requisições
+// Interceptor para injetar o token JWT e logar requisições
 api.interceptors.request.use(
   (config) => {
     if (typeof window !== 'undefined') {
@@ -19,6 +14,10 @@ api.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
     }
+
+    // Log para depurar e ver a rota completa sendo chamada
+    console.log(`🚀 [AXIOS OUT] ${config.method?.toUpperCase()} -> ${config.baseURL}${config.url}`);
+
     return config;
   },
   (error) => {
@@ -26,18 +25,22 @@ api.interceptors.request.use(
   }
 );
 
-// Interceptor para tratar respostas e erros globais (ex: 401 Unauthorized)
+// Interceptor de resposta
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log(`✅ [AXIOS IN] ${response.status} <- ${response.config.url}`);
+    return response;
+  },
   (error) => {
+    console.error(`❌ [AXIOS ERROR] ${error.config?.url}:`, error.response?.status || error.message);
+
     if (error.response?.status === 401) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token');
         window.location.href = '/';
       }
     }
-    
-// 429 (Too Many Requests): IP bloqueado por excesso de requisições.
+
     if (error.response?.status === 429) {
       error.response.data = {
         ...(typeof error.response.data === 'object' ? error.response.data : {}),
@@ -47,4 +50,4 @@ api.interceptors.response.use(
 
     return Promise.reject(error);
   }
-); 
+);

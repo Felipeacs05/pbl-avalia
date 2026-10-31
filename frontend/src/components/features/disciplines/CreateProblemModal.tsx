@@ -11,7 +11,7 @@ import { X } from "lucide-react";
 const TITLE_MAX_LENGTH = 100;
 
 interface CreateProblemModalProps {
-  problem?: { title: string; description: string }; // quando existe, o modal está editando este problema
+  problem?: { title: string; description?: string }; // quando existe, o modal está editando este problema
   onClose: () => void;
   onSubmit: (input: { title: string; description: string }) => Promise<void>;
   onEditPreset?: () => void; // só na edição: abre o Pré-set de Critérios

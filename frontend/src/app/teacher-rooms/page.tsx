@@ -116,7 +116,7 @@ export default function Home() {
             onEnter={handleEnter}
             onEdit={handleEdit} // ← MUDAR (era handleEdit(room.name), agora passa room)
             onShare={(room) => handleShare(room.code)}
-            onDelete={setRoomToDelete} // abre a confirmação de exclusão
+            onDelete={handleDelete}
           />
         )}
       </div>

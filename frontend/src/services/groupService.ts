@@ -24,21 +24,32 @@ export const groupService = {
     if (!response.ok) throw new Error("Failed to create group");
   },
 
-  updateGroup: async (groupId: string, name: string): Promise<void> => {
+  updateGroup: async (arg1: string, arg2: string, arg3?: string): Promise<void> => {
+    const isNested = arg3 !== undefined;
+    const roomId = isNested ? arg1 : undefined;
+    const groupId = isNested ? arg2 : arg1;
+    const name = isNested ? arg3 : arg2;
+
     if (!USE_REAL_API) {
       const group = groupMocks.groups.find(g => g.id === groupId);
       if (group) group.name = name;
       return;
     }
-    const response = await fetch(`/api/v1/groups/${groupId}`, {
-      method: "PUT",
+    const url = roomId ? `/api/v1/rooms/${roomId}/groups/${groupId}` : `/api/v1/groups/${groupId}`;
+    const method = roomId ? "PATCH" : "PUT";
+    const response = await fetch(url, {
+      method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name }),
     });
     if (!response.ok) throw new Error("Failed to update group");
   },
 
-  deleteGroup: async (groupId: string): Promise<void> => {
+  deleteGroup: async (arg1: string, arg2?: string): Promise<void> => {
+    const isNested = arg2 !== undefined;
+    const roomId = isNested ? arg1 : undefined;
+    const groupId = isNested ? arg2 : arg1;
+
     if (!USE_REAL_API) {
       const group = groupMocks.groups.find(g => g.id === groupId);
       if (group) {
@@ -47,7 +58,8 @@ export const groupService = {
       groupMocks.groups = groupMocks.groups.filter(g => g.id !== groupId);
       return;
     }
-    const response = await fetch(`/api/v1/groups/${groupId}`, {
+    const url = roomId ? `/api/v1/rooms/${roomId}/groups/${groupId}` : `/api/v1/groups/${groupId}`;
+    const response = await fetch(url, {
       method: "DELETE",
     });
     if (!response.ok) throw new Error("Failed to delete group");
@@ -60,7 +72,12 @@ export const groupService = {
     return response.json();
   },
 
-  addMember: async (groupId: string, studentId: string): Promise<void> => {
+  addMember: async (arg1: string, arg2: string, arg3?: string): Promise<void> => {
+    const isNested = arg3 !== undefined;
+    const roomId = isNested ? arg1 : undefined;
+    const groupId = isNested ? arg2 : arg1;
+    const studentId = isNested ? arg3 : arg2;
+
     if (!USE_REAL_API) {
       const studentIndex = groupMocks.availableStudents.findIndex(s => s.id === studentId);
       if (studentIndex > -1) {
@@ -70,18 +87,24 @@ export const groupService = {
       }
       return;
     }
-    const response = await fetch(`/api/v1/groups/${groupId}/members`, {
+    const url = roomId ? `/api/v1/rooms/${roomId}/groups/${groupId}/members` : `/api/v1/groups/${groupId}/members`;
+    const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ studentId }),
     });
     if (!response.ok) {
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
       throw new Error(data.message || "Failed to add member");
     }
   },
 
-  removeMember: async (groupId: string, studentId: string): Promise<void> => {
+  removeMember: async (arg1: string, arg2: string, arg3?: string): Promise<void> => {
+    const isNested = arg3 !== undefined;
+    const roomId = isNested ? arg1 : undefined;
+    const groupId = isNested ? arg2 : arg1;
+    const studentId = isNested ? arg3 : arg2;
+
     if (!USE_REAL_API) {
       const group = groupMocks.groups.find(g => g.id === groupId);
       if (group) {
@@ -93,7 +116,8 @@ export const groupService = {
       }
       return;
     }
-    const response = await fetch(`/api/v1/groups/${groupId}/members/${studentId}`, {
+    const url = roomId ? `/api/v1/rooms/${roomId}/groups/${groupId}/members/${studentId}` : `/api/v1/groups/${groupId}/members/${studentId}`;
+    const response = await fetch(url, {
       method: "DELETE",
     });
     if (!response.ok) throw new Error("Failed to remove member");

@@ -1,11 +1,10 @@
 import { api } from './api';
 import { RegistrationData } from "../types/registration";
-
-const USE_MOCK = true;
+import { USE_REAL_API } from "./apiMode";
 
 export const registrationService = {
     async createAccount(data: RegistrationData): Promise<void> {
-    if (USE_MOCK) {
+    if (!USE_REAL_API) {
         return new Promise((resolve) => {
         setTimeout(() => {
             console.log("Mock: Cadastro realizado com sucesso para:", data.email);
@@ -14,20 +13,23 @@ export const registrationService = {
         });
     }
 
-    // Preparação para enviar Arquivos (File) reais para a API
+    // Preparação para enviar Multipart com data (JSON) e photo (File) reais para a API
     const formData = new FormData();
-    formData.append('name', data.name);
-    formData.append('email', data.email);
-    formData.append('password', data.password);
-    // A imagem só é anexada se o usuário tiver selecionado uma
+    const jsonPayload = JSON.stringify({
+      name: data.name,
+      email: data.email,
+      password: data.password,
+    });
+    formData.append('data', new Blob([jsonPayload], { type: 'application/json' }));
+    // O backend espera o arquivo na parte 'photo'
     if (data.image) {
-        formData.append('image', data.image);
+      formData.append('photo', data.image);
     }
 
     await api.post('/auth/register', formData, {
-        headers: {
+      headers: {
         'Content-Type': 'multipart/form-data',
-        },
+      },
     });
     },
 };

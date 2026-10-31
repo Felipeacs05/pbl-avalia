@@ -4,7 +4,7 @@ import { Room } from "../types/room";
 
 export const roomsMock: Room[] = [
   {
-    id: "1",
+    id: "e22a84a6-1234-4b55-a8cd-112233445566",
     name: "Circuitos Digitais",
     code: "TEC498",
     joinLink: "app/join/TEC498",
@@ -12,7 +12,7 @@ export const roomsMock: Room[] = [
     tutor: "Roberto Oliveira",
   },
   {
-    id: "2",
+    id: "f55b99a6-5678-4c66-b9ef-998877665544",
     name: "Sistemas Digitais",
     code: "TEC499",
     joinLink: "app/join/TEC499",

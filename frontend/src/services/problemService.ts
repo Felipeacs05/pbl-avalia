@@ -7,6 +7,23 @@ import { USE_REAL_API } from "./apiMode";
 const BASE_URL = "/api/v1/problems";
 
 export const problemService = {
+  async fetchProblems(roomId: string): Promise<Problem[]> {
+    if (!USE_REAL_API) {
+      const details = Object.values(problemDetailsMock).map((p) => ({
+        id: p.id,
+        title: p.title,
+        description: p.description,
+      }));
+      return new Promise((resolve) => setTimeout(() => resolve(details), 300));
+    }
+    const response = await fetch(`/api/v1/rooms/${roomId}/problems`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!response.ok) throw new Error("Falha ao carregar problemas da sala.");
+    return response.json();
+  },
+
   async fetchProblemDetails(problemId: string): Promise<ProblemDetails | null> {
     if (!USE_REAL_API) {
       return new Promise((resolve) =>
@@ -24,48 +41,62 @@ export const problemService = {
     return response.json();
   },
 
-  
-  // Cria um problema na disciplina e devolve o problema criado (com o id gerado)
+  // Cria um problema na sala e devolve o problema criado
   async createProblem(
-    disciplineId: string,
-    input: { title: string; description: string }
+    roomIdOrDisciplineId: string,
+    input: string | { title: string; description?: string }
   ): Promise<Problem> {
+    const title = typeof input === "string" ? input : input.title;
+    const description = typeof input === "object" && input.description ? input.description : "";
+
     if (!USE_REAL_API) {
       return new Promise((resolve, reject) =>
         setTimeout(() => {
           try {
-            resolve(createProblemInMock(disciplineId, input));
-          } catch (error) {
-            reject(error);
+            resolve(createProblemInMock(roomIdOrDisciplineId, { title, description }));
+          } catch {
+            const fallback: Problem = { id: `prob_${Date.now()}`, title, description };
+            resolve(fallback);
           }
         }, 500)
       );
     }
-    const response = await fetch(`/api/v1/disciplines/${disciplineId}/problems`, {
+    const response = await fetch(`/api/v1/rooms/${roomIdOrDisciplineId}/problems`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input),
+      body: JSON.stringify({ title }),
     });
     if (!response.ok) throw new Error("Falha ao criar o problema.");
     return response.json();
   },
 
-  // Edita título e descrição do problema (o pré-set de critérios é editado na tela própria)
-  async updateProblem(problemId: string, input: { title: string; description: string }): Promise<void> {
+  // Edita título do problema no backend
+  async updateProblem(
+    problemId: string,
+    input: string | { title: string; description?: string }
+  ): Promise<Problem> {
+    const title = typeof input === "string" ? input : input.title;
+    const description = typeof input === "object" && input.description ? input.description : "";
+
     if (!USE_REAL_API) {
       return new Promise((resolve) =>
         setTimeout(() => {
-          updateProblemInMock(problemId, input);
-          resolve();
+          updateProblemInMock(problemId, { title, description });
+          resolve({ id: problemId, title, description });
         }, 400)
       );
     }
     const response = await fetch(`${BASE_URL}/${problemId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input),
+      body: JSON.stringify({ title }),
     });
-    if (!response.ok) throw new Error("Falha ao editar o problema.");
+    if (!response.ok) {
+      const error = new Error("Falha ao editar o problema.") as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
+    return response.json();
   },
 
   async deleteProblem(problemId: string): Promise<void> {
@@ -83,7 +114,6 @@ export const problemService = {
 
   async startSession(problemId: string): Promise<{ sessionId: string }> {
     if (!USE_REAL_API) {
-      // Cria a sessão dentro do problema e a mantém ativa (em andamento) na lista
       return new Promise((resolve, reject) =>
         setTimeout(() => {
           try {
@@ -105,8 +135,18 @@ export const problemService = {
     if (!USE_REAL_API) {
       return new Promise((resolve) => setTimeout(() => resolve(), 500));
     }
-    await fetch(`${BASE_URL}/${problemId}/self-evaluation/release`, {
-      method: "POST",
+    await fetch(`${BASE_URL}/${problemId}/self-assessment-release`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+    });
+  },
+
+  async releasePeerEvaluation(problemId: string): Promise<void> {
+    if (!USE_REAL_API) {
+      return new Promise((resolve) => setTimeout(() => resolve(), 500));
+    }
+    await fetch(`${BASE_URL}/${problemId}/peer-assessment-release`, {
+      method: "PATCH",
       headers: { "Content-Type": "application/json" },
     });
   },

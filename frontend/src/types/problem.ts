@@ -15,10 +15,15 @@ export interface Session {
   statusLabel: string;
 }
 
+export interface Problem {
+  id: string;
+  title: string;
+}
+
 export interface ProblemDetails {
   id: string;
   title: string;
-  description: string;
+  description?: string;
   disciplineCode: string;
   semester: string;
   sessions: Session[];

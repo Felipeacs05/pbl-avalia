@@ -3,7 +3,9 @@
 export interface Student {
   id: string;
   name: string;
-  avatarUrl: string;
+  avatarUrl?: string;
+  profileImageUrl?: string | null;
+  initials?: string;
   email?: string;
   registrationNumber?: string;
 }

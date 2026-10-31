@@ -51,19 +51,37 @@ export const evaluationService = {
       });
     }
 
-    // Future backend integration
     try {
-      const response = await fetch(`${BASE_URL}/${problemId}/evaluations/release`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type }),
-      });
-      if (!response.ok) {
-        return evaluationMock.saveStatus(problemId, type);
+      if (type === "self_evaluation") {
+        await fetch(`${BASE_URL}/${problemId}/self-assessment-release`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+        });
+      } else if (type === "peer_evaluation") {
+        await fetch(`${BASE_URL}/${problemId}/peer-assessment-release`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+        });
       }
-      return await response.json();
+      return evaluationMock.saveStatus(problemId, type);
     } catch {
       return evaluationMock.saveStatus(problemId, type);
     }
+  },
+
+  async toggleSelfAssessmentRelease(problemId: string): Promise<void> {
+    if (!USE_REAL_API) return;
+    await fetch(`${BASE_URL}/${problemId}/self-assessment-release`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+    });
+  },
+
+  async togglePeerAssessmentRelease(problemId: string): Promise<void> {
+    if (!USE_REAL_API) return;
+    await fetch(`${BASE_URL}/${problemId}/peer-assessment-release`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+    });
   },
 };
