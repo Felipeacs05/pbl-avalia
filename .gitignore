@@ -34,6 +34,7 @@ target/
 backend/.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+backend/.env
 
 # ==========================================
 # Frontend (Node / Vite / React)

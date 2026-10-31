@@ -5,6 +5,7 @@ C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\controller\AssessmentReleaseController.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\controller\AttendanceController.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\controller\AuthController.java
+C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\controller\BehaviorRecordController.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\controller\ClassRosterController.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\controller\DashboardController.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\controller\FeedbackController.java
@@ -20,6 +21,9 @@ C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\dto\AssessmentRequest.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\dto\AttendanceRequest.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\dto\AttendanceResponse.java
+C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\dto\BehaviorRecordRequest.java
+C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\dto\BehaviorRecordResponse.java
+C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\dto\BehaviorTagResponse.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\dto\ClassReportResponse.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\dto\ClassRosterDTO.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\dto\CriteriaWeightsRequest.java
@@ -75,6 +79,8 @@ C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\model\Assessment.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\model\Attendance.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\model\AttendanceStatus.java
+C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\model\BehaviorRecord.java
+C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\model\BehaviorTag.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\model\Criterion.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\model\ExportFormat.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\model\Feedback.java
@@ -93,6 +99,8 @@ C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\model\User.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\repository\AssessmentRepository.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\repository\AttendanceRepository.java
+C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\repository\BehaviorRecordRepository.java
+C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\repository\BehaviorTagRepository.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\repository\CriterionRepository.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\repository\FeedbackRepository.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\repository\GroupMemberRepository.java
@@ -108,8 +116,10 @@ C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\security\FeedbackSecurity.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\security\PerformanceTableSecurity.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\security\RoomSecurity.java
+C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\security\TutoringSessionSecurity.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\service\AssessmentReleaseService.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\service\AttendanceService.java
+C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\service\BehaviorRecordService.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\service\ClassRosterService.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\service\FeedbackRetrievalService.java
 C:\Users\Cocada\Documents\UEFS\Engenharia de Software\MVP\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\service\FeedbackService.java
