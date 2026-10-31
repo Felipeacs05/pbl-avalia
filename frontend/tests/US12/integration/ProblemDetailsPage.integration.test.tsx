@@ -12,7 +12,7 @@ import {
     OPEN_LABEL,
     PEER_RELEASED_TOAST,
     PROBLEM_ID,
-    ROOM_ID,
+
     SELF_RELEASED_TOAST,
 } from "../fixtures";
 
