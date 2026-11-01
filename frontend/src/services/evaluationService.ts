@@ -1,16 +1,16 @@
 // src/services/evaluationService.ts
 import type { EvaluationStatus, EvaluationType } from "../types/evaluation";
 import { evaluationMock } from "../mocks/evaluationMock";
+import { USE_REAL_API } from "./apiMode";
 
 const BASE_URL = "/api/v1/problems";
-const IS_TEST = process.env.NODE_ENV === "test";
 
 export const evaluationService = {
   /**
    * Fetches the current evaluation status for a specific problem.
    */
   async getEvaluationStatus(problemId: string): Promise<EvaluationStatus> {
-    if (!IS_TEST) {
+    if (!USE_REAL_API) {
       return new Promise((resolve) => {
         setTimeout(() => {
           const status = evaluationMock.getStatus(problemId);
@@ -42,7 +42,7 @@ export const evaluationService = {
     problemId: string,
     type: EvaluationType
   ): Promise<EvaluationStatus> {
-    if (!IS_TEST) {
+    if (!USE_REAL_API) {
       return new Promise((resolve) => {
         setTimeout(() => {
           const updated = evaluationMock.saveStatus(problemId, type);

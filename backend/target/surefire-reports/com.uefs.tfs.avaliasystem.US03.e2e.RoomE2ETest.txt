@@ -1,0 +1,62 @@
+-------------------------------------------------------------------------------
+Test set: com.uefs.tfs.avaliasystem.US03.e2e.RoomE2ETest
+-------------------------------------------------------------------------------
+Tests run: 4, Failures: 0, Errors: 2, Skipped: 0, Time elapsed: 1.554 s <<< FAILURE! -- in com.uefs.tfs.avaliasystem.US03.e2e.RoomE2ETest
+com.uefs.tfs.avaliasystem.US03.e2e.RoomE2ETest.tutorLifecycle_CreateUpdateDelete_WorksEndToEnd -- Time elapsed: 0.044 s <<< ERROR!
+org.springframework.http.converter.HttpMessageConversionException: Type definition error: [simple type, class com.uefs.tfs.avaliasystem.dto.RoomResponse]
+	at org.springframework.http.converter.AbstractJacksonHttpMessageConverter.readJavaType(AbstractJacksonHttpMessageConverter.java:360)
+	at org.springframework.http.converter.AbstractJacksonHttpMessageConverter.read(AbstractJacksonHttpMessageConverter.java:319)
+	at org.springframework.web.client.HttpMessageConverterExtractor.extractData(HttpMessageConverterExtractor.java:112)
+	at org.springframework.web.client.RestTemplate$ResponseEntityResponseExtractor.extractData(RestTemplate.java:1035)
+	at org.springframework.web.client.RestTemplate$ResponseEntityResponseExtractor.extractData(RestTemplate.java:1019)
+	at org.springframework.web.client.RestTemplate.doExecute(RestTemplate.java:757)
+	at org.springframework.web.client.RestTemplate.execute(RestTemplate.java:677)
+	at org.springframework.web.client.RestTemplate.exchange(RestTemplate.java:561)
+	at org.springframework.boot.resttestclient.TestRestTemplate.exchange(TestRestTemplate.java:727)
+	at com.uefs.tfs.avaliasystem.US03.e2e.RoomE2ETest.tutorLifecycle_CreateUpdateDelete_WorksEndToEnd(RoomE2ETest.java:110)
+Caused by: tools.jackson.databind.exc.InvalidDefinitionException: Cannot construct instance of `com.uefs.tfs.avaliasystem.dto.RoomResponse` (no Creators, like default constructor, exist): cannot deserialize from Object value (no delegate- or property-based Creator)
+ at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); byte offset: #1]
+	at tools.jackson.databind.exc.InvalidDefinitionException.from(InvalidDefinitionException.java:70)
+	at tools.jackson.databind.DeserializationContext.reportBadDefinition(DeserializationContext.java:1995)
+	at tools.jackson.databind.DatabindContext.reportBadDefinition(DatabindContext.java:511)
+	at tools.jackson.databind.DeserializationContext.handleMissingInstantiator(DeserializationContext.java:1525)
+	at tools.jackson.databind.deser.bean.BeanDeserializerBase.deserializeFromObjectUsingNonDefault(BeanDeserializerBase.java:1524)
+	at tools.jackson.databind.deser.bean.BeanDeserializer.deserializeFromObject(BeanDeserializer.java:605)
+	at tools.jackson.databind.deser.bean.BeanDeserializer.deserialize(BeanDeserializer.java:200)
+	at tools.jackson.databind.deser.DeserializationContextExt.readRootValue(DeserializationContextExt.java:266)
+	at tools.jackson.databind.ObjectReader._bindAndClose(ObjectReader.java:1888)
+	at tools.jackson.databind.ObjectReader.readValue(ObjectReader.java:1270)
+	at org.springframework.http.converter.AbstractJacksonHttpMessageConverter.readJavaType(AbstractJacksonHttpMessageConverter.java:352)
+	... 9 more
+
+com.uefs.tfs.avaliasystem.US03.e2e.RoomE2ETest.listingJourney_ReflectsRealMembershipAcrossFullStack -- Time elapsed: 0.053 s <<< ERROR!
+org.springframework.http.converter.HttpMessageConversionException: Type definition error: [simple type, class com.uefs.tfs.avaliasystem.dto.RoomResponse]
+	at org.springframework.http.converter.AbstractJacksonHttpMessageConverter.readJavaType(AbstractJacksonHttpMessageConverter.java:360)
+	at org.springframework.http.converter.AbstractJacksonHttpMessageConverter.read(AbstractJacksonHttpMessageConverter.java:319)
+	at org.springframework.web.client.HttpMessageConverterExtractor.extractData(HttpMessageConverterExtractor.java:112)
+	at org.springframework.web.client.RestTemplate$ResponseEntityResponseExtractor.extractData(RestTemplate.java:1035)
+	at org.springframework.web.client.RestTemplate$ResponseEntityResponseExtractor.extractData(RestTemplate.java:1019)
+	at org.springframework.web.client.RestTemplate.doExecute(RestTemplate.java:757)
+	at org.springframework.web.client.RestTemplate.execute(RestTemplate.java:677)
+	at org.springframework.web.client.RestTemplate.exchange(RestTemplate.java:561)
+	at org.springframework.boot.resttestclient.TestRestTemplate.exchange(TestRestTemplate.java:727)
+	at com.uefs.tfs.avaliasystem.US03.e2e.RoomE2ETest.assertRoomVisibleTo(RoomE2ETest.java:214)
+	at com.uefs.tfs.avaliasystem.US03.e2e.RoomE2ETest.listingJourney_ReflectsRealMembershipAcrossFullStack(RoomE2ETest.java:207)
+Caused by: tools.jackson.databind.exc.InvalidDefinitionException: Cannot construct instance of `com.uefs.tfs.avaliasystem.dto.RoomResponse` (no Creators, like default constructor, exist): cannot deserialize from Object value (no delegate- or property-based Creator)
+ at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); byte offset: #2] (through reference chain: java.lang.Object[][0])
+	at tools.jackson.databind.exc.InvalidDefinitionException.from(InvalidDefinitionException.java:70)
+	at tools.jackson.databind.DeserializationContext.reportBadDefinition(DeserializationContext.java:1995)
+	at tools.jackson.databind.DatabindContext.reportBadDefinition(DatabindContext.java:511)
+	at tools.jackson.databind.DeserializationContext.handleMissingInstantiator(DeserializationContext.java:1525)
+	at tools.jackson.databind.deser.bean.BeanDeserializerBase.deserializeFromObjectUsingNonDefault(BeanDeserializerBase.java:1524)
+	at tools.jackson.databind.deser.bean.BeanDeserializer.deserializeFromObject(BeanDeserializer.java:605)
+	at tools.jackson.databind.deser.bean.BeanDeserializer.deserialize(BeanDeserializer.java:200)
+	at tools.jackson.databind.deser.jdk.ObjectArrayDeserializer._deserializeNoNullChecks(ObjectArrayDeserializer.java:504)
+	at tools.jackson.databind.deser.jdk.ObjectArrayDeserializer._deserialize(ObjectArrayDeserializer.java:260)
+	at tools.jackson.databind.deser.jdk.ObjectArrayDeserializer.deserialize(ObjectArrayDeserializer.java:208)
+	at tools.jackson.databind.deser.DeserializationContextExt.readRootValue(DeserializationContextExt.java:266)
+	at tools.jackson.databind.ObjectReader._bindAndClose(ObjectReader.java:1888)
+	at tools.jackson.databind.ObjectReader.readValue(ObjectReader.java:1270)
+	at org.springframework.http.converter.AbstractJacksonHttpMessageConverter.readJavaType(AbstractJacksonHttpMessageConverter.java:352)
+	... 10 more
+

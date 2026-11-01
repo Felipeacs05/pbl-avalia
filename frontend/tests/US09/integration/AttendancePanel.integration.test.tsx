@@ -10,11 +10,13 @@ import {
   makeOtherStudent,
   makeStudent,
   OTHER_STUDENT_ID,
+  presenceLabel,
   PREVIOUS_RECORDED_AT,
   PREVIOUS_RECORDED_AT_LABEL,
   RECORDED_AT,
   RECORDED_AT_LABEL,
   SESSION_ID,
+  STATUS_LABELS,
   STUDENT_ID,
   TIMEOUT_MESSAGE,
 } from "../fixtures";
@@ -86,8 +88,25 @@ function rowOf(name: string) {
   return item;
 }
 
-function statusButton(name: string, label: string) {
-  return within(rowOf(name)).getByRole("button", { name: label });
+type User = ReturnType<typeof userEvent.setup>;
+
+function presenceButton(name: string) {
+  return within(rowOf(name)).getByRole("button", { name: new RegExp(`^Presença de ${name}:`) });
+}
+
+function alwaysEnabledButtons() {
+  return screen.getAllByRole("button", { name: /^(Presença|Tags) de / });
+}
+
+async function chooseStatus(user: User, name: string, status: AttendanceStatus) {
+  await user.click(presenceButton(name));
+  const dialog = within(screen.getByRole("dialog"));
+  await user.click(dialog.getByRole("button", { name: STATUS_LABELS[status] }));
+  await user.click(dialog.getByRole("button", { name: "Confirmar" }));
+}
+
+function expectStatus(name: string, status: AttendanceStatus | null) {
+  expect(presenceButton(name)).toHaveAccessibleName(presenceLabel(name, status));
 }
 
 async function releaseHeldResponses() {
@@ -120,13 +139,13 @@ afterEach(() => {
 });
 
 describe("[US09] Integração do AttendancePanel", () => {
-  it("Deve enviar o PUT do status tocado e marcar o aluno com o horário devolvido pelo servidor", async () => {
+  it("Deve enviar o PUT do status confirmado no modal e marcar o aluno com o horário devolvido pelo servidor", async () => {
     const { user } = renderPanel();
 
-    await user.click(statusButton("Alice Souza", "Atraso"));
+    await chooseStatus(user, "Alice Souza", "LATE");
 
     expect(await within(rowOf("Alice Souza")).findByText(RECORDED_AT_LABEL)).toBeInTheDocument();
-    expect(statusButton("Alice Souza", "Atraso")).toHaveAttribute("aria-pressed", "true");
+    expectStatus("Alice Souza", "LATE");
     const puts = requestsWithMethod("PUT");
     expect(puts).toHaveLength(1);
     expect(puts[0].url).toMatch(STUDENT_ROUTE);
@@ -139,18 +158,18 @@ describe("[US09] Integração do AttendancePanel", () => {
     networkIsSlow = true;
     const { user } = renderPanel();
 
-    await user.click(statusButton("Alice Souza", "Falta"));
+    await chooseStatus(user, "Alice Souza", "ABSENT");
 
     // Antes de qualquer resposta: marcação visível e só a linha de Alice salvando
-    expect(statusButton("Alice Souza", "Falta")).toHaveAttribute("aria-pressed", "true");
+    expectStatus("Alice Souza", "ABSENT");
     expect(rowOf("Alice Souza")).toHaveAttribute("aria-busy", "true");
-    screen.getAllByRole("button").forEach((button) => expect(button).toBeEnabled());
+    alwaysEnabledButtons().forEach((button) => expect(button).toBeEnabled());
     expect(records.size).toBe(0);
 
-    await user.click(statusButton("Bruno Lima", "Presente"));
+    await chooseStatus(user, "Bruno Lima", "PRESENT");
 
     expect(requestsWithMethod("PUT").map((put) => put.body)).toEqual([{ status: "ABSENT" }, { status: "PRESENT" }]);
-    expect(statusButton("Bruno Lima", "Presente")).toHaveAttribute("aria-pressed", "true");
+    expectStatus("Bruno Lima", "PRESENT");
 
     await releaseHeldResponses();
 
@@ -169,8 +188,8 @@ describe("[US09] Integração do AttendancePanel", () => {
     const { user } = renderPanel();
 
     // 1) Registro com a rede lenta: a marcação aparece antes da resposta
-    await user.click(statusButton("Alice Souza", "Falta"));
-    expect(statusButton("Alice Souza", "Falta")).toHaveAttribute("aria-pressed", "true");
+    await chooseStatus(user, "Alice Souza", "ABSENT");
+    expectStatus("Alice Souza", "ABSENT");
 
     // 2) Sem resposta em 8 segundos: aviso de timeout e marcação desfeita
     await act(async () => {
@@ -178,18 +197,18 @@ describe("[US09] Integração do AttendancePanel", () => {
     });
 
     expect(await screen.findByRole("alert")).toHaveTextContent(TIMEOUT_MESSAGE);
-    expect(statusButton("Alice Souza", "Falta")).toHaveAttribute("aria-pressed", "false");
+    expectStatus("Alice Souza", null);
     expect(rowOf("Alice Souza")).not.toHaveAttribute("aria-busy", "true");
     // O aviso não bloqueia a lista
-    screen.getAllByRole("button").forEach((button) => expect(button).toBeEnabled());
+    alwaysEnabledButtons().forEach((button) => expect(button).toBeEnabled());
     expect(records.size).toBe(0);
 
     // 3) A rede volta e o tutor reenvia
     networkIsSlow = false;
-    await user.click(statusButton("Alice Souza", "Falta"));
+    await chooseStatus(user, "Alice Souza", "ABSENT");
 
     expect(await within(rowOf("Alice Souza")).findByText(RECORDED_AT_LABEL)).toBeInTheDocument();
-    expect(statusButton("Alice Souza", "Falta")).toHaveAttribute("aria-pressed", "true");
+    expectStatus("Alice Souza", "ABSENT");
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     // O envio que expirou e o reenvio levam o mesmo status para a mesma rota
     const puts = requestsWithMethod("PUT");
@@ -202,11 +221,10 @@ describe("[US09] Integração do AttendancePanel", () => {
     requesterIsRoomTutor = false;
     const { user } = renderPanel([makeStudent({ status: "PRESENT", recordedAt: PREVIOUS_RECORDED_AT }), makeOtherStudent()]);
 
-    await user.click(statusButton("Alice Souza", "Falta"));
+    await chooseStatus(user, "Alice Souza", "ABSENT");
 
     expect(await screen.findByRole("alert")).toHaveTextContent(FORBIDDEN_MESSAGE);
-    expect(statusButton("Alice Souza", "Presente")).toHaveAttribute("aria-pressed", "true");
-    expect(statusButton("Alice Souza", "Falta")).toHaveAttribute("aria-pressed", "false");
+    expectStatus("Alice Souza", "PRESENT");
     expect(within(rowOf("Alice Souza")).getByText(PREVIOUS_RECORDED_AT_LABEL)).toBeInTheDocument();
     // A tentativa chegou ao backend, que recusou sem gravar
     const refused = requestsWithMethod("PUT");
@@ -217,10 +235,10 @@ describe("[US09] Integração do AttendancePanel", () => {
 
     // Depois da recusa, um valor diferente do inicial prova que a segunda gravação aconteceu
     requesterIsRoomTutor = true;
-    await user.click(statusButton("Alice Souza", "Atraso"));
+    await chooseStatus(user, "Alice Souza", "LATE");
 
     expect(await within(rowOf("Alice Souza")).findByText(RECORDED_AT_LABEL)).toBeInTheDocument();
-    expect(statusButton("Alice Souza", "Atraso")).toHaveAttribute("aria-pressed", "true");
+    expectStatus("Alice Souza", "LATE");
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(records.get(STUDENT_ID)?.status).toBe("LATE");
   });

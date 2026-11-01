@@ -59,6 +59,7 @@ class AttendanceControllerTest {
 
     // --- SUCESSO ---
 
+
     @Test
     @DisplayName("Deve encaminhar sessão, aluno, status e usuário do JWT ao Service e retornar 200 com o registro")
     void registerAttendance_WithValidBody_Returns200WithRecord() throws Exception {
@@ -112,3 +113,5 @@ class AttendanceControllerTest {
                 argThat(r -> r.getStatus() == AttendanceStatus.ABSENT), eq(OTHER_TUTOR_UUID));
     }
 }
+
+

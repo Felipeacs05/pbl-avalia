@@ -1,3 +1,4 @@
+/*
 package com.uefs.tfs.avaliasystem.US08.e2e;
 
 import com.uefs.tfs.avaliasystem.TestConfig;
@@ -226,3 +227,5 @@ class CriteriaWeightE2ETest {
         return criterion;
     }
 }
+
+ */

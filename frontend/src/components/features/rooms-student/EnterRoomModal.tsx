@@ -14,11 +14,11 @@ interface EnterRoomModalProps {
 
 export function EnterRoomModal({ name, email, initialCode = "", onClose, onEnter }: EnterRoomModalProps) {
   // Começa com o código do link (se houver), mas o aluno ainda pode editar
-  const [codigo, setCodigo] = useState(initialCode);
+  const [code, setCode] = useState(initialCode);
 
-  const handleConfirmar = () => {
-    if (!codigo.trim()) return; // não deixa entrar com o campo vazio
-    onEnter(codigo.trim().toUpperCase());
+  const handleConfirm = () => {
+    if (!code.trim()) return; // não deixa entrar com o campo vazio
+    onEnter(code.trim().toUpperCase());
   };
 
   return (
@@ -52,13 +52,13 @@ export function EnterRoomModal({ name, email, initialCode = "", onClose, onEnter
 
         <input
           type="text"
-          value={codigo}
-          onChange={(e) => setCodigo(e.target.value)}
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
           placeholder="Código da sala"
           className="w-full bg-white text-gray-900 text-center rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#757DC3] mb-3"
         />
 
-        <PrimaryButton onClick={handleConfirmar}>Entrar em Sala PBL</PrimaryButton>
+        <PrimaryButton onClick={handleConfirm}>Entrar em Sala PBL</PrimaryButton>
       </div>
     </div>
   );

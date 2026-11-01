@@ -9,12 +9,15 @@ import {
   makeRow,
   makeStudent,
   OTHER_STUDENT_ID,
+  presenceLabel,
   RECORDED_AT,
   RECORDED_AT_LABEL,
   STATUS_LABELS,
   TIMEOUT_MESSAGE,
   TIMEOUT_TEXT,
 } from "../fixtures";
+
+type User = ReturnType<typeof userEvent.setup>;
 
 function renderList(
   students: AttendanceRow[] = [makeRow(makeStudent()), makeRow(makeOtherStudent())],
@@ -34,34 +37,75 @@ function rowOf(name: string) {
   return item;
 }
 
+function presenceButton(name: string) {
+  return within(rowOf(name)).getByRole("button", { name: new RegExp(`^Presença de ${name}:`) });
+}
+
+function alwaysEnabledButtons() {
+  return screen.getAllByRole("button", { name: /^(Presença|Tags) de / });
+}
+
+function confirmButton() {
+  return within(screen.getByRole("dialog")).getByRole("button", { name: "Confirmar" });
+}
+
+function statusOption(status: AttendanceStatus) {
+  return within(screen.getByRole("dialog")).getByRole("button", { name: STATUS_LABELS[status] });
+}
+
+async function chooseStatus(user: User, name: string, status: AttendanceStatus) {
+  await user.click(presenceButton(name));
+  await user.click(statusOption(status));
+  await user.click(confirmButton());
+}
+
 describe("[US09] AttendanceList", () => {
-  it("Deve listar cada aluno com os quatro botões de status", () => {
-    const { students } = renderList();
+  it("Deve listar cada aluno com o botão de presença que abre os quatro status", async () => {
+    const { students, user, onChangeStatus } = renderList();
 
     const items = within(screen.getByRole("list")).getAllByRole("listitem");
     expect(items).toHaveLength(students.length);
-    students.forEach((student, index) => {
+    for (const [index, student] of students.entries()) {
       const row = within(items[index]);
       expect(row.getByText(student.name)).toBeInTheDocument();
+      await user.click(row.getByRole("button", { name: presenceLabel(student.name, null) }));
+
+      const dialog = within(screen.getByRole("dialog"));
+      expect(dialog.getByText(student.name)).toBeInTheDocument();
       // Nome exato: "Falta" não pode casar com "Falta Justificada"
       ALL_STATUSES.forEach((status) => {
-        expect(row.getByRole("button", { name: STATUS_LABELS[status] })).toBeInTheDocument();
+        expect(dialog.getByRole("button", { name: STATUS_LABELS[status] })).toBeInTheDocument();
       });
-    });
+      await user.click(dialog.getByRole("button", { name: "Fechar modal de presença" }));
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    }
+    expect(onChangeStatus).not.toHaveBeenCalled();
   });
 
-  it("Deve marcar com aria-pressed apenas o status atual de cada aluno", () => {
-    renderList([makeRow(makeStudent({ status: "LATE", recordedAt: RECORDED_AT })), makeRow(makeOtherStudent())]);
+  it("Deve indicar apenas o status atual de cada aluno no botão de presença e no modal", async () => {
+    const { user, onChangeStatus } = renderList([makeRow(makeStudent({ status: "LATE", recordedAt: RECORDED_AT })), makeRow(makeOtherStudent())]);
 
-    const markedRow = within(rowOf("Alice Souza"));
+    expect(presenceButton("Alice Souza")).toHaveAccessibleName(presenceLabel("Alice Souza", "LATE"));
+    await user.click(presenceButton("Alice Souza"));
     ALL_STATUSES.forEach((status) => {
-      expect(markedRow.getByRole("button", { name: STATUS_LABELS[status] }))
-        .toHaveAttribute("aria-pressed", String(status === "LATE"));
+      expect(statusOption(status)).toHaveAttribute("aria-pressed", String(status === "LATE"));
     });
+    expect(confirmButton()).toBeDisabled();
+    await user.click(statusOption("PRESENT"));
+    expect(confirmButton()).toBeEnabled();
+    await user.click(statusOption("LATE"));
+    expect(confirmButton()).toBeDisabled();
+    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Cancelar" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
     // Aluno ainda sem chamada: nenhum status marcado
-    within(rowOf("Bruno Lima")).getAllByRole("button").forEach((button) => {
-      expect(button).toHaveAttribute("aria-pressed", "false");
+    expect(presenceButton("Bruno Lima")).toHaveAccessibleName(presenceLabel("Bruno Lima", null));
+    await user.click(presenceButton("Bruno Lima"));
+    ALL_STATUSES.forEach((status) => {
+      expect(statusOption(status)).toHaveAttribute("aria-pressed", "false");
     });
+    expect(confirmButton()).toBeDisabled();
+    expect(onChangeStatus).not.toHaveBeenCalled();
   });
 
   it("Deve exibir o horário salvo pelo servidor no fuso de Brasília apenas para quem já tem registro", () => {
@@ -71,13 +115,18 @@ describe("[US09] AttendanceList", () => {
     expect(within(rowOf("Bruno Lima")).queryByText(/às \d{2}:\d{2}/)).not.toBeInTheDocument();
   });
 
-  it("Deve enviar ao callback o aluno e o status tocados", async () => {
+  it("Deve enviar ao callback o aluno e o status confirmados no modal", async () => {
     const { user, onChangeStatus } = renderList();
 
-    await user.click(within(rowOf("Bruno Lima")).getByRole("button", { name: "Falta Justificada" }));
+    await user.click(presenceButton("Bruno Lima"));
+    await user.click(statusOption("JUSTIFIED_ABSENCE"));
+    expect(onChangeStatus).not.toHaveBeenCalled();
+
+    await user.click(confirmButton());
 
     expect(onChangeStatus).toHaveBeenCalledTimes(1);
     expect(onChangeStatus).toHaveBeenCalledWith(OTHER_STUDENT_ID, "JUSTIFIED_ABSENCE");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("Deve sinalizar o salvamento só na linha do aluno e manter toda a lista utilizável", async () => {
@@ -92,15 +141,15 @@ describe("[US09] AttendanceList", () => {
     expect(screen.getByRole("list")).not.toHaveAttribute("aria-busy", "true");
     expect(rowOf("Alice Souza")).toHaveAttribute("aria-busy", "true");
     expect(rowOf("Bruno Lima")).not.toHaveAttribute("aria-busy", "true");
-    screen.getAllByRole("button").forEach((button) => expect(button).toBeEnabled());
+    alwaysEnabledButtons().forEach((button) => expect(button).toBeEnabled());
 
-    await user.click(within(rowOf("Bruno Lima")).getByRole("button", { name: "Presente" }));
-    await user.click(within(rowOf("Bruno Lima")).getByRole("button", { name: "Atraso" }));
+    await chooseStatus(user, "Bruno Lima", "PRESENT");
+    await chooseStatus(user, "Bruno Lima", "LATE");
 
     // O segundo toque passa mesmo com o primeiro ainda pendente
     expect(onChangeStatus).toHaveBeenNthCalledWith(1, OTHER_STUDENT_ID, "PRESENT");
     expect(onChangeStatus).toHaveBeenNthCalledWith(2, OTHER_STUDENT_ID, "LATE");
-    screen.getAllByRole("button").forEach((button) => expect(button).toBeEnabled());
+    alwaysEnabledButtons().forEach((button) => expect(button).toBeEnabled());
   });
 
   it("Deve dar a cada botão de status área de toque de no mínimo 44x44 pixels", () => {
@@ -118,7 +167,7 @@ describe("[US09] AttendanceList", () => {
 
     expect(screen.getByRole("alert")).toHaveTextContent(TIMEOUT_MESSAGE);
     expect(screen.getAllByRole("listitem")).toHaveLength(2);
-    screen.getAllByRole("button").forEach((button) => expect(button).toBeEnabled());
+    alwaysEnabledButtons().forEach((button) => expect(button).toBeEnabled());
   });
 
   it("Deve omitir o alerta quando não há erro", () => {

@@ -33,6 +33,10 @@ export const STATUS_LABELS: Record<AttendanceStatus, string> = {
 
 export const ALL_STATUSES = Object.keys(STATUS_LABELS) as AttendanceStatus[];
 
+export function presenceLabel(name: string, status: AttendanceStatus | null): string {
+  return `Presença de ${name}: ${status ? STATUS_LABELS[status] : "não registrada"}`;
+}
+
 export function makeStudent(overrides: Partial<SessionStudent> = {}): SessionStudent {
   return {
     id: STUDENT_ID,

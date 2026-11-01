@@ -1,0 +1,32 @@
+name: avalia-e2e
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: avalia_e2e_postgres
+    environment:
+      POSTGRES_USER: tfs_user
+      POSTGRES_PASSWORD: tfs_pass
+      POSTGRES_DB: tfs_e2e
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tfs_user -d tfs_e2e"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  backend:
+    build: ./backend
+    container_name: avalia_e2e_backend
+    ports:
+      - "8081:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=e2e
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/tfs_e2e
+      - SPRING_DATASOURCE_USERNAME=tfs_user
+      - SPRING_DATASOURCE_PASSWORD=tfs_pass
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      postgres:
+        condition: service_healthy

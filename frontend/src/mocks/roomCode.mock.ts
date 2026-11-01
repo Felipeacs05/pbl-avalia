@@ -7,9 +7,9 @@ export const VALID_CODES_MOCK: string[] = [
 ];
 
 //Função utilitária para validar se o código digitado existe no sistema simulado.
-export function validateRoomCode(codigo: string): boolean {
-  const codigoTratado = codigo.trim().toUpperCase();
-  return VALID_CODES_MOCK.includes(codigoTratado);
+export function validateRoomCode(code: string): boolean {
+  const normalizedCode = code.trim().toUpperCase();
+  return VALID_CODES_MOCK.includes(normalizedCode);
 }
 
 // Ainda não existe endpoint no back-end, então a validação de código é feita 

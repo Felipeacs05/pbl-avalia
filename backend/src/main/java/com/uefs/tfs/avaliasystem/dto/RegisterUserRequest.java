@@ -15,7 +15,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class RegisterUserRequest {
+public class    RegisterUserRequest {
 
     @NotBlank(message = "Name is required")
     @Pattern(regexp = "^[^<>]*$", message = "Name contains invalid characters")

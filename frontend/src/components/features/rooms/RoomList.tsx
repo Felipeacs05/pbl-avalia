@@ -21,7 +21,7 @@ export function RoomList({ rooms, onEnter, onEdit, onShare, onCopyLink, onDelete
         if (onEnter) {
             onEnter(room);
         } else {
-            router.push(`/professor-salas/${room.id}/disciplinas`);
+            router.push(`/teacher-rooms/${room.id}/disciplines`);
         }
     };
 

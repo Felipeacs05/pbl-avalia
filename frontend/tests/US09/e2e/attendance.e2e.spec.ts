@@ -32,16 +32,33 @@ function studentRow(page: Page, name: string) {
   return page.getByRole("listitem").filter({ hasText: name });
 }
 
-function statusButton(page: Page, name: string, status: AttendanceStatus) {
+function presenceButton(page: Page, name: string) {
+  return studentRow(page, name).getByRole("button", { name: `Presença de ${name}:` });
+}
+
+function presenceLabel(name: string, status: AttendanceStatus | null): string {
+  return `Presença de ${name}: ${status ? STATUS_LABELS[status] : "não registrada"}`;
+}
+
+function statusOption(page: Page, status: AttendanceStatus) {
   // exact: "Falta" não pode casar com "Falta Justificada"
-  return studentRow(page, name).getByRole("button", { name: STATUS_LABELS[status], exact: true });
+  return page.getByRole("dialog").getByRole("button", { name: STATUS_LABELS[status], exact: true });
+}
+
+async function chooseStatus(page: Page, name: string, status: AttendanceStatus) {
+  await presenceButton(page, name).click();
+  await statusOption(page, status).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Confirmar", exact: true }).click();
+}
+
+async function expectStatus(page: Page, name: string, status: AttendanceStatus | null) {
+  await expect(presenceButton(page, name)).toHaveAccessibleName(presenceLabel(name, status));
 }
 
 async function currentStatus(page: Page, name: string): Promise<AttendanceStatus | null> {
-  for (const status of Object.keys(STATUS_LABELS) as AttendanceStatus[]) {
-    if ((await statusButton(page, name, status).getAttribute("aria-pressed")) === "true") return status;
-  }
-  return null;
+  const label = await presenceButton(page, name).getAttribute("aria-label");
+  const current = label?.slice(`Presença de ${name}: `.length);
+  return (Object.keys(STATUS_LABELS) as AttendanceStatus[]).find((status) => STATUS_LABELS[status] === current) ?? null;
 }
 
 // Status diferente do atual, para que a gravação seja visível
@@ -69,7 +86,7 @@ async function openAttendance(page: Page) {
 async function registerStatus(page: Page, status: AttendanceStatus) {
   const [response] = await Promise.all([
     page.waitForResponse((res) => res.request().method() === "PUT" && ATTENDANCE_ROUTE.test(res.url())),
-    statusButton(page, studentName, status).click(),
+    chooseStatus(page, studentName, status),
   ]);
   attendanceUrl = response.url();
   expect(response.request().postDataJSON()).toEqual({ status });
@@ -108,11 +125,11 @@ test("[E2E][US09] Tutor registra e altera a presença; o horário vem do servido
   const first = await statusOtherThanCurrent(page, studentName);
   const registered = await registerStatus(page, first);
 
-  await expect(statusButton(page, studentName, first)).toHaveAttribute("aria-pressed", "true");
+  await expectStatus(page, studentName, first);
   await expect(studentRow(page, studentName)).toContainText(timeLabel(registered.recordedAt));
 
   await page.reload();
-  await expect(statusButton(page, studentName, first)).toHaveAttribute("aria-pressed", "true");
+  await expectStatus(page, studentName, first);
   await expect(studentRow(page, studentName)).toContainText(timeLabel(registered.recordedAt));
 
   // 2) Alteração: mesma linha no banco, horário novo
@@ -123,8 +140,7 @@ test("[E2E][US09] Tutor registra e altera a presença; o horário vem do servido
   expect(new Date(changed.recordedAt).getTime()).toBeGreaterThanOrEqual(new Date(registered.recordedAt).getTime());
 
   await page.reload();
-  await expect(statusButton(page, studentName, second)).toHaveAttribute("aria-pressed", "true");
-  await expect(statusButton(page, studentName, first)).toHaveAttribute("aria-pressed", "false");
+  await expectStatus(page, studentName, second);
   await expect(studentRow(page, studentName)).toContainText(timeLabel(changed.recordedAt));
 });
 
@@ -144,21 +160,18 @@ test("[E2E][US09][QA] Com a rede lenta, a marcação aparece na hora, a lista se
     await route.continue();
   });
 
-  await statusButton(page, studentName, target).click();
+  await chooseStatus(page, studentName, target);
 
   // A marcação aparece sem esperar a resposta
-  await expect(statusButton(page, studentName, target)).toHaveAttribute("aria-pressed", "true");
+  await expectStatus(page, studentName, target);
   // Nada cobre a lista: o botão de outro aluno continua recebendo toques (trial não dispara a ação)
-  await statusButton(page, otherStudentName, "PRESENT").click({ trial: true, timeout: 2_000 });
-  await statusButton(page, studentName, "PRESENT").click({ trial: true, timeout: 2_000 });
+  await presenceButton(page, otherStudentName).click({ trial: true, timeout: 2_000 });
+  await presenceButton(page, studentName).click({ trial: true, timeout: 2_000 });
 
   // 2) Sem resposta em 8 segundos: aviso de timeout e marcação desfeita
   // O filtro evita colidir com o anunciador de rotas do Next, que também usa role="alert"
   await expect(page.getByRole("alert").filter({ hasText: TIMEOUT_MESSAGE })).toBeVisible({ timeout: 12_000 });
-  await expect(statusButton(page, studentName, target)).toHaveAttribute("aria-pressed", "false");
-  if (statusBefore) {
-    await expect(statusButton(page, studentName, statusBefore)).toHaveAttribute("aria-pressed", "true");
-  }
+  await expectStatus(page, studentName, statusBefore);
 
   // O PUT retido era o do aluno tocado, com o status escolhido
   expect(heldRoute, "o PUT do registro não saiu do frontend").toBeDefined();
@@ -171,10 +184,7 @@ test("[E2E][US09][QA] Com a rede lenta, a marcação aparece na hora, a lista se
   // O envio que expirou não gravou nada. Uma aba nova lê o estado salvo sem apagar o aviso desta página
   const freshPage = await page.context().newPage();
   await openAttendance(freshPage);
-  await expect(statusButton(freshPage, studentName, target)).toHaveAttribute("aria-pressed", "false");
-  if (statusBefore) {
-    await expect(statusButton(freshPage, studentName, statusBefore)).toHaveAttribute("aria-pressed", "true");
-  }
+  await expectStatus(freshPage, studentName, statusBefore);
   await freshPage.close();
   await expect(page.getByRole("alert").filter({ hasText: TIMEOUT_MESSAGE })).toBeVisible();
 
@@ -184,7 +194,7 @@ test("[E2E][US09][QA] Com a rede lenta, a marcação aparece na hora, a lista se
   await expect(studentRow(page, studentName)).toContainText(timeLabel(resent.recordedAt));
 
   await page.reload();
-  await expect(statusButton(page, studentName, target)).toHaveAttribute("aria-pressed", "true");
+  await expectStatus(page, studentName, target);
 });
 
 test("[E2E][US09] Botões de status têm área de toque de no mínimo 44x44 pixels no celular", async ({ page }) => {
@@ -192,8 +202,14 @@ test("[E2E][US09] Botões de status têm área de toque de no mínimo 44x44 pixe
   await page.setViewportSize({ width: 375, height: 667 });
   await openAttendance(page);
 
+  const presenceBox = await presenceButton(page, studentName).boundingBox();
+  expect(presenceBox, "botão de presença sem caixa renderizada").not.toBeNull();
+  expect(presenceBox!.width).toBeGreaterThanOrEqual(44);
+  expect(presenceBox!.height).toBeGreaterThanOrEqual(44);
+
+  await presenceButton(page, studentName).click();
   for (const status of Object.keys(STATUS_LABELS) as AttendanceStatus[]) {
-    const box = await statusButton(page, studentName, status).boundingBox();
+    const box = await statusOption(page, status).boundingBox();
     expect(box, `botão ${STATUS_LABELS[status]} sem caixa renderizada`).not.toBeNull();
     expect(box!.width).toBeGreaterThanOrEqual(44);
     expect(box!.height).toBeGreaterThanOrEqual(44);
@@ -216,7 +232,6 @@ test("[E2E][US09] Tutor de outra sala recebe 403 ao alterar a presença e o stat
   expect(body).toMatch(FORBIDDEN_MESSAGE);
 
   await page.reload();
-  await expect(statusButton(page, studentName, saved)).toHaveAttribute("aria-pressed", "true");
-  await expect(statusButton(page, studentName, attempt)).toHaveAttribute("aria-pressed", "false");
+  await expectStatus(page, studentName, saved);
   await expect(studentRow(page, studentName)).toContainText(timeLabel(registered.recordedAt));
 });

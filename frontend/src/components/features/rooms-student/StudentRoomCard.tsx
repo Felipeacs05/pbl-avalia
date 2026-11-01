@@ -1,5 +1,6 @@
 import React from "react";
 import { Room } from "../../../types/room";
+import { getInitials } from "../../ui/Avatar";
 
 // src/components/features/rooms-student/StudentRoomCard.tsx
 
@@ -11,15 +12,6 @@ interface StudentRoomCardProps {
 
 // Tons do Figma, do mais claro ao mais escuro
 const COLORS = ["#3F4A9A", "#141B5E", "#020845"];
-
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .map((parte) => parte[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
 
 export function StudentRoomCard({ room, index, onEnter }: StudentRoomCardProps) {
   return (

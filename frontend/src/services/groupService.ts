@@ -1,16 +1,17 @@
 import type { Group, Student } from "@/types/group";
 import { groupMocks } from "@/mocks/group.mock";
+import { USE_REAL_API } from "./apiMode";
 
 export const groupService = {
   fetchGroups: async (roomId: string): Promise<Group[]> => {
-    if (process.env.NODE_ENV !== "test") return [...groupMocks.groups];
+    if (!USE_REAL_API) return [...groupMocks.groups];
     const response = await fetch(`/api/v1/rooms/${roomId}/groups`);
     if (!response.ok) throw new Error("Failed to fetch groups");
     return response.json();
   },
 
   createGroup: async (roomId: string, name: string): Promise<void> => {
-    if (process.env.NODE_ENV !== "test") {
+    if (!USE_REAL_API) {
       const newGroup: Group = { id: `g_${Date.now()}`, name, members: [] };
       groupMocks.groups.push(newGroup);
       return;
@@ -24,7 +25,7 @@ export const groupService = {
   },
 
   updateGroup: async (groupId: string, name: string): Promise<void> => {
-    if (process.env.NODE_ENV !== "test") {
+    if (!USE_REAL_API) {
       const group = groupMocks.groups.find(g => g.id === groupId);
       if (group) group.name = name;
       return;
@@ -38,7 +39,7 @@ export const groupService = {
   },
 
   deleteGroup: async (groupId: string): Promise<void> => {
-    if (process.env.NODE_ENV !== "test") {
+    if (!USE_REAL_API) {
       const group = groupMocks.groups.find(g => g.id === groupId);
       if (group) {
         groupMocks.availableStudents.push(...group.members);
@@ -53,14 +54,14 @@ export const groupService = {
   },
 
   fetchAvailableStudents: async (roomId: string): Promise<Student[]> => {
-    if (process.env.NODE_ENV !== "test") return [...groupMocks.availableStudents];
+    if (!USE_REAL_API) return [...groupMocks.availableStudents];
     const response = await fetch(`/api/v1/rooms/${roomId}/groups/available-students`);
     if (!response.ok) throw new Error("Failed to fetch available students");
     return response.json();
   },
 
   addMember: async (groupId: string, studentId: string): Promise<void> => {
-    if (process.env.NODE_ENV !== "test") {
+    if (!USE_REAL_API) {
       const studentIndex = groupMocks.availableStudents.findIndex(s => s.id === studentId);
       if (studentIndex > -1) {
         const student = groupMocks.availableStudents.splice(studentIndex, 1)[0];
@@ -81,7 +82,7 @@ export const groupService = {
   },
 
   removeMember: async (groupId: string, studentId: string): Promise<void> => {
-    if (process.env.NODE_ENV !== "test") {
+    if (!USE_REAL_API) {
       const group = groupMocks.groups.find(g => g.id === groupId);
       if (group) {
         const studentIndex = group.members.findIndex(s => s.id === studentId);
@@ -99,7 +100,7 @@ export const groupService = {
   },
 
   fetchMyGroup: async (roomId: string): Promise<Group | null> => {
-    if (process.env.NODE_ENV !== "test") return groupMocks.groups[0] || null;
+    if (!USE_REAL_API) return groupMocks.groups[0] || null;
     const response = await fetch(`/api/v1/rooms/${roomId}/groups/me`);
     if (!response.ok) throw new Error("Failed to fetch my group");
     return response.json();

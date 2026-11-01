@@ -1,3 +1,4 @@
+
 package com.uefs.tfs.avaliasystem.US09;
 
 import com.uefs.tfs.avaliasystem.model.Attendance;
@@ -169,3 +170,5 @@ class AttendanceRepositoryTest {
         return entityManager.persistFlushFind(newAttendance(targetSession, targetStudent, status, RECORDED_AT));
     }
 }
+
+

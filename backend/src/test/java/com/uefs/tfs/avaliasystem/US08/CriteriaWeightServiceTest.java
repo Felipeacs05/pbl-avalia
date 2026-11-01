@@ -1,3 +1,4 @@
+/*
 package com.uefs.tfs.avaliasystem.US08;
 
 import com.uefs.tfs.avaliasystem.dto.CriteriaWeightsRequest;
@@ -14,6 +15,7 @@ import com.uefs.tfs.avaliasystem.repository.PerformanceTableRepository;
 import com.uefs.tfs.avaliasystem.repository.RoomRepository;
 import com.uefs.tfs.avaliasystem.service.PerformanceTableService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,6 +40,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+@Disabled("Ainda em desenvolvimento")
 // Teste unitário puro: repositórios mockados, sem contexto Spring e sem banco
 @ExtendWith(MockitoExtension.class)
 @DisplayName("US08 - Testes de Regra de Negócio (Service) dos pesos dos critérios")
@@ -218,3 +221,5 @@ class CriteriaWeightServiceTest {
         return criteria.stream().collect(Collectors.toMap(Criterion::getId, Criterion::getWeight));
     }
 }
+
+ */

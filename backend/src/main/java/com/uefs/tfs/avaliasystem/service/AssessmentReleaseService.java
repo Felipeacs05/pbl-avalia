@@ -20,7 +20,8 @@ public class AssessmentReleaseService {
         if (!p.getRoom().getTutor().getId().equals(tutorId)) {
             throw new AccessDeniedException("Only the tutor can toggle self-assessment");
         }
-        p.setSelfAssessmentReleased(!p.getSelfAssessmentReleased());
+        boolean isCurrentlyReleased = Boolean.TRUE.equals(p.getSelfAssessmentReleased());
+        p.setSelfAssessmentReleased(!isCurrentlyReleased);
         return problemRepository.save(p);
     }
 
@@ -30,7 +31,8 @@ public class AssessmentReleaseService {
         if (!p.getRoom().getTutor().getId().equals(tutorId)) {
             throw new AccessDeniedException("Only the tutor can toggle peer-assessment");
         }
-        p.setPeerAssessmentReleased(!p.getPeerAssessmentReleased());
+        boolean isCurrentlyReleased = Boolean.TRUE.equals(p.getPeerAssessmentReleased());
+        p.setPeerAssessmentReleased(!isCurrentlyReleased);
         return problemRepository.save(p);
     }
 }

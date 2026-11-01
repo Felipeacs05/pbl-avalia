@@ -29,11 +29,11 @@ export function DisciplineTabBar({
     }
 
     if (tab === "subject") {
-      router.push(`/professor-salas/${roomId}/disciplinas`);
+      router.push(`/teacher-rooms/${roomId}/disciplines`);
     } else if (tab === "groups") {
-      router.push(`/professor-salas/${roomId}/groups`);
+      router.push(`/teacher-rooms/${roomId}/groups`);
     } else if (tab === "people") {
-      router.push(`/professor-salas/${roomId}/disciplinas?tab=people`);
+      router.push(`/teacher-rooms/${roomId}/disciplines?tab=people`);
     }
   };
 
