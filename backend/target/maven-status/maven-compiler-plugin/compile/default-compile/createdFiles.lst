@@ -12,6 +12,7 @@ com\uefs\tfs\avaliasystem\dto\ClassRosterDTO.class
 com\uefs\tfs\avaliasystem\exception\ProblemNotFoundException.class
 com\uefs\tfs\avaliasystem\exception\ResourceNotFoundException.class
 com\uefs\tfs\avaliasystem\repository\TeamRepository.class
+com\uefs\tfs\avaliasystem\dto\BehaviorTagResponse.class
 com\uefs\tfs\avaliasystem\exception\TooManyAttemptsException.class
 com\uefs\tfs\avaliasystem\dto\ClassReportResponse.class
 com\uefs\tfs\avaliasystem\service\AssessmentReleaseService.class
@@ -20,9 +21,11 @@ com\uefs\tfs\avaliasystem\controller\AttendanceController.class
 com\uefs\tfs\avaliasystem\service\GroupService.class
 com\uefs\tfs\avaliasystem\dto\ClassReportResponse$StudentReportRow.class
 com\uefs\tfs\avaliasystem\service\JoinAttemptLimiter$State.class
+com\uefs\tfs\avaliasystem\security\TutoringSessionSecurity.class
 com\uefs\tfs\avaliasystem\service\SelfAssessmentService.class
 com\uefs\tfs\avaliasystem\dto\ProblemRequest.class
 com\uefs\tfs\avaliasystem\dto\GradeAdjustmentRequest.class
+com\uefs\tfs\avaliasystem\repository\BehaviorRecordRepository.class
 com\uefs\tfs\avaliasystem\model\Problem.class
 com\uefs\tfs\avaliasystem\model\SessionRoleAssignment.class
 com\uefs\tfs\avaliasystem\controller\FeedbackRetrievalController.class
@@ -32,6 +35,7 @@ com\uefs\tfs\avaliasystem\dto\LoginResponse.class
 com\uefs\tfs\avaliasystem\model\Assessment.class
 com\uefs\tfs\avaliasystem\security\FeedbackSecurity.class
 com\uefs\tfs\avaliasystem\dto\GradeAdjustmentResponse.class
+com\uefs\tfs\avaliasystem\model\BehaviorRecord.class
 com\uefs\tfs\avaliasystem\dto\ClassReportResponse$ReportWarning.class
 com\uefs\tfs\avaliasystem\dto\ProblemResponse.class
 com\uefs\tfs\avaliasystem\dto\GroupRequest.class
@@ -56,6 +60,7 @@ com\uefs\tfs\avaliasystem\exception\ResourceConflictException.class
 com\uefs\tfs\avaliasystem\service\RateLimitingService.class
 com\uefs\tfs\avaliasystem\controller\GroupController.class
 com\uefs\tfs\avaliasystem\service\FeedbackService.class
+com\uefs\tfs\avaliasystem\controller\BehaviorRecordController.class
 com\uefs\tfs\avaliasystem\service\SessionRoleAssignmentService.class
 com\uefs\tfs\avaliasystem\model\Feedback.class
 com\uefs\tfs\avaliasystem\exception\InvalidAccessCodeException.class
@@ -63,6 +68,7 @@ com\uefs\tfs\avaliasystem\repository\GroupRepository.class
 com\uefs\tfs\avaliasystem\AvaliaSystemApplication.class
 com\uefs\tfs\avaliasystem\dto\SessionRoleAssignmentResponse.class
 com\uefs\tfs\avaliasystem\service\ClassRosterService.class
+com\uefs\tfs\avaliasystem\dto\BehaviorRecordRequest.class
 com\uefs\tfs\avaliasystem\dto\ClassReportResponse$WithdrawnStudentRow.class
 com\uefs\tfs\avaliasystem\model\GroupMember.class
 com\uefs\tfs\avaliasystem\security\PerformanceTableSecurity.class
@@ -79,8 +85,11 @@ com\uefs\tfs\avaliasystem\dto\SessionReportResponse.class
 com\uefs\tfs\avaliasystem\dto\RegisterUserRequest.class
 com\uefs\tfs\avaliasystem\dto\AttendanceResponse.class
 com\uefs\tfs\avaliasystem\dto\ClassReportResponse$ProblemSummary.class
+com\uefs\tfs\avaliasystem\model\BehaviorTag.class
 com\uefs\tfs\avaliasystem\model\AttendanceStatus.class
+com\uefs\tfs\avaliasystem\repository\BehaviorTagRepository.class
 com\uefs\tfs\avaliasystem\dto\FeedbackDTO.class
+com\uefs\tfs\avaliasystem\dto\BehaviorRecordResponse.class
 com\uefs\tfs\avaliasystem\util\PaginationUtils.class
 com\uefs\tfs\avaliasystem\service\RoomService.class
 com\uefs\tfs\avaliasystem\dto\RoomMemberResponse.class
@@ -94,6 +103,7 @@ com\uefs\tfs\avaliasystem\controller\SelfAssessmentController.class
 com\uefs\tfs\avaliasystem\model\Group.class
 com\uefs\tfs\avaliasystem\service\PeerAssessmentService.class
 com\uefs\tfs\avaliasystem\model\Attendance.class
+com\uefs\tfs\avaliasystem\service\BehaviorRecordService.class
 com\uefs\tfs\avaliasystem\service\UserService.class
 com\uefs\tfs\avaliasystem\exception\InvalidRegisterException.class
 com\uefs\tfs\avaliasystem\security\RoomSecurity.class

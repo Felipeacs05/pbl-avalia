@@ -20,23 +20,22 @@ import java.util.UUID;
 
 @Repository
 public interface RoomMemberRepository extends JpaRepository<RoomMember, UUID> {
-
     Optional<RoomMember> findByRoomIdAndUserId(UUID roomId, UUID userId);
 
     // US16: valida a turma inteira em uma consulta; o EntityGraph evita um SELECT por aluno
     @EntityGraph(attributePaths = "user")
     List<RoomMember> findByRoomIdAndUserIdIn(UUID roomId, Collection<UUID> userIds);
 
-    List<RoomMember> findAllByRoomIdAndActiveTrueOrderByUserNameAsc(UUID roomId);
-
     List<RoomMember> findByRoomIdAndActiveTrueAndRole(UUID roomId, Role role);
 
     boolean existsByRoomIdAndUserIdAndActiveTrue(UUID roomId, UUID userId);
 
+    List<RoomMember> findAllByRoomIdAndActiveTrueOrderByUserNameAsc(UUID roomId);
+
     // US18: carômetro paginado, apenas alunos ativos, em ordem alfabética
     Page<RoomMember> findByRoomIdAndRoleAndActiveTrueOrderByUserNameAsc(UUID roomId, Role role, Pageable pageable);
 
-    // trava esse usuário durante a consulta e só libera depois que o dado é escrito
+    //trava esse usuário durante a consulta e so libera dps q o dado é escrito
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT rm FROM RoomMember rm WHERE rm.room.id = :roomId AND rm.user.id = :userId")
     Optional<RoomMember> findByRoomIdAndUserIdForUpdate(
