@@ -6,6 +6,7 @@ import com.uefs.tfs.avaliasystem.model.User;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -21,6 +22,8 @@ import java.util.UUID;
 public interface RoomMemberRepository extends JpaRepository<RoomMember, UUID> {
     Optional<RoomMember> findByRoomIdAndUserId(UUID roomId, UUID userId);
 
+    // US16: valida a turma inteira em uma consulta; o EntityGraph evita um SELECT por aluno
+    @EntityGraph(attributePaths = "user")
     List<RoomMember> findByRoomIdAndUserIdIn(UUID roomId, Collection<UUID> userIds);
 
     List<RoomMember> findByRoomIdAndActiveTrueAndRole(UUID roomId, Role role);
