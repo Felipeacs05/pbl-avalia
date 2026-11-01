@@ -12,6 +12,7 @@ import { StudentSelfEvaluationModal } from "../../../../../../../components/feat
 import { StudentPeerEvaluationModal } from "../../../../../../../components/features/evaluations/StudentPeerEvaluationModal";
 import { Toast } from "../../../../../../../components/ui/Toast";
 import { useFeedback } from "../../../../../../../hooks/useFeedback";
+import { useProblemDetails } from "../../../../../../../hooks/useProblemDetails";
 import { MOCK_SESSION_SUMMARY } from "../../../../../../../mocks/feedback.mock";
 import { gradeAdjustmentMock } from "../../../../../../../mocks/gradeAdjustment.mock";
 import type { SubmittedSelfAssessment } from "../../../../../../../types/gradeAdjustment";
@@ -53,6 +54,9 @@ export default function StudentSessionDashboardPage() {
     };
   }, [refreshFeedbacks]);
 
+  // Back-end: a nota e as tags rápidas da sessão ainda vêm do MOCK_SESSION_SUMMARY (feedback.mock).
+  // Endpoint previsto: GET /api/v1/sessions/{sessionId}/students/{studentId}/summary -> { grade, quickTags }
+  // (o título do problema e a data da sessão já vêm do problemService, via useProblemDetails)
   const isModifiedByTutor = Boolean(
     myAssessment.modifiedByTutor ?? myAssessment.ajustado_por_tutor
   );
@@ -60,12 +64,12 @@ export default function StudentSessionDashboardPage() {
     ? myAssessment.score
     : MOCK_SESSION_SUMMARY.grade ?? 7.5;
 
-  const sessionDateLabel =
-    sessionId === "session_hoje"
-      ? "Hoje"
-      : sessionId === "session_02"
-      ? "03/04"
-      : MOCK_SESSION_SUMMARY.sessionDate;
+  // Título do problema e data da sessão vêm do mesmo problema da tela do professor
+  const { problem } = useProblemDetails(problemId);
+  const session = problem?.sessions.find((s) => s.id === sessionId);
+  const problemTitle = problem?.title ?? MOCK_SESSION_SUMMARY.problemTitle;
+  const sessionDateLabel = session?.displayDate ?? MOCK_SESSION_SUMMARY.sessionDate;
+  const disciplineTag = problem ? `${problem.disciplineCode} - ${problem.semester}` : MOCK_SESSION_SUMMARY.roomCode;
 
   const handleOpenMyFeedbacks = () => {
     void refreshFeedbacks();
@@ -76,7 +80,7 @@ export default function StudentSessionDashboardPage() {
     <main className="w-full min-h-screen bg-[#F5F5F5] font-sans relative flex flex-col">
       {/* Header responsivo igual ao fluxo do professor */}
       <ProblemDetailsHeader
-        disciplineTag={MOCK_SESSION_SUMMARY.roomCode}
+        disciplineTag={disciplineTag}
         onBack={() =>
           router.push(`/student-rooms/${roomId}/problems/${problemId}`)
         }
@@ -91,7 +95,7 @@ export default function StudentSessionDashboardPage() {
       <div className="flex-1 flex flex-col md:hidden px-5 pt-5 pb-10 space-y-5">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 leading-snug underline decoration-gray-200 underline-offset-4">
-            {MOCK_SESSION_SUMMARY.problemTitle}
+            {problemTitle}
           </h1>
           <p className="text-lg font-bold text-gray-800 mt-1">
             Sessão de {sessionDateLabel}
@@ -156,7 +160,7 @@ export default function StudentSessionDashboardPage() {
         <div className="w-1/2 flex flex-col gap-5">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 w-full">
             <h1 className="text-2xl font-bold text-gray-900 leading-tight mb-2">
-              {MOCK_SESSION_SUMMARY.problemTitle}
+              {problemTitle}
             </h1>
             <div className="w-full h-px bg-gray-200 mb-3" />
             <p className="text-sm font-semibold text-[#4354A0]">

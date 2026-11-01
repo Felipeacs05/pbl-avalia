@@ -8,33 +8,14 @@ import { BarChart3, UserCheck, Users } from "lucide-react";
 import { StudentSelfEvaluationModal } from "../../../../../components/features/evaluations/StudentSelfEvaluationModal";
 import { StudentPeerEvaluationModal } from "../../../../../components/features/evaluations/StudentPeerEvaluationModal";
 import { Toast } from "../../../../../components/ui/Toast";
+import { useProblemDetails } from "../../../../../hooks/useProblemDetails";
+import { useRooms } from "../../../../../hooks/useRooms";
 
-interface StudentSessionItem {
-  id: string;
-  dateLabel: string;
-  statusLabel: string;
-  gradient: string;
-}
-
-const STUDENT_SESSIONS: StudentSessionItem[] = [
-  {
-    id: "session_hoje",
-    dateLabel: "Hoje",
-    statusLabel: "Avaliação por pares disponivel",
-    gradient: "from-[#3B4899] to-[#4354A0]",
-  },
-  {
-    id: "session_01",
-    dateLabel: "08/04",
-    statusLabel: "Sessão Finalizada",
-    gradient: "from-[#2D3A7C] to-[#4354A0]",
-  },
-  {
-    id: "session_02",
-    dateLabel: "03/04",
-    statusLabel: "Sessão Finalizada",
-    gradient: "from-[#1E285E] to-[#34438E]",
-  },
+// Cores alternadas dos cards de sessão
+const SESSION_GRADIENTS = [
+  "from-[#3B4899] to-[#4354A0]",
+  "from-[#2D3A7C] to-[#4354A0]",
+  "from-[#1E285E] to-[#34438E]",
 ];
 
 export default function StudentProblemSessionsPage() {
@@ -44,11 +25,23 @@ export default function StudentProblemSessionsPage() {
   const problemId =
     typeof params?.problemId === "string" ? params.problemId : "prob_01";
 
-  const problemTitle = problemId === "prob_02" ? "Problema 2" : "Problema 1";
-  const problemSubtitle =
-    problemId === "prob_02"
-      ? "Confecção do MVP — Engenharia de Software"
-      : "Prototipação do projeto e do PRD — Engenharia de Software";
+  // Mesmo problema da tela do professor: título, descrição e sessões vêm dele
+  const { problem, isLoading } = useProblemDetails(problemId);
+  const { rooms } = useRooms();
+  const room = rooms.find((r) => r.id === roomId);
+  const disciplineTag = room
+    ? `${room.code} - ${room.semester ?? ""}`
+    : problem
+      ? `${problem.disciplineCode} - ${problem.semester}`
+      : "...";
+  const problemTitle = problem?.title ?? (isLoading ? "Carregando problema..." : "Problema não encontrado");
+  const problemSubtitle = problem?.description ?? "";
+  const sessions = (problem?.sessions ?? []).map((session, index) => ({
+    id: session.id,
+    dateLabel: session.displayDate,
+    statusLabel: session.statusLabel,
+    gradient: SESSION_GRADIENTS[index % SESSION_GRADIENTS.length],
+  }));
 
   // Autoavaliação e avaliação por pares abrem como modal, sem trocar de tela
   const [activeModal, setActiveModal] = useState<"self" | "peer" | null>(null);
@@ -64,7 +57,7 @@ export default function StudentProblemSessionsPage() {
     <main className="w-full min-h-screen bg-[#F5F5F5] font-sans relative flex flex-col">
       {/* Header responsivo igual ao professor */}
       <ProblemDetailsHeader
-        disciplineTag="EXA613 - 2026.2"
+        disciplineTag={disciplineTag}
         onBack={() => router.push(`/student-rooms/${roomId}`)}
         onShare={() => {
           if (navigator.clipboard) {
@@ -93,7 +86,10 @@ export default function StudentProblemSessionsPage() {
               Sessões realizadas
             </h2>
 
-            {STUDENT_SESSIONS.map((session) => (
+            {sessions.length === 0 && !isLoading && (
+              <p className="text-sm text-gray-400">Nenhuma sessão realizada ainda.</p>
+            )}
+            {sessions.map((session) => (
               <button
                 key={session.id}
                 type="button"
@@ -160,7 +156,10 @@ export default function StudentProblemSessionsPage() {
             Sessões realizadas
           </h2>
 
-          {STUDENT_SESSIONS.map((session) => (
+          {sessions.length === 0 && !isLoading && (
+            <p className="text-sm text-gray-400">Nenhuma sessão realizada ainda.</p>
+          )}
+          {sessions.map((session) => (
             <button
               key={session.id}
               type="button"

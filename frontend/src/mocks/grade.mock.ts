@@ -1,7 +1,10 @@
 // src/mocks/grade.mock.ts
 import type { Discipline } from "../types/discipline";
+import { loadMock, onMockChange, saveMock } from "./mockStorage";
 
-export const gradeMock: Discipline[] = [
+const DISCIPLINES_STORAGE_KEY = "avalia_pbl_disciplines_v1";
+
+const INITIAL_DISCIPLINES: Discipline[] = [
   {
     id: "disc_01",
     name: "Circuitos Digitais",
@@ -60,3 +63,15 @@ export const gradeMock: Discipline[] = [
     ],
   },
 ];
+
+// Disciplinas e problemas compartilhados entre a tela do professor e a do aluno
+export const gradeMock: Discipline[] = loadMock(DISCIPLINES_STORAGE_KEY, INITIAL_DISCIPLINES);
+
+// Chamar depois de criar, editar ou excluir um problema
+export function saveDisciplinesMock(): void {
+  saveMock(DISCIPLINES_STORAGE_KEY, gradeMock);
+}
+
+onMockChange<Discipline[]>(DISCIPLINES_STORAGE_KEY, (saved) => {
+  gradeMock.splice(0, gradeMock.length, ...saved);
+});

@@ -1,6 +1,9 @@
 // src/mocks/evaluationMock.ts
 import type { EvaluationStatus, EvaluationType } from "../types/evaluation";
 import { getReleasedTypes } from "../types/evaluation";
+import { loadMock, onMockChange, saveMock } from "./mockStorage";
+
+const EVALUATIONS_STORAGE_KEY = "avalia_pbl_evaluation_status_v1";
 
 /**
  * In-memory storage to simulate persistent evaluations per problem during the session.
@@ -25,9 +28,19 @@ export const initialEvaluationStatuses: Record<string, EvaluationStatus> = {
   },
 };
 
+// Liberações compartilhadas entre a tela do professor e a do aluno
 const inMemoryEvaluationStore = new Map<string, EvaluationStatus>(
-  Object.entries(initialEvaluationStatuses)
+  Object.entries(loadMock(EVALUATIONS_STORAGE_KEY, initialEvaluationStatuses))
 );
+
+function saveEvaluationsMock(): void {
+  saveMock(EVALUATIONS_STORAGE_KEY, Object.fromEntries(inMemoryEvaluationStore));
+}
+
+onMockChange<Record<string, EvaluationStatus>>(EVALUATIONS_STORAGE_KEY, (saved) => {
+  inMemoryEvaluationStore.clear();
+  Object.entries(saved).forEach(([id, status]) => inMemoryEvaluationStore.set(id, status));
+});
 
 export const evaluationMock = {
   /**
@@ -67,6 +80,7 @@ export const evaluationMock = {
     };
 
     inMemoryEvaluationStore.set(problemId, updatedStatus);
+    saveEvaluationsMock();
     return { ...updatedStatus, activeTypes: [...activeTypes] };
   },
 
@@ -78,5 +92,6 @@ export const evaluationMock = {
     Object.entries(initialEvaluationStatuses).forEach(([k, v]) => {
       inMemoryEvaluationStore.set(k, { ...v });
     });
+    saveEvaluationsMock();
   },
 };

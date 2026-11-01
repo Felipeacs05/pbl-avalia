@@ -2,6 +2,9 @@
 // Simula o back-end do Pré-set de Critérios (US07) enquanto o endpoint não existe.
 // Os critérios iniciais são os do Figma.
 import type { PresetCriterion } from "../types/performanceTable";
+import { loadMock, onMockChange, saveMock } from "./mockStorage";
+
+const PRESETS_STORAGE_KEY = "avalia_pbl_criteria_presets_v1";
 
 const INITIAL_PRESET: PresetCriterion[] = [
   { id: "crit_papel", name: "Papel", weight: 25, isRemovable: false },
@@ -15,7 +18,15 @@ const INITIAL_PRESET: PresetCriterion[] = [
 
 // Pré-set salvo por dono (problema ou sala), em memória.
 // Todo problema novo "nasce" com o INITIAL_PRESET até o professor salvar o dele.
-const presetsById = new Map<string, PresetCriterion[]>();
+// Fica no localStorage: os toggles de autoavaliação e pares também valem na tela do aluno
+const presetsById = new Map<string, PresetCriterion[]>(
+  Object.entries(loadMock<Record<string, PresetCriterion[]>>(PRESETS_STORAGE_KEY, {}))
+);
+
+onMockChange<Record<string, PresetCriterion[]>>(PRESETS_STORAGE_KEY, (saved) => {
+  presetsById.clear();
+  Object.entries(saved).forEach(([id, criteria]) => presetsById.set(id, criteria));
+});
 
 export const criteriaPresetMock = {
   getPreset(presetId: string): PresetCriterion[] {
@@ -28,6 +39,7 @@ export const criteriaPresetMock = {
     const total = criteria.filter((c) => !c.isToggle).reduce((sum, c) => sum + c.weight, 0);
     if (total !== 100) throw new Error(`A soma dos pesos deve ser 100% (atual: ${total}%).`);
     presetsById.set(presetId, criteria.map((c) => ({ ...c })));
+    saveMock(PRESETS_STORAGE_KEY, Object.fromEntries(presetsById));
     return criteriaPresetMock.getPreset(presetId);
   },
 };
