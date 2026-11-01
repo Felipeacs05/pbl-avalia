@@ -32,6 +32,17 @@ public interface RoomMemberRepository extends JpaRepository<RoomMember, UUID> {
     // US18: carômetro paginado, apenas alunos ativos, em ordem alfabética
     Page<RoomMember> findByRoomIdAndRoleAndActiveTrueOrderByUserNameAsc(UUID roomId, Role role, Pageable pageable);
 
+    // US19/US20: alunos relevantes para o relatório (ativos e inativos da sala, ordenados por nome)
+    @Query("""
+            SELECT rm
+            FROM RoomMember rm
+            JOIN FETCH rm.user
+            WHERE rm.room.id = :roomId
+              AND rm.role = com.uefs.tfs.avaliasystem.model.Role.STUDENT
+            ORDER BY rm.user.name ASC
+            """)
+    List<RoomMember> findAllRelevantStudentsByRoomId(@Param("roomId") UUID roomId);
+
     //trava esse usuário durante a consulta e so libera dps q o dado é escrito
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT rm FROM RoomMember rm WHERE rm.room.id = :roomId AND rm.user.id = :userId")
@@ -49,7 +60,7 @@ public interface RoomMemberRepository extends JpaRepository<RoomMember, UUID> {
                   SELECT gm.id
                   FROM GroupMember gm
                   WHERE gm.group.room.id = :roomId
-                    AND gm.user.id = rm.user.id
+                     AND gm.user.id = rm.user.id
               )
             ORDER BY rm.user.name
             """)

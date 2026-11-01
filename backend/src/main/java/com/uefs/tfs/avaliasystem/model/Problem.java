@@ -32,6 +32,9 @@ public class Problem {
     @Column(name = "order_index", nullable = false)
     private Integer orderIndex = 0;
 
+    @Column(name = "weight", nullable = false)
+    private Double weight = 1.0;
+
     @Column(name = "self_assessment_released", nullable = false)
     private Boolean selfAssessmentReleased = false;
 

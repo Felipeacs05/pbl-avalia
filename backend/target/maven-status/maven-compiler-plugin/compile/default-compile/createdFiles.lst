@@ -17,14 +17,17 @@ com\uefs\tfs\avaliasystem\exception\TooManyAttemptsException.class
 com\uefs\tfs\avaliasystem\dto\ClassReportResponse.class
 com\uefs\tfs\avaliasystem\service\AssessmentReleaseService.class
 com\uefs\tfs\avaliasystem\config\SecurityConfig.class
+com\uefs\tfs\avaliasystem\service\ExportedFile.class
 com\uefs\tfs\avaliasystem\controller\AttendanceController.class
 com\uefs\tfs\avaliasystem\service\GroupService.class
 com\uefs\tfs\avaliasystem\dto\ClassReportResponse$StudentReportRow.class
 com\uefs\tfs\avaliasystem\service\JoinAttemptLimiter$State.class
 com\uefs\tfs\avaliasystem\security\TutoringSessionSecurity.class
+com\uefs\tfs\avaliasystem\service\ClassReportService.class
 com\uefs\tfs\avaliasystem\service\SelfAssessmentService.class
 com\uefs\tfs\avaliasystem\dto\ProblemRequest.class
 com\uefs\tfs\avaliasystem\dto\GradeAdjustmentRequest.class
+com\uefs\tfs\avaliasystem\controller\ReportController.class
 com\uefs\tfs\avaliasystem\repository\BehaviorRecordRepository.class
 com\uefs\tfs\avaliasystem\model\Problem.class
 com\uefs\tfs\avaliasystem\model\SessionRoleAssignment.class
@@ -33,6 +36,7 @@ com\uefs\tfs\avaliasystem\controller\GradeAdjustmentController.class
 com\uefs\tfs\avaliasystem\dto\GroupMemberRequest.class
 com\uefs\tfs\avaliasystem\dto\LoginResponse.class
 com\uefs\tfs\avaliasystem\model\Assessment.class
+com\uefs\tfs\avaliasystem\service\PdfReportGenerator.class
 com\uefs\tfs\avaliasystem\security\FeedbackSecurity.class
 com\uefs\tfs\avaliasystem\dto\GradeAdjustmentResponse.class
 com\uefs\tfs\avaliasystem\model\BehaviorRecord.class
@@ -89,6 +93,7 @@ com\uefs\tfs\avaliasystem\model\BehaviorTag.class
 com\uefs\tfs\avaliasystem\model\AttendanceStatus.class
 com\uefs\tfs\avaliasystem\repository\BehaviorTagRepository.class
 com\uefs\tfs\avaliasystem\dto\FeedbackDTO.class
+com\uefs\tfs\avaliasystem\service\ReportExportService$1.class
 com\uefs\tfs\avaliasystem\dto\BehaviorRecordResponse.class
 com\uefs\tfs\avaliasystem\util\PaginationUtils.class
 com\uefs\tfs\avaliasystem\service\RoomService.class
@@ -102,6 +107,7 @@ com\uefs\tfs\avaliasystem\config\E2eSecurityConfig$UserIdHeaderAuthenticationFil
 com\uefs\tfs\avaliasystem\controller\SelfAssessmentController.class
 com\uefs\tfs\avaliasystem\model\Group.class
 com\uefs\tfs\avaliasystem\service\PeerAssessmentService.class
+com\uefs\tfs\avaliasystem\service\SpreadsheetReportGenerator.class
 com\uefs\tfs\avaliasystem\model\Attendance.class
 com\uefs\tfs\avaliasystem\service\BehaviorRecordService.class
 com\uefs\tfs\avaliasystem\service\UserService.class
@@ -128,6 +134,7 @@ com\uefs\tfs\avaliasystem\controller\ClassRosterController.class
 com\uefs\tfs\avaliasystem\repository\RoomRepository.class
 com\uefs\tfs\avaliasystem\repository\GroupMemberRepository.class
 com\uefs\tfs\avaliasystem\repository\AssessmentRepository.class
+com\uefs\tfs\avaliasystem\service\ReportExportService.class
 com\uefs\tfs\avaliasystem\dto\LoginRequest.class
 com\uefs\tfs\avaliasystem\model\RoomMember.class
 com\uefs\tfs\avaliasystem\service\GradeAdjustmentService.class
