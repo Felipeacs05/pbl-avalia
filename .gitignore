@@ -7,3 +7,4 @@ target/
 .vscode/ 
 *.iml 
 *:Zone.Identifier
+docs/local/
