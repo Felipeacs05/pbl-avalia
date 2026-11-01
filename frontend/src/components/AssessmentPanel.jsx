@@ -2,29 +2,33 @@
 
 export const AssessmentPanel = ({ problemId, isTutor, peers = [] }) => {
     const [selfReleased, setSelfReleased] = useState(false);
-    const [peerReleased] = useState(false);
+    const [peerReleased, setPeerReleased] = useState(false);
     const [selfScore, setSelfScore] = useState('');
     const [selfComment, setSelfComment] = useState('');
     const [peerScores, setPeerScores] = useState({});
     const [error, setError] = useState(null);
 
-    const toggleSelfAssessment = async () => {
+    // PATCH na rota de liberação; o estado só muda quando o servidor confirma
+    const toggleRelease = async (route, applyChange) => {
         try {
-            const res = await fetch(`/api/v1/problems/${problemId}/self-assessment-release`, {
+            const res = await fetch(`/api/v1/problems/${problemId}/${route}`, {
                 method: 'PATCH',
                 headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
             });
-            if (res.ok) setSelfReleased(!selfReleased);
+            if (res.ok) applyChange();
             else throw new Error('Falha na API');
         } catch {
             setError('Erro ao alterar status');
         }
     };
 
+    const toggleSelfAssessment = () => toggleRelease('self-assessment-release', () => setSelfReleased(!selfReleased));
+    const togglePeerAssessment = () => toggleRelease('peer-assessment-release', () => setPeerReleased(!peerReleased));
+
     const submitSelfAssessment = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetch(`/api/v1/problems/${problemId}/self-assessment`, {
+            const res = await fetch(`/api/v1/problems/${problemId}/self-assessments`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -69,8 +73,11 @@ export const AssessmentPanel = ({ problemId, isTutor, peers = [] }) => {
             {isTutor && (
                 <div>
                     <h3>Painel do Tutor</h3>
-                    <button id="toggleSelfAssessment" onClick={toggleSelfAssessment}>
+                    <button id={`toggleSelfAssessment_${problemId}`} onClick={toggleSelfAssessment}>
                         Toggle Autoavaliação
+                    </button>
+                    <button id={`togglePeerAssessment_${problemId}`} onClick={togglePeerAssessment}>
+                        Toggle Avaliação de Pares
                     </button>
                     <span id="statusAssessmentLabel">
                         {selfReleased ? 'Avaliações Abertas' : 'Avaliações Fechadas'}

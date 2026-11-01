@@ -1,10 +1,13 @@
 // src/app/student-rooms/[id]/problems/[problemId]/page.tsx
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ProblemDetailsHeader } from "../../../../../components/features/problem-details/ProblemDetailsHeader";
 import { BarChart3, UserCheck, Users } from "lucide-react";
+import { StudentSelfEvaluationModal } from "../../../../../components/features/evaluations/StudentSelfEvaluationModal";
+import { StudentPeerEvaluationModal } from "../../../../../components/features/evaluations/StudentPeerEvaluationModal";
+import { Toast } from "../../../../../components/ui/Toast";
 
 interface StudentSessionItem {
   id: string;
@@ -46,6 +49,10 @@ export default function StudentProblemSessionsPage() {
     problemId === "prob_02"
       ? "Confecção do MVP — Engenharia de Software"
       : "Prototipação do projeto e do PRD — Engenharia de Software";
+
+  // Autoavaliação e avaliação por pares abrem como modal, sem trocar de tela
+  const [activeModal, setActiveModal] = useState<"self" | "peer" | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const handleOpenSession = (sessionId: string) => {
     router.push(
@@ -128,7 +135,7 @@ export default function StudentProblemSessionsPage() {
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => router.push("/selfevaluation")}
+                onClick={() => setActiveModal("self")}
                 className="w-full bg-[#757DC3] hover:bg-[#636BAE] active:scale-[0.98] text-white py-3 px-4 rounded-xl font-semibold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <UserCheck size={17} />
@@ -137,7 +144,7 @@ export default function StudentProblemSessionsPage() {
 
               <button
                 type="button"
-                onClick={() => router.push("/peerevaluation")}
+                onClick={() => setActiveModal("peer")}
                 className="w-full bg-[#4354A0] hover:bg-[#364485] active:scale-[0.98] text-white py-3 px-4 rounded-xl font-semibold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Users size={17} />
@@ -177,6 +184,25 @@ export default function StudentProblemSessionsPage() {
           ))}
         </div>
       </div>
+
+      {toastMessage && <Toast message={toastMessage} type="success" onClose={() => setToastMessage(null)} />}
+
+      {activeModal === "self" && (
+        <StudentSelfEvaluationModal
+          roomId={roomId}
+          problemId={problemId}
+          onClose={() => setActiveModal(null)}
+          onSubmitted={setToastMessage}
+        />
+      )}
+      {activeModal === "peer" && (
+        <StudentPeerEvaluationModal
+          roomId={roomId}
+          problemId={problemId}
+          onClose={() => setActiveModal(null)}
+          onSubmitted={setToastMessage}
+        />
+      )}
     </main>
   );
 }

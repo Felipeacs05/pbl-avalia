@@ -43,8 +43,10 @@ export default function ProblemDetailsPage() {
     isModalOpen,
     evaluationStatus,
     selectedType,
+    selectedTypes,
     isLoading: isLoadingEvaluation,
     isSubmitting: isSubmittingEvaluation,
+    error: evaluationError,
     openModal,
     closeModal,
     toggleType,
@@ -190,6 +192,9 @@ export default function ProblemDetailsPage() {
                       <p className="text-xs text-gray-500 font-medium">
                         Status da Avaliação
                       </p>
+                      <p className="text-[11px] font-bold uppercase tracking-wide text-emerald-700">
+                        Avaliações Abertas
+                      </p>
                       <p className="text-sm font-semibold text-[#4354A0]">
                         {evaluationStatus.activeType === "self_evaluation"
                           ? "Autoavaliação Liberada"
@@ -264,6 +269,9 @@ export default function ProblemDetailsPage() {
                       <p className="text-xs text-gray-500 font-medium">
                         Status da Avaliação
                       </p>
+                      <p className="text-[11px] font-bold uppercase tracking-wide text-emerald-700">
+                        Avaliações Abertas
+                      </p>
                       <p className="text-sm font-semibold text-[#4354A0]">
                         {evaluationStatus.activeType === "self_evaluation"
                           ? "Autoavaliação Liberada"
@@ -326,9 +334,11 @@ export default function ProblemDetailsPage() {
         isOpen={isModalOpen}
         onClose={closeModal}
         selectedType={selectedType}
+        selectedTypes={selectedTypes}
         onToggleType={toggleType}
         onConfirm={handleConfirmRelease}
         isSubmitting={isSubmittingEvaluation}
+        error={evaluationError}
       />
 
       {/* Feedback Form Modal (US16) */}

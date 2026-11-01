@@ -8,6 +8,9 @@ import { ProblemDetailsHeader } from "../../../../../../../components/features/p
 import { SelfAssessmentGrade } from "../../../../../../../components/features/grade-adjustment/SelfAssessmentGrade";
 import { SessionQuickTagsCard } from "../../../../../../../components/features/feedback/SessionQuickTagsCard";
 import { StudentFeedbacksModal } from "../../../../../../../components/features/feedback/StudentFeedbacksModal";
+import { StudentSelfEvaluationModal } from "../../../../../../../components/features/evaluations/StudentSelfEvaluationModal";
+import { StudentPeerEvaluationModal } from "../../../../../../../components/features/evaluations/StudentPeerEvaluationModal";
+import { Toast } from "../../../../../../../components/ui/Toast";
 import { useFeedback } from "../../../../../../../hooks/useFeedback";
 import { MOCK_SESSION_SUMMARY } from "../../../../../../../mocks/feedback.mock";
 import { gradeAdjustmentMock } from "../../../../../../../mocks/gradeAdjustment.mock";
@@ -25,6 +28,9 @@ export default function StudentSessionDashboardPage() {
     typeof params?.sessionId === "string" ? params.sessionId : "session_01";
 
   const [isFeedbacksModalOpen, setIsFeedbacksModalOpen] = useState(false);
+  // Autoavaliação e avaliação por pares abrem como modal, sem trocar de tela
+  const [activeModal, setActiveModal] = useState<"self" | "peer" | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [myAssessment, setMyAssessment] = useState<SubmittedSelfAssessment>(() =>
     gradeAdjustmentMock.getAssessmentById(DEFAULT_STUDENT_ASSESSMENT_ID)
   );
@@ -118,7 +124,7 @@ export default function StudentSessionDashboardPage() {
 
           <button
             type="button"
-            onClick={() => router.push("/selfevaluation")}
+            onClick={() => setActiveModal("self")}
             className="rounded-2xl bg-[#E2E4EC] hover:bg-[#D5D8E4] border-2 border-[#C8CCDC] py-3.5 px-2 flex flex-col items-center justify-center gap-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
           >
             <UserCheck size={24} className="text-[#3E4875]" strokeWidth={2.2} />
@@ -129,7 +135,7 @@ export default function StudentSessionDashboardPage() {
 
           <button
             type="button"
-            onClick={() => router.push("/peerevaluation")}
+            onClick={() => setActiveModal("peer")}
             className="rounded-2xl bg-[#E2E4EC] hover:bg-[#D5D8E4] border-2 border-[#C8CCDC] py-3.5 px-2 flex flex-col items-center justify-center gap-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
           >
             <Users size={24} className="text-[#3E4875]" strokeWidth={2.2} />
@@ -182,7 +188,7 @@ export default function StudentSessionDashboardPage() {
 
             <button
               type="button"
-              onClick={() => router.push("/selfevaluation")}
+              onClick={() => setActiveModal("self")}
               className="rounded-2xl bg-white hover:bg-[#EEEDF8] border-2 border-gray-200 hover:border-[#757DC3]/50 py-4 px-3 flex flex-col items-center justify-center gap-2 shadow-xs transition-all hover:shadow-md active:scale-95 cursor-pointer"
             >
               <UserCheck size={26} className="text-[#4354A0]" strokeWidth={2.2} />
@@ -193,7 +199,7 @@ export default function StudentSessionDashboardPage() {
 
             <button
               type="button"
-              onClick={() => router.push("/peerevaluation")}
+              onClick={() => setActiveModal("peer")}
               className="rounded-2xl bg-white hover:bg-[#EEEDF8] border-2 border-gray-200 hover:border-[#757DC3]/50 py-4 px-3 flex flex-col items-center justify-center gap-2 shadow-xs transition-all hover:shadow-md active:scale-95 cursor-pointer"
             >
               <Users size={26} className="text-[#4354A0]" strokeWidth={2.2} />
@@ -215,6 +221,25 @@ export default function StudentSessionDashboardPage() {
         <StudentFeedbacksModal
           feedbacks={feedbacks}
           onClose={() => setIsFeedbacksModalOpen(false)}
+        />
+      )}
+
+      {toastMessage && <Toast message={toastMessage} type="success" onClose={() => setToastMessage(null)} />}
+
+      {activeModal === "self" && (
+        <StudentSelfEvaluationModal
+          roomId={roomId}
+          problemId={problemId}
+          onClose={() => setActiveModal(null)}
+          onSubmitted={setToastMessage}
+        />
+      )}
+      {activeModal === "peer" && (
+        <StudentPeerEvaluationModal
+          roomId={roomId}
+          problemId={problemId}
+          onClose={() => setActiveModal(null)}
+          onSubmitted={setToastMessage}
         />
       )}
     </main>

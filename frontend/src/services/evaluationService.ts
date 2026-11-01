@@ -5,6 +5,16 @@ import { USE_REAL_API } from "./apiMode";
 
 const BASE_URL = "/api/v1/problems";
 
+const STATUS_ERROR_MESSAGE = "Não foi possível carregar o status da avaliação.";
+const RELEASE_ERROR_MESSAGE = "Não foi possível alterar a liberação da avaliação.";
+const NETWORK_ERROR_MESSAGE = "Sem conexão com o servidor. Tente novamente.";
+
+// Falhas no contrato { status, message }; status 0 = sem resposta (rede)
+async function toApiError(response: Response, fallback: string) {
+  const body = await response.json().catch(() => null);
+  return { status: response.status, message: body?.message || fallback };
+}
+
 export const evaluationService = {
   /**
    * Fetches the current evaluation status for a specific problem.
@@ -19,19 +29,18 @@ export const evaluationService = {
       });
     }
 
-    // Future backend integration
+    let response: Response;
     try {
-      const response = await fetch(`${BASE_URL}/${problemId}/evaluation-status`, {
+      response = await fetch(`${BASE_URL}/${problemId}/evaluation-status`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });
-      if (!response.ok) {
-        return evaluationMock.getStatus(problemId);
-      }
-      return await response.json();
     } catch {
-      return evaluationMock.getStatus(problemId);
+      throw { status: 0, message: NETWORK_ERROR_MESSAGE };
     }
+    // Não inventa um status: o aluno veria uma liberação que não existe
+    if (!response.ok) throw await toApiError(response, STATUS_ERROR_MESSAGE);
+    return await response.json();
   },
 
   /**
@@ -51,19 +60,18 @@ export const evaluationService = {
       });
     }
 
-    // Future backend integration
+    let response: Response;
     try {
-      const response = await fetch(`${BASE_URL}/${problemId}/evaluations/release`, {
+      response = await fetch(`${BASE_URL}/${problemId}/evaluations/release`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type }),
       });
-      if (!response.ok) {
-        return evaluationMock.saveStatus(problemId, type);
-      }
-      return await response.json();
     } catch {
-      return evaluationMock.saveStatus(problemId, type);
+      throw { status: 0, message: NETWORK_ERROR_MESSAGE };
     }
+    // Sem fallback para o mock: o tutor precisa saber que a liberação não foi gravada
+    if (!response.ok) throw await toApiError(response, RELEASE_ERROR_MESSAGE);
+    return await response.json();
   },
 };
