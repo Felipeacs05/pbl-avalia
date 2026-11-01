@@ -5,6 +5,7 @@ import React from "react";
 import { useEvaluationManager } from "../../../hooks/useEvaluationManager";
 import { useMyGroup } from "../../../hooks/useMyGroup";
 import { useCriteriaPreset } from "../../../hooks/useCriteriaPreset";
+import { isEvaluationTypeReleased } from "../../../types/evaluation";
 import { selfEvaluationMock } from "../../../mocks/selfEvaluation.mock";
 import { authMockSuccess } from "../../../mocks/auth.mock";
 import { SelfEvaluationModal } from "./SelfEvaluationModal";
@@ -41,7 +42,7 @@ export function StudentSelfEvaluationModal({
     <SelfEvaluationModal
       isOpen
       onClose={onClose}
-      isEvaluationOpen={evaluationStatus.activeType === "self_evaluation" && isEnabledInPreset}
+      isEvaluationOpen={isEvaluationTypeReleased(evaluationStatus, "self_evaluation") && isEnabledInPreset}
       peers={peers}
       onSubmit={async (data) => {
         // trocar pelo endpoint real quando o back-end existir

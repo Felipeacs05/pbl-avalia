@@ -1,5 +1,6 @@
 // src/mocks/evaluationMock.ts
 import type { EvaluationStatus, EvaluationType } from "../types/evaluation";
+import { getReleasedTypes } from "../types/evaluation";
 
 /**
  * In-memory storage to simulate persistent evaluations per problem during the session.
@@ -35,7 +36,7 @@ export const evaluationMock = {
   getStatus(problemId: string): EvaluationStatus {
     const existing = inMemoryEvaluationStore.get(problemId);
     if (existing) {
-      return { ...existing };
+      return { ...existing, activeTypes: getReleasedTypes(existing) };
     }
 
     // Default status if problem has no record yet
@@ -50,17 +51,23 @@ export const evaluationMock = {
 
   /**
    * Updates or releases an evaluation for a given problem ID.
+   * keepOthers: mantém as avaliações já liberadas (para liberar as duas juntas); sem ele, substitui.
    */
-  saveStatus(problemId: string, activeType: EvaluationType): EvaluationStatus {
+  saveStatus(problemId: string, activeType: EvaluationType, keepOthers = false): EvaluationStatus {
+    const current = keepOthers ? evaluationMock.getStatus(problemId).activeTypes ?? [] : [];
+    const activeTypes = activeType === null
+      ? []
+      : [...current.filter((type) => type !== activeType), activeType];
     const updatedStatus: EvaluationStatus = {
       problemId,
       activeType,
-      isReleased: activeType !== null,
-      releasedAt: activeType !== null ? new Date().toISOString() : undefined,
+      activeTypes,
+      isReleased: activeTypes.length > 0,
+      releasedAt: activeTypes.length > 0 ? new Date().toISOString() : undefined,
     };
 
     inMemoryEvaluationStore.set(problemId, updatedStatus);
-    return { ...updatedStatus };
+    return { ...updatedStatus, activeTypes: [...activeTypes] };
   },
 
   /**

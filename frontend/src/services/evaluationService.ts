@@ -49,12 +49,15 @@ export const evaluationService = {
    */
   async releaseEvaluation(
     problemId: string,
-    type: EvaluationType
+    type: EvaluationType,
+    // keepOthers: libera este tipo sem desligar o que já está liberado (usado ao liberar os dois juntos)
+    options: { keepOthers?: boolean } = {}
   ): Promise<EvaluationStatus> {
+    const keepOthers = options.keepOthers === true;
     if (!USE_REAL_API) {
       return new Promise((resolve) => {
         setTimeout(() => {
-          const updated = evaluationMock.saveStatus(problemId, type);
+          const updated = evaluationMock.saveStatus(problemId, type, keepOthers);
           resolve(updated);
         }, 450);
       });
@@ -65,7 +68,11 @@ export const evaluationService = {
       response = await fetch(`${BASE_URL}/${problemId}/evaluations/release`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type }),
+        // ATENÇÃO (combinar com o back-end): ao liberar a autoavaliação e a avaliação entre pares juntas,
+        // o 1º POST vai como { type } e o 2º como { type, keepOthers: true }.
+        // O back-end precisa entender keepOthers como "libere este tipo SEM desligar o que já está liberado";
+        // sem esse campo, cada POST substitui a liberação anterior e só o último tipo fica salvo.
+        body: JSON.stringify(keepOthers ? { type, keepOthers } : { type }),
       });
     } catch {
       throw { status: 0, message: NETWORK_ERROR_MESSAGE };

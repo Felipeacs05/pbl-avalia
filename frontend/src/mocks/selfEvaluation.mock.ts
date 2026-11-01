@@ -3,6 +3,7 @@
 //   prob_1 -> autoavaliação LIBERADA   (botão ativado)
 //   prob_2 -> nada liberado            (botão desativado)
 import { evaluationMock } from "./evaluationMock";
+import { isEvaluationTypeReleased } from "../types/evaluation";
 import type { SelfEvaluationSubmission } from "../types/evaluation";
 
 export const SELF_EVALUATION_MOCK_PROBLEM_ID = "prob_1";
@@ -12,7 +13,7 @@ const FAKE_DELAY_MS = 600;
 
 export const selfEvaluationMock = {
   isOpen(problemId: string): boolean {
-    return evaluationMock.getStatus(problemId).activeType === "self_evaluation";
+    return isEvaluationTypeReleased(evaluationMock.getStatus(problemId), "self_evaluation");
   },
 
   async submit(problemId: string, data: SelfEvaluationSubmission): Promise<void> {

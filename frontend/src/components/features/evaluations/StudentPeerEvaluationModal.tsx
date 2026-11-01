@@ -5,6 +5,7 @@ import React from "react";
 import { useEvaluationManager } from "../../../hooks/useEvaluationManager";
 import { useMyGroup } from "../../../hooks/useMyGroup";
 import { useCriteriaPreset } from "../../../hooks/useCriteriaPreset";
+import { isEvaluationTypeReleased } from "../../../types/evaluation";
 import { peerEvaluationMock } from "../../../mocks/peerEvaluation.mock";
 import { authMockSuccess } from "../../../mocks/auth.mock";
 import { PeerEvaluationModal } from "./PeerEvaluationModal";
@@ -42,7 +43,7 @@ export function StudentPeerEvaluationModal({
     <PeerEvaluationModal
       isOpen
       onClose={onClose}
-      isEvaluationOpen={evaluationStatus.activeType === "peer_evaluation" && isEnabledInPreset}
+      isEvaluationOpen={isEvaluationTypeReleased(evaluationStatus, "peer_evaluation") && isEnabledInPreset}
       peers={peers}
       onSubmit={async (data) => {
         // trocar pelo endpoint real quando o back-end existir

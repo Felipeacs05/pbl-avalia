@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import type { EvaluationStatus, EvaluationType } from "../types/evaluation";
+import type { EvaluationStatus, EvaluationType, ReleasableEvaluationType } from "../types/evaluation";
+import { getReleasedTypes } from "../types/evaluation";
 import { evaluationService } from "../services/evaluationService";
-
-type ReleasableType = "self_evaluation" | "peer_evaluation";
 
 // Lê a mensagem tanto de Error quanto do contrato { status, message } dos services
 function errorMessage(err: unknown, fallback: string): string {
@@ -20,7 +19,7 @@ export function useEvaluationManager(problemId: string) {
   });
   const [selectedType, setSelectedType] = useState<EvaluationType>(null);
   // Tipos marcados no modal: as duas liberações são independentes, então os dois podem ir juntos
-  const [selectedTypes, setSelectedTypes] = useState<ReleasableType[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<ReleasableEvaluationType[]>([]);
   // Só a resposta do último clique em "Liberar" atualiza a tela
   const lastRequestId = useRef(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,7 +33,7 @@ export function useEvaluationManager(problemId: string) {
       const status = await evaluationService.getEvaluationStatus(problemId);
       setEvaluationStatus(status);
       setSelectedType(status.activeType);
-      setSelectedTypes(status.activeType ? [status.activeType] : []);
+      setSelectedTypes(getReleasedTypes(status));
     } catch (err) {
       setError(errorMessage(err, "Failed to load evaluation status"));
     } finally {
@@ -51,7 +50,7 @@ export function useEvaluationManager(problemId: string) {
         if (isMounted) {
           setEvaluationStatus(status);
           setSelectedType(status.activeType);
-          setSelectedTypes(status.activeType ? [status.activeType] : []);
+          setSelectedTypes(getReleasedTypes(status));
           setError(null);
         }
       } catch (err) {
@@ -75,16 +74,16 @@ export function useEvaluationManager(problemId: string) {
   const openModal = useCallback(() => {
     // Descarta o que foi marcado e não confirmado: volta ao que está gravado
     setSelectedType(evaluationStatus.activeType);
-    setSelectedTypes(evaluationStatus.activeType ? [evaluationStatus.activeType] : []);
+    setSelectedTypes(getReleasedTypes(evaluationStatus));
     setError(null);
     setIsModalOpen(true);
-  }, [evaluationStatus.activeType]);
+  }, [evaluationStatus]);
 
   const closeModal = useCallback(() => {
     setIsModalOpen(false);
   }, []);
 
-  const toggleType = useCallback((type: ReleasableType) => {
+  const toggleType = useCallback((type: ReleasableEvaluationType) => {
     setSelectedType((current) => (current === type ? null : type));
     setSelectedTypes((current) =>
       current.includes(type) ? current.filter((t) => t !== type) : [...current, type]
@@ -100,8 +99,14 @@ export function useEvaluationManager(problemId: string) {
       // Nada marcado = desativa (null); senão, um envio por tipo marcado
       const types: EvaluationType[] = selectedTypes.length > 0 ? selectedTypes : [null];
       let updatedStatus: EvaluationStatus | null = null;
-      for (const type of types) {
-        updatedStatus = await evaluationService.releaseEvaluation(problemId, type);
+      for (const [index, type] of types.entries()) {
+        // Do segundo tipo em diante, mantém o que acabou de ser liberado (senão só o último ficaria salvo)
+        updatedStatus = index === 0
+          ? await evaluationService.releaseEvaluation(problemId, type)
+          : await evaluationService.releaseEvaluation(problemId, type, { keepOthers: true });
+      }
+      if (updatedStatus && selectedTypes.length > 1) {
+        updatedStatus = { ...updatedStatus, activeTypes: [...selectedTypes], isReleased: true };
       }
       if (isLatest() && updatedStatus) {
         setEvaluationStatus(updatedStatus);
