@@ -23,8 +23,8 @@ const ROOMS_LIST_API = /\/api\/v1\/rooms$/;
 /** Rota de exclusão (DELETE /api/v1/rooms/{id}) */
 const ROOM_DELETE_API = /\/api\/v1\/rooms\/[^/]+$/;
 
-/** Credenciais do tutor injetadas pelo global-setup (X-User-Id já vai no header) */
-let tutorId: string;
+/** Credenciais do tutor injetadas pelo global-setup (X-User-Id já vai no header); validadas no beforeAll */
+
 
 /** ID da sala criada durante o teste — para limpeza no afterEach */
 let createdRoomId: string | undefined;
@@ -34,7 +34,8 @@ let createdRoomId: string | undefined;
 // ---------------------------------------------------------------------------
 
 test.beforeAll(() => {
-  tutorId = requiredEnv("E2E_TUTOR_ID", "UUID do tutor com salas cadastradas");
+  // Valida já no início que o global-setup injetou o tutor (o X-User-Id vai no header)
+  requiredEnv("E2E_TUTOR_ID", "UUID do tutor com salas cadastradas");
 });
 
 test.afterEach(async ({ request }) => {
