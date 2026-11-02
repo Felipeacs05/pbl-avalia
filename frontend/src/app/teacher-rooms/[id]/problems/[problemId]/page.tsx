@@ -17,6 +17,7 @@ import { useFeedback } from "../../../../../hooks/useFeedback";
 import { MOCK_FEEDBACK_STUDENTS } from "../../../../../mocks/feedback.mock";
 import { Toast } from "../../../../../components/ui/Toast";
 import type { Session } from "../../../../../types/problem";
+import { getReleasedTypes } from "../../../../../types/evaluation";
 import type { ReportScope } from "../../../../../types/reportExport";
 import {
   FileQuestion,
@@ -43,8 +44,10 @@ export default function ProblemDetailsPage() {
     isModalOpen,
     evaluationStatus,
     selectedType,
+    selectedTypes,
     isLoading: isLoadingEvaluation,
     isSubmitting: isSubmittingEvaluation,
+    error: evaluationError,
     openModal,
     closeModal,
     toggleType,
@@ -108,14 +111,25 @@ export default function ProblemDetailsPage() {
     });
   };
 
+  const releasedTypes = getReleasedTypes(evaluationStatus);
+  const releasedLabel =
+    releasedTypes.length > 1
+      ? "Autoavaliação e Avaliação entre Pares Liberadas"
+      : releasedTypes[0] === "self_evaluation"
+        ? "Autoavaliação Liberada"
+        : "Avaliação entre Pares Liberada";
+
   const handleConfirmRelease = async () => {
     const updated = await confirmRelease();
     if (updated) {
       if (updated.isReleased) {
+        const types = getReleasedTypes(updated);
         setToastMessage(
-          updated.activeType === "self_evaluation"
-            ? "Autoavaliação liberada com sucesso!"
-            : "Avaliação entre Pares liberada com sucesso!"
+          types.length > 1
+            ? "Autoavaliação e Avaliação entre Pares liberadas com sucesso!"
+            : types[0] === "self_evaluation"
+              ? "Autoavaliação liberada com sucesso!"
+              : "Avaliação entre Pares liberada com sucesso!"
         );
       } else {
         setToastMessage("Liberação de avaliações desativada.");
@@ -190,10 +204,11 @@ export default function ProblemDetailsPage() {
                       <p className="text-xs text-gray-500 font-medium">
                         Status da Avaliação
                       </p>
+                      <p className="text-[11px] font-bold uppercase tracking-wide text-emerald-700">
+                        Avaliações Abertas
+                      </p>
                       <p className="text-sm font-semibold text-[#4354A0]">
-                        {evaluationStatus.activeType === "self_evaluation"
-                          ? "Autoavaliação Liberada"
-                          : "Avaliação entre Pares Liberada"}
+                        {releasedLabel}
                       </p>
                     </div>
                   </div>
@@ -222,6 +237,7 @@ export default function ProblemDetailsPage() {
                 isLoading={isLoadingEvaluation}
                 isReleased={evaluationStatus.isReleased}
                 activeType={evaluationStatus.activeType}
+                activeTypes={releasedTypes}
               />
               <button
                 type="button"
@@ -264,10 +280,11 @@ export default function ProblemDetailsPage() {
                       <p className="text-xs text-gray-500 font-medium">
                         Status da Avaliação
                       </p>
+                      <p className="text-[11px] font-bold uppercase tracking-wide text-emerald-700">
+                        Avaliações Abertas
+                      </p>
                       <p className="text-sm font-semibold text-[#4354A0]">
-                        {evaluationStatus.activeType === "self_evaluation"
-                          ? "Autoavaliação Liberada"
-                          : "Avaliação entre Pares Liberada"}
+                        {releasedLabel}
                       </p>
                     </div>
                   </div>
@@ -285,6 +302,7 @@ export default function ProblemDetailsPage() {
                 isLoading={isLoadingEvaluation}
                 isReleased={evaluationStatus.isReleased}
                 activeType={evaluationStatus.activeType}
+                activeTypes={releasedTypes}
               />
 
               <button
@@ -326,9 +344,11 @@ export default function ProblemDetailsPage() {
         isOpen={isModalOpen}
         onClose={closeModal}
         selectedType={selectedType}
+        selectedTypes={selectedTypes}
         onToggleType={toggleType}
         onConfirm={handleConfirmRelease}
         isSubmitting={isSubmittingEvaluation}
+        error={evaluationError}
       />
 
       {/* Feedback Form Modal (US16) */}
