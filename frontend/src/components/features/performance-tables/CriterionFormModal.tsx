@@ -121,7 +121,7 @@ export function CriterionFormModal({ isOpen, criterion, existingNames, onClose, 
               if (error) setError(null); // limpa o erro assim que o professor volta a digitar
             }}
             placeholder="Ex.: Pesquisa"
-            maxLength={60}
+            maxLength={255}
             readOnly={isNameLocked}
             autoFocus={!isNameLocked}
             aria-invalid={Boolean(error)}
