@@ -12,11 +12,17 @@ import type { CriterionInput } from "../../../hooks/useCriteriaPreset";
 const MIN_WEIGHT = 0;
 const MAX_WEIGHT = 100; // percentual
 
-// Subtarefa: bloqueia nome vazio ou só com espaços.
-// Também bloqueia nome repetido, para não existirem dois critérios iguais na tabela.
+// Só letras (com acento), números, espaços e hífen: barra <script>, aspas, caractere nulo etc. (CT-FE-04)
+const VALID_NAME_PATTERN = /^[\p{L}\p{N} -]+$/u;
+
+// Subtarefa: bloqueia nome vazio ou só com espaços (mensagem do plano, CT-FE-03).
+// Também bloqueia caracteres inválidos e nome repetido, para não existirem dois critérios iguais na tabela.
 export function validateCriterionName(name: string, otherNames: string[]): string | null {
   const trimmed = name.trim();
-  if (!trimmed) return "O nome do critério não pode ficar vazio.";
+  if (!trimmed) return "O nome do critério é obrigatório.";
+  if (!VALID_NAME_PATTERN.test(trimmed)) {
+    return "O nome do critério contém caracteres inválidos. Utilize apenas letras, números e hifens.";
+  }
   if (otherNames.some((other) => other.trim().toLowerCase() === trimmed.toLowerCase())) {
     return "Já existe um critério com esse nome.";
   }
@@ -57,7 +63,9 @@ export function CriterionFormModal({ isOpen, criterion, existingNames, onClose, 
     e.preventDefault();
     const validationError = isNameLocked ? null : validateCriterionName(name, existingNames);
     const weight = Number(weightText);
-    const isWeightValid = Number.isInteger(weight) && weight >= MIN_WEIGHT && weight <= MAX_WEIGHT;
+    // Campo apagado não vira 0: Number("") é 0 em JavaScript
+    const isWeightValid =
+      weightText.trim() !== "" && Number.isInteger(weight) && weight >= MIN_WEIGHT && weight <= MAX_WEIGHT;
     setError(validationError);
     setWeightError(isWeightValid ? null : `O peso deve ser um número inteiro de ${MIN_WEIGHT} a ${MAX_WEIGHT}.`);
     if (validationError || !isWeightValid) return; // não envia nada
