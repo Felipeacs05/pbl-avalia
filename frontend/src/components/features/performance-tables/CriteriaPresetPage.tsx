@@ -49,10 +49,17 @@ export function CriteriaPresetPage({
   } = useCriteriaPreset(presetId);
 
   const [modal, setModal] = useState<ModalState>({ mode: "closed" });
+  // Aviso de tabela sem critério (CT-BND-06): o bloqueio é da tela, nada vai para o service
+  const [showNoCriteriaWarning, setShowNoCriteriaWarning] = useState(false);
+  const hasWeightedCriteria = criteria.some((c) => !c.isToggle);
 
   const canSave = (hasChanges || allowSaveWithoutChanges) && !isSaving;
 
   const handleSave = async () => {
+    if (!hasWeightedCriteria) {
+      setShowNoCriteriaWarning(true);
+      return;
+    }
     const ok = await savePreset();
     if (ok) onSaved?.();
   };
@@ -175,6 +182,11 @@ export function CriteriaPresetPage({
               )}
               {hasChanges && (
                 <p className="text-xs text-center text-gray-500">Há alterações não salvas.</p>
+              )}
+              {showNoCriteriaWarning && !hasWeightedCriteria && (
+                <p className="text-xs text-center text-red-600 font-semibold">
+                  Adicione pelo menos um critério antes de salvar o pré-set.
+                </p>
               )}
               {/* Na edição comum, só ativa quando algo mudou. Na criação do problema, já vem ativo
                   para o professor poder aceitar o pré-set padrão. */}
