@@ -49,6 +49,7 @@ async function loginStatus(request: APIRequestContext, password: string): Promis
 async function submitNewPassword(page: Page, token: string, newPassword: string): Promise<Response> {
   await page.goto(resetPasswordPage(token));
   await page.getByLabel(/nova senha/i).fill(newPassword);
+  await page.getByLabel(/confirmar senha/i).fill(newPassword);
   const [response] = await Promise.all([
     page.waitForResponse((res) => res.request().method() === "POST" && RESET_ROUTE.test(res.url())),
     page.getByRole("button", { name: /redefinir senha/i }).click(),
