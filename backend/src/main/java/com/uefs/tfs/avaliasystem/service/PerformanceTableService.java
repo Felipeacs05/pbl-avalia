@@ -268,8 +268,6 @@ public class PerformanceTableService {
 
         criteria.add(criterion);
 
-        performanceTableRepository.save(table);
-
         Criterion saved = criterionRepository.save(criterion);
 
         return new CriterionResponse(
