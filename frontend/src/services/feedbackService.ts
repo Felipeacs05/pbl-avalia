@@ -12,6 +12,7 @@ import {
   addStoredFeedback,
   loadStoredFeedbacks,
 } from "../mocks/feedback.mock";
+import { getAuthHeaders } from "./mappers";
 
 const DEFAULT_TEXT_REQUIRED_MSG = "O texto do feedback não pode ser vazio";
 const SEND_FORBIDDEN_MSG = "Apenas o tutor responsável pela sala pode enviar feedbacks.";
@@ -65,9 +66,7 @@ export const feedbackService = {
   ): Promise<Feedback> {
     const response = await fetch(`/api/v1/problems/${problemId}/feedbacks`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getAuthHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({
         studentId: payload.studentId,
         grade: payload.grade,
@@ -88,9 +87,7 @@ export const feedbackService = {
   ): Promise<Feedback[]> {
     const response = await fetch(`/api/v1/problems/${problemId}/feedbacks/batch`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getAuthHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({
         feedbacks: items.map((item) => ({
           studentId: item.studentId,
@@ -108,7 +105,11 @@ export const feedbackService = {
   },
 
   async fetchStudentFeedbacks(studentId: string): Promise<StudentFeedback[]> {
-    const response = await fetch(`/api/v1/students/${studentId}/feedbacks`);
+    const headers = getAuthHeaders({});
+    const response =
+      Object.keys(headers).length > 0
+        ? await fetch(`/api/v1/students/${studentId}/feedbacks`, { headers })
+        : await fetch(`/api/v1/students/${studentId}/feedbacks`);
 
     if (!response.ok) {
       if (response.status === 403) {

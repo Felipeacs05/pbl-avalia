@@ -57,6 +57,28 @@ public class RoomController {
         return roomService.listRoomsAsStudent(userId(principal));
     }
 
+    @GetMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("@roomSecurity.isRoomMemberOrOwner(#id, authentication)")
+    public RoomResponse getRoomById(@PathVariable UUID id) {
+        return roomService.getRoomById(id);
+    }
+
+    @DeleteMapping("/{roomId}/members/me")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void leaveRoom(@PathVariable UUID roomId, Principal principal) {
+        roomService.leaveRoom(roomId, userId(principal));
+    }
+
+    @PreAuthorize("@roomSecurity.isOwner(#roomId, authentication)")
+    @DeleteMapping({"/{roomId}/members/{studentId}", "/{roomId}/students/{studentId}"})
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeStudentFromRoom(@PathVariable UUID roomId,
+                                      @PathVariable UUID studentId,
+                                      Principal principal) {
+        roomService.removeStudentFromRoom(roomId, studentId, userId(principal));
+    }
+
     @GetMapping("/{roomId}/members")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("@roomSecurity.isRoomMemberOrOwner(#roomId, authentication)")

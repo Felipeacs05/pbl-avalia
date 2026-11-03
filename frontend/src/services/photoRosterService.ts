@@ -2,6 +2,7 @@
 import type { Student } from "../types/student";
 import { photoRosterMock } from "../mocks/photoRosterMock";
 import { USE_REAL_API } from "./apiMode";
+import { getAuthHeaders, mapRosterStudentFromApi } from "./mappers";
 
 const BASE_URL = "/api/v1/rooms";
 
@@ -21,18 +22,14 @@ export const photoRosterService = {
     try {
       const response = await fetch(`${BASE_URL}/${roomId}/roster?page=0&size=100`, {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
       });
       if (response.ok) {
         const page = await response.json();
         const items = Array.isArray(page) ? page : page.content || [];
-        return items.map((item: { id: string; name: string; profileImageUrl?: string | null; initials?: string }) => ({
-          id: item.id,
-          name: item.name,
-          avatarUrl: item.profileImageUrl ?? "",
-          profileImageUrl: item.profileImageUrl ?? null,
-          initials: item.initials,
-        }));
+        return items.map((item: Record<string, unknown>) =>
+          mapRosterStudentFromApi(item)
+        );
       }
       return photoRosterMock.getStudents(roomId);
     } catch {
@@ -58,10 +55,13 @@ export const photoRosterService = {
     try {
       const response = await fetch(`${BASE_URL}/${roomId}/students/${studentId}`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
       });
       if (!response.ok) {
         return photoRosterMock.removeStudent(roomId, studentId);
+      }
+      if (response.status === 204) {
+        return await photoRosterService.getStudentsByRoom(roomId);
       }
       return await response.json();
     } catch {

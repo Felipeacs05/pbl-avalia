@@ -13,6 +13,7 @@ import type {
 } from "../types/sessionRole";
 import { sessionRoleMock } from "../mocks/sessionRole.mock";
 import { USE_REAL_API } from "./apiMode";
+import { getAuthHeaders } from "./mappers";
 
 const BASE_URL = "/api/v1/sessions";
 
@@ -56,7 +57,7 @@ export const sessionRoleService = {
     try {
       response = await fetch(`${BASE_URL}/${sessionId}/roles/${role}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ studentId, extraGrade }),
       });
     } catch {
@@ -77,7 +78,11 @@ export const sessionRoleService = {
 
     let response: Response;
     try {
-      response = await fetch(`${BASE_URL}/${sessionId}/roles/${role}`, { method: "DELETE" });
+      const headers = getAuthHeaders({});
+      response =
+        Object.keys(headers).length > 0
+          ? await fetch(`${BASE_URL}/${sessionId}/roles/${role}`, { method: "DELETE", headers })
+          : await fetch(`${BASE_URL}/${sessionId}/roles/${role}`, { method: "DELETE" });
     } catch {
       throw { status: 0, message: NETWORK_MESSAGE } satisfies SessionRoleRequestError;
     }

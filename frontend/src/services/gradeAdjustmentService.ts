@@ -7,6 +7,7 @@ import type {
   SubmittedSelfAssessment,
 } from "../types/gradeAdjustment";
 import { gradeAdjustmentMock } from "../mocks/gradeAdjustment.mock";
+import { getAuthHeaders } from "./mappers";
 
 const FORBIDDEN_PT_BR = "Apenas o tutor responsável pela sala pode ajustar notas.";
 
@@ -24,9 +25,9 @@ export const gradeAdjustmentService = {
         `/api/v1/assessments/${assessmentId}/grade-adjustment`,
         {
           method: "PATCH",
-          headers: {
+          headers: getAuthHeaders({
             "Content-Type": "application/json",
-          },
+          }),
           body: JSON.stringify({
             adjustedGrade: input.adjustedGrade,
             justification: input.justification,
@@ -85,7 +86,7 @@ export const gradeAdjustmentService = {
     try {
       const response = await fetch(`/api/v1/assessments/${assessmentId}`, {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
       });
       if (response.ok) {
         const data = (await response.json()) as Partial<SubmittedSelfAssessment>;

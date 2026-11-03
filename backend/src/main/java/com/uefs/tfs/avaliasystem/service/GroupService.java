@@ -94,10 +94,26 @@ public class GroupService {
     }
 
     @Transactional
+    public GroupResponse updateGroupById(
+            UUID groupId,
+            GroupRequest request,
+            UUID tutorId
+    ) {
+        Group group = findGroupById(groupId);
+        return updateGroup(group.getRoom().getId(), groupId, request, tutorId);
+    }
+
+    @Transactional
     public void deleteGroup(UUID roomId, UUID groupId, UUID tutorId) {
         Group group = findGroupInRoom(groupId, roomId);
         validateTutor(group.getRoom(), tutorId);
         groupRepository.delete(group);
+    }
+
+    @Transactional
+    public void deleteGroupById(UUID groupId, UUID tutorId) {
+        Group group = findGroupById(groupId);
+        deleteGroup(group.getRoom().getId(), groupId, tutorId);
     }
 
     @Transactional
@@ -117,6 +133,16 @@ public class GroupService {
     }
 
     @Transactional
+    public GroupResponse addMemberByGroupId(
+            UUID groupId,
+            UUID studentId,
+            UUID tutorId
+    ) {
+        Group group = findGroupById(groupId);
+        return addMember(group.getRoom().getId(), groupId, studentId, tutorId);
+    }
+
+    @Transactional
     public void removeMember(
             UUID roomId,
             UUID groupId,
@@ -132,6 +158,16 @@ public class GroupService {
 
         group.getMembers().remove(groupMember);
         groupMemberRepository.delete(groupMember);
+    }
+
+    @Transactional
+    public void removeMemberByGroupId(
+            UUID groupId,
+            UUID studentId,
+            UUID tutorId
+    ) {
+        Group group = findGroupById(groupId);
+        removeMember(group.getRoom().getId(), groupId, studentId, tutorId);
     }
 
     @Transactional(readOnly = true)
@@ -162,6 +198,11 @@ public class GroupService {
 
         validateTutor(room, tutorId);
         return room;
+    }
+
+    private Group findGroupById(UUID groupId) {
+        return groupRepository.findById(groupId)
+                .orElseThrow(() -> new ResourceNotFoundException("Grupo não encontrado"));
     }
 
     private Group findGroupInRoom(UUID groupId, UUID roomId) {

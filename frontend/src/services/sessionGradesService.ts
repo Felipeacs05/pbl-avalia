@@ -2,6 +2,7 @@
 import type { SessionGradesStatus } from "../types/session";
 import { sessionGradesMock } from "../mocks/sessionGrades.mock";
 import { USE_REAL_API } from "./apiMode";
+import { getAuthHeaders } from "./mappers";
 
 const BASE_URL = "/api/v1/sessions";
 const FAKE_DELAY_MS = 400;
@@ -13,7 +14,7 @@ function wait<T>(value: () => T): Promise<T> {
 async function post(sessionId: string, action: "publish" | "unpublish", studentIds: string[], errorMessage: string) {
   const response = await fetch(`${BASE_URL}/${sessionId}/grades/${action}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({ studentIds }),
   });
   if (!response.ok) throw new Error(errorMessage);
@@ -27,7 +28,7 @@ export const sessionGradesService = {
 
     const response = await fetch(`${BASE_URL}/${sessionId}/grades/status`, {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders({ "Content-Type": "application/json" }),
     });
     if (!response.ok) throw new Error("Falha ao consultar as notas da sessão.");
     return response.json();

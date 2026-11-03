@@ -19,18 +19,39 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Base64;
+import java.util.List;
 
 @Configuration
 @EnableMethodSecurity
-public class SecurityConfig implements WebMvcConfigurer { // Implementa WebMvcConfigurer aqui mesmo
+public class SecurityConfig implements WebMvcConfigurer {
 
-    // Configuração de CORS unificada para o Spring MVC e Spring Security
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:3000",
+                "http://localhost:3001",
+                "http://127.0.0.1:3000",
+                "http://127.0.0.1:3001"
+        ));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setExposedHeaders(List.of("Authorization", "Location", "Access-Control-Allow-Origin", "Content-Disposition"));
+        configuration.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
@@ -42,7 +63,7 @@ public class SecurityConfig implements WebMvcConfigurer { // Implementa WebMvcCo
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                 .allowedHeaders("*")
-                .exposedHeaders("Authorization", "Location", "Access-Control-Allow-Origin")
+                .exposedHeaders("Authorization", "Location", "Access-Control-Allow-Origin", "Content-Disposition")
                 .allowCredentials(true);
     }
 
@@ -50,13 +71,12 @@ public class SecurityConfig implements WebMvcConfigurer { // Implementa WebMvcCo
     @Profile("!e2e")
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                // Puxa as configurações do addCorsMappings acima automaticamente sem mudar a ordem
                 .cors(Customizer.withDefaults()) 
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login").permitAll()
+                        .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .anyRequest().authenticated()
                 )

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -23,7 +24,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/rooms")
+@RequestMapping("/api/v1")
 public class GroupController {
 
     private final GroupService groupService;
@@ -32,7 +33,7 @@ public class GroupController {
         this.groupService = groupService;
     }
 
-    @PostMapping("/{roomId}/groups")
+    @PostMapping("/rooms/{roomId}/groups")
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("@roomSecurity.isOwner(#roomId, authentication)")
     public GroupResponse createGroup(
@@ -43,13 +44,13 @@ public class GroupController {
         return groupService.createGroup(roomId, request, userId(principal));
     }
 
-    @GetMapping("/{roomId}/groups")
+    @GetMapping("/rooms/{roomId}/groups")
     @PreAuthorize("@roomSecurity.isRoomMemberOrOwner(#roomId, authentication)")
     public List<GroupResponse> listGroups(@PathVariable UUID roomId) {
         return groupService.listGroups(roomId);
     }
 
-    @PatchMapping("/{roomId}/groups/{groupId}")
+    @PatchMapping("/rooms/{roomId}/groups/{groupId}")
     @PreAuthorize("@roomSecurity.isOwner(#roomId, authentication)")
     public GroupResponse updateGroup(
             @PathVariable UUID roomId,
@@ -60,7 +61,25 @@ public class GroupController {
         return groupService.updateGroup(roomId, groupId, request, userId(principal));
     }
 
-    @DeleteMapping("/{roomId}/groups/{groupId}")
+    @PutMapping("/groups/{groupId}")
+    public GroupResponse updateGroupById(
+            @PathVariable UUID groupId,
+            @RequestBody @Valid GroupRequest request,
+            Principal principal
+    ) {
+        return groupService.updateGroupById(groupId, request, userId(principal));
+    }
+
+    @PatchMapping("/groups/{groupId}")
+    public GroupResponse patchGroupById(
+            @PathVariable UUID groupId,
+            @RequestBody @Valid GroupRequest request,
+            Principal principal
+    ) {
+        return groupService.updateGroupById(groupId, request, userId(principal));
+    }
+
+    @DeleteMapping("/rooms/{roomId}/groups/{groupId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("@roomSecurity.isOwner(#roomId, authentication)")
     public void deleteGroup(
@@ -71,7 +90,16 @@ public class GroupController {
         groupService.deleteGroup(roomId, groupId, userId(principal));
     }
 
-    @PostMapping("/{roomId}/groups/{groupId}/members")
+    @DeleteMapping("/groups/{groupId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteGroupById(
+            @PathVariable UUID groupId,
+            Principal principal
+    ) {
+        groupService.deleteGroupById(groupId, userId(principal));
+    }
+
+    @PostMapping("/rooms/{roomId}/groups/{groupId}/members")
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("@roomSecurity.isOwner(#roomId, authentication)")
     public GroupResponse addMember(
@@ -88,7 +116,21 @@ public class GroupController {
         );
     }
 
-    @DeleteMapping("/{roomId}/groups/{groupId}/members/{studentId}")
+    @PostMapping("/groups/{groupId}/members")
+    @ResponseStatus(HttpStatus.CREATED)
+    public GroupResponse addMemberByGroupId(
+            @PathVariable UUID groupId,
+            @RequestBody @Valid GroupMemberRequest request,
+            Principal principal
+    ) {
+        return groupService.addMemberByGroupId(
+                groupId,
+                request.getStudentId(),
+                userId(principal)
+        );
+    }
+
+    @DeleteMapping("/rooms/{roomId}/groups/{groupId}/members/{studentId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("@roomSecurity.isOwner(#roomId, authentication)")
     public void removeMember(
@@ -100,7 +142,17 @@ public class GroupController {
         groupService.removeMember(roomId, groupId, studentId, userId(principal));
     }
 
-    @GetMapping("/{roomId}/groups/me")
+    @DeleteMapping("/groups/{groupId}/members/{studentId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeMemberByGroupId(
+            @PathVariable UUID groupId,
+            @PathVariable UUID studentId,
+            Principal principal
+    ) {
+        groupService.removeMemberByGroupId(groupId, studentId, userId(principal));
+    }
+
+    @GetMapping("/rooms/{roomId}/groups/me")
     public GroupResponse getMyGroup(
             @PathVariable UUID roomId,
             Principal principal
@@ -108,7 +160,7 @@ public class GroupController {
         return groupService.getMyGroup(roomId, userId(principal));
     }
 
-    @GetMapping("/{roomId}/groups/available-students")
+    @GetMapping("/rooms/{roomId}/groups/available-students")
     @PreAuthorize("@roomSecurity.isOwner(#roomId, authentication)")
     public List<GroupMemberResponse> listAvailableStudents(@PathVariable UUID roomId) {
         return groupService.listAvailableStudents(roomId);

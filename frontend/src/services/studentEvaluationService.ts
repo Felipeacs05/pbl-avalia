@@ -2,6 +2,7 @@
 import type { StudentEvaluationData } from "../types/performanceTable";
 import { studentEvaluationMock } from "../mocks/studentEvaluation.mock";
 import { IS_TEST, USE_REAL_API } from "./apiMode";
+import { getAuthHeaders } from "./mappers";
 
 const BASE_URL = "/api/v1/sessions";
 
@@ -30,7 +31,7 @@ export const studentEvaluationService = {
         `${BASE_URL}/${sessionId}/evaluations/${studentId}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
+          headers: getAuthHeaders({ "Content-Type": "application/json" }),
         }
       );
       if (!response.ok) {
@@ -64,7 +65,7 @@ export const studentEvaluationService = {
         `${BASE_URL}/${data.sessionId}/evaluations/${data.studentId}`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: getAuthHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify(data),
         }
       );

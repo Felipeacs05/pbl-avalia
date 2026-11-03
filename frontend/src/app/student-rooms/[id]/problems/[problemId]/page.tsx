@@ -5,6 +5,9 @@ import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ProblemDetailsHeader } from "../../../../../components/features/problem-details/ProblemDetailsHeader";
 import { BarChart3, UserCheck, Users } from "lucide-react";
+import { useStudentsRoom } from "../../../../../hooks/useStudentsRoom";
+import { useProblemDetails } from "../../../../../hooks/useProblemDetails";
+import { USE_REAL_API } from "../../../../../services/apiMode";
 
 interface StudentSessionItem {
   id: string;
@@ -13,24 +16,30 @@ interface StudentSessionItem {
   gradient: string;
 }
 
+const SESSION_GRADIENTS = [
+  "from-[#3B4899] to-[#4354A0]",
+  "from-[#2D3A7C] to-[#4354A0]",
+  "from-[#1E285E] to-[#34438E]",
+];
+
 const STUDENT_SESSIONS: StudentSessionItem[] = [
   {
     id: "session_hoje",
     dateLabel: "Hoje",
     statusLabel: "Avaliação por pares disponivel",
-    gradient: "from-[#3B4899] to-[#4354A0]",
+    gradient: SESSION_GRADIENTS[0],
   },
   {
     id: "session_01",
     dateLabel: "08/04",
     statusLabel: "Sessão Finalizada",
-    gradient: "from-[#2D3A7C] to-[#4354A0]",
+    gradient: SESSION_GRADIENTS[1],
   },
   {
     id: "session_02",
     dateLabel: "03/04",
     statusLabel: "Sessão Finalizada",
-    gradient: "from-[#1E285E] to-[#34438E]",
+    gradient: SESSION_GRADIENTS[2],
   },
 ];
 
@@ -41,11 +50,34 @@ export default function StudentProblemSessionsPage() {
   const problemId =
     typeof params?.problemId === "string" ? params.problemId : "prob_01";
 
-  const problemTitle = problemId === "prob_02" ? "Problema 2" : "Problema 1";
+  const { rooms } = useStudentsRoom();
+  const { problem } = useProblemDetails(problemId);
+
+  const currentRoom = rooms.find((r) => r.id === roomId);
+
+  const disciplineTag = currentRoom
+    ? `${currentRoom.code} - ${currentRoom.semester ?? "2026.2"}`
+    : problem
+      ? `${problem.disciplineCode} - ${problem.semester}`
+      : "EXA613 - 2026.2";
+
+  const problemTitle =
+    problem?.title ?? (problemId === "prob_02" ? "Problema 2" : "Problema 1");
   const problemSubtitle =
-    problemId === "prob_02"
+    problem?.description ??
+    (problemId === "prob_02"
       ? "Confecção do MVP — Engenharia de Software"
-      : "Prototipação do projeto e do PRD — Engenharia de Software";
+      : "Prototipação do projeto e do PRD — Engenharia de Software");
+
+  const sessionsToDisplay: StudentSessionItem[] =
+    USE_REAL_API && problem
+      ? problem.sessions.map((s, idx) => ({
+          id: s.id,
+          dateLabel: s.displayDate || "Hoje",
+          statusLabel: s.statusLabel || "Sessão em Andamento",
+          gradient: SESSION_GRADIENTS[idx % SESSION_GRADIENTS.length],
+        }))
+      : STUDENT_SESSIONS;
 
   const handleOpenSession = (sessionId: string) => {
     router.push(
@@ -57,7 +89,7 @@ export default function StudentProblemSessionsPage() {
     <main className="w-full min-h-screen bg-[#F5F5F5] font-sans relative flex flex-col">
       {/* Header responsivo igual ao professor */}
       <ProblemDetailsHeader
-        disciplineTag="EXA613 - 2026.2"
+        disciplineTag={disciplineTag}
         onBack={() => router.push(`/student-rooms/${roomId}`)}
         onShare={() => {
           if (navigator.clipboard) {
@@ -86,7 +118,7 @@ export default function StudentProblemSessionsPage() {
               Sessões realizadas
             </h2>
 
-            {STUDENT_SESSIONS.map((session) => (
+            {sessionsToDisplay.map((session) => (
               <button
                 key={session.id}
                 type="button"
@@ -153,7 +185,7 @@ export default function StudentProblemSessionsPage() {
             Sessões realizadas
           </h2>
 
-          {STUDENT_SESSIONS.map((session) => (
+          {sessionsToDisplay.map((session) => (
             <button
               key={session.id}
               type="button"

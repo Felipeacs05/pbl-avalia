@@ -4,6 +4,7 @@ import type {
   PerformanceTable,
 } from "../types/performanceTable";
 import { IS_TEST, USE_REAL_API } from "./apiMode";
+import { getAuthHeaders } from "./mappers";
 
 const BASE_URL = "/api/v1/performance-tables";
 
@@ -56,7 +57,7 @@ export const performanceTableService = {
 
     const response = await fetch(`${BASE_URL}/${tableId}`, {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders({ "Content-Type": "application/json" }),
     });
 
     if (!response.ok) {
@@ -98,7 +99,7 @@ export const performanceTableService = {
 
     const response = await fetch(`${BASE_URL}/${tableId}/criteria/weights`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({ weights }),
     });
 

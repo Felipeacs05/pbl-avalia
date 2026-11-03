@@ -29,6 +29,9 @@ public class Problem {
     @Column(name = "title", nullable = false)
     private String title;
 
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
     @Column(name = "order_index", nullable = false)
     private Integer orderIndex = 0;
 
@@ -40,5 +43,15 @@ public class Problem {
 
     @Column(name = "created_at", columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private Instant createdAt;
+
+    public Problem(UUID id, Room room, String title, Integer orderIndex, Boolean selfAssessmentReleased, Boolean peerAssessmentReleased, Instant createdAt) {
+        this.id = id;
+        this.room = room;
+        this.title = title;
+        this.orderIndex = orderIndex;
+        this.selfAssessmentReleased = selfAssessmentReleased;
+        this.peerAssessmentReleased = peerAssessmentReleased;
+        this.createdAt = createdAt;
+    }
 
 }

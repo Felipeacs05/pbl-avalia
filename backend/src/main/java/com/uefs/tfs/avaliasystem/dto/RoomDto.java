@@ -17,18 +17,25 @@ public class RoomDto {
     private String name;
     private String accessCode;
     private UUID tutorId;
+    private String tutorName;
 
-
+    public RoomDto(UUID id, String name, String accessCode, UUID tutorId) {
+        this.id = id;
+        this.name = name;
+        this.accessCode = accessCode;
+        this.tutorId = tutorId;
+    }
 
     public static RoomDto from(Room room) {
-        UUID tutorId = room.getTutor().getId();
+        UUID tutorId = room.getTutor() != null ? room.getTutor().getId() : null;
+        String tutorName = room.getTutor() != null ? room.getTutor().getName() : null;
 
         return new RoomDto(
                 room.getId(),
                 room.getName(),
                 room.getAccessCode(),
-                tutorId
+                tutorId,
+                tutorName
         );
     }
 }
-

@@ -2,6 +2,7 @@
 import type { EvaluationStatus, EvaluationType } from "../types/evaluation";
 import { evaluationMock } from "../mocks/evaluationMock";
 import { USE_REAL_API } from "./apiMode";
+import { getAuthHeaders, mapEvaluationStatusFromApi } from "./mappers";
 
 const BASE_URL = "/api/v1/problems";
 
@@ -19,16 +20,16 @@ export const evaluationService = {
       });
     }
 
-    // Future backend integration
     try {
       const response = await fetch(`${BASE_URL}/${problemId}/evaluation-status`, {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
       });
       if (!response.ok) {
         return evaluationMock.getStatus(problemId);
       }
-      return await response.json();
+      const raw = (await response.json()) as Record<string, unknown>;
+      return mapEvaluationStatusFromApi(problemId, raw);
     } catch {
       return evaluationMock.getStatus(problemId);
     }
@@ -55,12 +56,12 @@ export const evaluationService = {
       if (type === "self_evaluation") {
         await fetch(`${BASE_URL}/${problemId}/self-assessment-release`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: getAuthHeaders(),
         });
       } else if (type === "peer_evaluation") {
         await fetch(`${BASE_URL}/${problemId}/peer-assessment-release`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: getAuthHeaders(),
         });
       }
       return evaluationMock.saveStatus(problemId, type);
@@ -73,7 +74,7 @@ export const evaluationService = {
     if (!USE_REAL_API) return;
     await fetch(`${BASE_URL}/${problemId}/self-assessment-release`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
     });
   },
 
@@ -81,7 +82,7 @@ export const evaluationService = {
     if (!USE_REAL_API) return;
     await fetch(`${BASE_URL}/${problemId}/peer-assessment-release`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
     });
   },
 };

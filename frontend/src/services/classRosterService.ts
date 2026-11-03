@@ -1,5 +1,6 @@
 // src/services/classRosterService.ts
 import type { ClassRosterPage, ClassRosterStudent } from "../types/classRoster";
+import { getAuthHeaders } from "./mappers";
 
 const ROSTER_PAGE_SIZE = 100;
 
@@ -14,7 +15,7 @@ export const classRosterService = {
         `/api/v1/rooms/${roomId}/roster?page=${currentPage}&size=${ROSTER_PAGE_SIZE}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
+          headers: getAuthHeaders(),
         }
       );
 

@@ -18,6 +18,7 @@ import com.uefs.tfs.avaliasystem.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -61,7 +62,7 @@ public class RoomService {
 
         room = roomRepository.save(room);
 
-        return new RoomResponse(room.getId(), room.getName(), room.getAccessCode(), room.getInviteLink());
+        return new RoomResponse(room.getId(), room.getName(), room.getAccessCode(), room.getInviteLink(), tutor.getName());
     }
 
     @Transactional
@@ -76,7 +77,41 @@ public class RoomService {
         room.setName(request.getName());
         room = roomRepository.save(room);
 
-        return new RoomResponse(room.getId(), room.getName(), room.getAccessCode(), room.getInviteLink());
+        String tutorName = room.getTutor() != null ? room.getTutor().getName() : null;
+        return new RoomResponse(room.getId(), room.getName(), room.getAccessCode(), room.getInviteLink(), tutorName);
+    }
+
+    @Transactional(readOnly = true)
+    public RoomResponse getRoomById(UUID roomId) {
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("Sala não encontrada"));
+        String tutorName = room.getTutor() != null ? room.getTutor().getName() : null;
+        return new RoomResponse(room.getId(), room.getName(), room.getAccessCode(), room.getInviteLink(), tutorName);
+    }
+
+    @Transactional
+    public void leaveRoom(UUID roomId, UUID studentId) {
+        RoomMember member = roomMemberRepository.findByRoomIdAndUserId(roomId, studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Vínculo com a sala não encontrado"));
+        member.setActive(false);
+        member.setUnlinkedAt(Instant.now());
+        roomMemberRepository.save(member);
+    }
+
+    @Transactional
+    public void removeStudentFromRoom(UUID roomId, UUID studentId, UUID tutorId) {
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("Sala não encontrada"));
+
+        if (room.getTutor() == null || !room.getTutor().getId().equals(tutorId)) {
+            throw new SecurityException("Apenas o Tutor da sala possui permissão para remover alunos.");
+        }
+
+        RoomMember member = roomMemberRepository.findByRoomIdAndUserId(roomId, studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Aluno não encontrado nesta sala"));
+        member.setActive(false);
+        member.setUnlinkedAt(Instant.now());
+        roomMemberRepository.save(member);
     }
 
     @Transactional
@@ -96,7 +131,13 @@ public class RoomService {
         var rooms = roomRepository.findByTutorId(userId);
         if (rooms == null) return new ArrayList<>();
         return rooms.stream()
-                .map(room -> new RoomResponse(room.getId(), room.getName(), room.getAccessCode(), room.getInviteLink()))
+                .map(room -> new RoomResponse(
+                        room.getId(),
+                        room.getName(),
+                        room.getAccessCode(),
+                        room.getInviteLink(),
+                        room.getTutor() != null ? room.getTutor().getName() : null
+                ))
                 .collect(Collectors.toList());
     }
 
@@ -105,7 +146,13 @@ public class RoomService {
         var rooms = roomRepository.findRoomsByParticipantId(userId);
         if (rooms == null) return new ArrayList<>();
         return rooms.stream()
-                .map(room -> new RoomResponse(room.getId(), room.getName(), room.getAccessCode(), room.getInviteLink()))
+                .map(room -> new RoomResponse(
+                        room.getId(),
+                        room.getName(),
+                        room.getAccessCode(),
+                        room.getInviteLink(),
+                        room.getTutor() != null ? room.getTutor().getName() : null
+                ))
                 .collect(Collectors.toList());
     }
     
@@ -192,6 +239,7 @@ public class RoomService {
 
         rateLimitingService.resetFailedAttempts(ip);
 
-        return new RoomResponse(room.getId(), room.getName(), room.getAccessCode(), room.getInviteLink());
+        String tutorName = room.getTutor() != null ? room.getTutor().getName() : null;
+        return new RoomResponse(room.getId(), room.getName(), room.getAccessCode(), room.getInviteLink(), tutorName);
     }
 }

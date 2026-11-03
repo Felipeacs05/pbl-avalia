@@ -1,4 +1,4 @@
-// src/hooks/useStudentRooms.ts
+// src/hooks/useStudentsRoom.ts
 import { useState, useEffect, useCallback } from "react";
 import type { StudentRoom } from "../types/studentRoom";
 import { studentRoomService } from "../services/studentRoomService";
@@ -37,5 +37,11 @@ export function useStudentsRoom() {
     return joined;
   };
 
-  return { rooms, isLoading, joinRoom, refreshRooms: fetchRooms };
+  const leaveRoom = async (roomId: string) => {
+    await studentRoomService.leaveRoom(roomId);
+    setRooms((prev) => prev.filter((r) => r.id !== roomId));
+    if (USE_REAL_API) await fetchRooms();
+  };
+
+  return { rooms, isLoading, joinRoom, leaveRoom, refreshRooms: fetchRooms };
 }

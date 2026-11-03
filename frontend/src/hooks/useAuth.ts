@@ -4,8 +4,6 @@ import { useRouter } from 'next/navigation';
 import { authService } from '@/services/authService';
 import { LoginCredentials } from '@/types/login';
 
-//src/hooks/useAuth.ts
-
 export function useAuth() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -16,6 +14,10 @@ export function useAuth() {
     setIsLoading(true);
 
     try {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+      }
+
       const data = await authService.login(credentials);
 
       if (typeof window !== 'undefined') {
@@ -24,7 +26,6 @@ export function useAuth() {
 
       router.push('/teacher-rooms');
     } catch (err: unknown) {
-      // Trata o tipo unknown de forma segura sem usar 'any'
       let message = 'Erro ao realizar login. Verifique seus dados de acesso.';
 
       if (

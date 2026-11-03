@@ -4,7 +4,6 @@ import { registrationService } from "../services/registrationService";
 
 type ToastState = { message: string; type: "success" | "error" } | null;
 
-// Criamos uma interface para o Linter não reclamar do 'any'
 interface ApiError {
   response?: {
     data?: {
@@ -47,10 +46,12 @@ export function useRegistration() {
 
     if (!name || !email || !password || !confirmPassword) return showToast("Preencha todos os campos obrigatórios.");
     if (password !== confirmPassword) return showToast("As senhas não coincidem.");
-    // [OPCIONAL] Validação "A foto de perfil é obrigatória." removida: a imagem agora é opcional.
 
     setLoading(true);
     try {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("token");
+      }
       await registrationService.createAccount({ name, email, password, image });
       showToast("Conta criada com sucesso! Redirecionando...", "success");
       

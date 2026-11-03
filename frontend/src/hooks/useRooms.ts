@@ -13,16 +13,15 @@ export function useRooms() {
 
   const fetchRoomsData = useCallback(async () => {
     try {
-      // Busca separada e dedicada para cada perfil
-      const tutorRooms = await roomService.fetchRooms(); // /rooms/tutor
-      
+      const tutorRooms = await roomService.fetchRooms();
+
       let studentRooms: StudentRoom[] = [];
       try {
-        studentRooms = await studentRoomService.fetchStudentRooms(); // /rooms/student
+        studentRooms = await studentRoomService.fetchStudentRooms();
       } catch (e) {
         console.warn("Aviso: Não foi possível carregar as salas de estudante", e);
       }
-      
+
       setRoomsAsTutor(tutorRooms);
       setRoomsAsStudent(studentRooms);
     } catch (error) {
@@ -45,12 +44,12 @@ export function useRooms() {
   const createRoom = async (name: string) => {
     const generated = await roomService.createRoom(name);
     if (USE_REAL_API) {
-      await fetchRoomsData(); // Rebusca direto do backend para sincronizar
+      await fetchRoomsData();
     } else {
       setRoomsAsTutor((prev) => [
         ...prev,
         {
-          id: String(Date.now()),
+          id: generated.id ?? String(Date.now()),
           name,
           code: generated.code,
           joinLink: generated.joinLink,
@@ -81,13 +80,14 @@ export function useRooms() {
     }
   };
 
-  return { 
-    roomsAsTutor, 
-    roomsAsStudent, 
-    isLoading, 
-    createRoom, 
-    updateRoom, 
-    deleteRoom, 
-    refreshRooms: fetchRoomsData 
+  return {
+    rooms: roomsAsTutor,
+    roomsAsTutor,
+    roomsAsStudent,
+    isLoading,
+    createRoom,
+    updateRoom,
+    deleteRoom,
+    refreshRooms: fetchRoomsData,
   };
 }

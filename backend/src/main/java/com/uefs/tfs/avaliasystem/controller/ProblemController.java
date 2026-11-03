@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -55,5 +56,37 @@ public class ProblemController {
     public ResponseEntity<List<ProblemResponse>> listProblems(@PathVariable UUID roomId) {
         List<ProblemResponse> response = problemService.listProblems(roomId);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/problems/{id}")
+    public ResponseEntity<ProblemResponse> getProblemById(@PathVariable UUID id) {
+        return ResponseEntity.ok(problemService.getProblemById(id));
+    }
+
+    @GetMapping("/problems/{id}/evaluation-status")
+    public ResponseEntity<Map<String, Boolean>> getEvaluationStatus(@PathVariable UUID id) {
+        ProblemResponse problem = problemService.getProblemById(id);
+        boolean selfOpen = Boolean.TRUE.equals(problem.getSelfAssessmentReleased());
+        boolean peerOpen = Boolean.TRUE.equals(problem.getPeerAssessmentReleased());
+        return ResponseEntity.ok(Map.of(
+                "selfEvaluationOpen", selfOpen,
+                "peerEvaluationOpen", peerOpen,
+                "selfAssessmentReleased", selfOpen,
+                "peerAssessmentReleased", peerOpen
+        ));
+    }
+
+    @PostMapping("/problems/{id}/sessions")
+    public ResponseEntity<Map<String, Object>> createSession(
+            @PathVariable UUID id,
+            Principal principal) {
+        UUID userId = UUID.fromString(principal.getName());
+        Map<String, Object> session = problemService.createOrGetSession(id, userId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(session);
+    }
+
+    @GetMapping("/problems/{id}/sessions")
+    public ResponseEntity<List<Map<String, Object>>> listSessions(@PathVariable UUID id) {
+        return ResponseEntity.ok(problemService.listSessions(id));
     }
 }

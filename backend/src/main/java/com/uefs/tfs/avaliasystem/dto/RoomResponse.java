@@ -7,16 +7,15 @@ public class RoomResponse {
     private String name;
     private String code;
     private String joinLink;
+    private String tutorName;
 
     public RoomResponse() {
     }
-
 
     public RoomResponse(String code, String joinLink) {
         this.code = code;
         this.joinLink = joinLink;
     }
-
 
     public RoomResponse(UUID id, String name, String code, String joinLink) {
         this.id = id;
@@ -25,6 +24,13 @@ public class RoomResponse {
         this.joinLink = joinLink;
     }
 
+    public RoomResponse(UUID id, String name, String code, String joinLink, String tutorName) {
+        this.id = id;
+        this.name = name;
+        this.code = code;
+        this.joinLink = joinLink;
+        this.tutorName = tutorName;
+    }
 
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
@@ -34,4 +40,6 @@ public class RoomResponse {
     public void setCode(String code) { this.code = code; }
     public String getJoinLink() { return joinLink; }
     public void setJoinLink(String joinLink) { this.joinLink = joinLink; }
+    public String getTutorName() { return tutorName; }
+    public void setTutorName(String tutorName) { this.tutorName = tutorName; }
 }
