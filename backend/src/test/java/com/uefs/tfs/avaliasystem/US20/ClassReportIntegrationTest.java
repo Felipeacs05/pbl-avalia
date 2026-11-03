@@ -140,7 +140,6 @@ class ClassReportIntegrationTest {
         Feedback feedback = new Feedback();
         feedback.setProblem(problem);
         feedback.setStudent(student);
-        feedback.setTutor(tutor);
         feedback.setGrade(value);
         feedback.setText("Feedback de " + student.getName());
         feedbackRepository.save(feedback);
