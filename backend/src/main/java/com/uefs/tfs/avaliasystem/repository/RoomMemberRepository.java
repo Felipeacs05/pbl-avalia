@@ -46,6 +46,8 @@ public interface RoomMemberRepository extends JpaRepository<RoomMember, UUID> {
             """)
     List<RoomMember> findAllRelevantStudentsByRoomId(@Param("roomId") UUID roomId);
 
+
+
     //trava esse usuário durante a consulta e so libera dps q o dado é escrito
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT rm FROM RoomMember rm WHERE rm.room.id = :roomId AND rm.user.id = :userId")
@@ -68,4 +70,6 @@ public interface RoomMemberRepository extends JpaRepository<RoomMember, UUID> {
             ORDER BY rm.user.name
             """)
     List<User> findAvailableStudentsByRoomId(@Param("roomId") UUID roomId);
+
+
 }

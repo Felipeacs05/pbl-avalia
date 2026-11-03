@@ -16,17 +16,14 @@ import com.uefs.tfs.avaliasystem.model.Problem;
 import com.uefs.tfs.avaliasystem.model.Room;
 import com.uefs.tfs.avaliasystem.model.RoomMember;
 import com.uefs.tfs.avaliasystem.model.TutoringSession;
-import com.uefs.tfs.avaliasystem.repository.AttendanceRepository;
-import com.uefs.tfs.avaliasystem.repository.FeedbackRepository;
-import com.uefs.tfs.avaliasystem.repository.ProblemRepository;
-import com.uefs.tfs.avaliasystem.repository.RoomMemberRepository;
-import com.uefs.tfs.avaliasystem.repository.RoomRepository;
-import com.uefs.tfs.avaliasystem.repository.TutoringSessionRepository;
+import com.uefs.tfs.avaliasystem.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -38,6 +35,8 @@ import java.util.UUID;
 @Service
 public class ClassReportService {
 
+    private static final int AVERAGE_SCALE = 2;
+
     private final RoomRepository roomRepository;
     private final ProblemRepository problemRepository;
     private final FeedbackRepository feedbackRepository;
@@ -48,6 +47,9 @@ public class ClassReportService {
 
     @Autowired(required = false)
     private AttendanceRepository attendanceRepository;
+
+    @Autowired(required = false)
+    private SessionRoleAssignmentRepository sessionRoleAssignmentRepository;
 
     @Autowired
     public ClassReportService(
@@ -139,8 +141,8 @@ public class ClassReportService {
             Map<UUID, Double> studentGrades = new LinkedHashMap<>();
             List<UUID> pendingProblemIds = new ArrayList<>();
 
-            double weightedSum = 0.0;
-            double totalWeight = 0.0;
+            BigDecimal weightedSum = BigDecimal.ZERO;
+            BigDecimal totalWeight = BigDecimal.ZERO;
 
             for (Problem problem : problems) {
                 UUID problemId = problem.getId();
@@ -150,16 +152,18 @@ public class ClassReportService {
                     studentGrades.put(problemId, grade);
                     Double weight = validWeights.get(problemId);
                     if (weight != null && weight > 0.0) {
-                        weightedSum += grade * weight;
-                        totalWeight += weight;
+                        BigDecimal decimalWeight = BigDecimal.valueOf(weight);
+                        weightedSum = weightedSum.add(BigDecimal.valueOf(grade).multiply(decimalWeight));
+                        totalWeight = totalWeight.add(decimalWeight);
                     }
                 } else if (!openProblemIds.contains(problemId)) {
                     pendingProblemIds.add(problemId);
                 }
             }
 
-            Double average = totalWeight > 0.0 ? (weightedSum / totalWeight) : null;
-
+            Double average = totalWeight.signum() > 0
+                    ? weightedSum.divide(totalWeight, AVERAGE_SCALE, RoundingMode.HALF_UP).doubleValue()
+                    : null;
             if (member.isActive()) {
                 activeStudents.add(new StudentReportRow(
                         studentId,
