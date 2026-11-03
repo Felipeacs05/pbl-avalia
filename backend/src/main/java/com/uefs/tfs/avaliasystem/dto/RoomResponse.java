@@ -25,8 +25,6 @@ public class RoomResponse {
         this.joinLink = joinLink;
     }
 
-    public RoomResponse(String s, String mathRoom, String a1B2C3, String joinLink) {
-    }
 
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }

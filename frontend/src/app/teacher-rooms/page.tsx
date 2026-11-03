@@ -14,7 +14,7 @@ import type { Room } from "../../types/room"; // ← ADICIONAR IMPORT
 
 export default function Home() {
   const router = useRouter();
-  const { rooms, isLoading, createRoom, updateRoom, deleteRoom } = useRooms();
+  const { roomsAsTutor: rooms, isLoading, createRoom, updateRoom, deleteRoom } = useRooms();
   const { copyLink, toast: copyToast, clearToast } = useCopyLink();
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
