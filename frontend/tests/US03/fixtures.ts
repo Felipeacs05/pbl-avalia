@@ -32,6 +32,7 @@ export const NAME_LENGTH_ERROR_TEXT = "O nome da sala deve ter entre 3 e 100 car
 export const NAME_LENGTH_ERROR_MESSAGE = /o nome da sala deve ter entre 3 e 100 caracteres/i;
 /** Alias para o teste de integração, que importa NAME_LENGTH_MESSAGE */
 export const NAME_LENGTH_MESSAGE = NAME_LENGTH_ERROR_MESSAGE;
+export const NAME_VALIDATION_MESSAGE = NAME_LENGTH_ERROR_MESSAGE;
 /** Alias para o texto literal, para o teste de integração */
 export const NAME_LENGTH_TEXT = NAME_LENGTH_ERROR_TEXT;
 

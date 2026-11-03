@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RegisterAuth } from "@/components/features/auth/RegisterAuth";
 import { registrationService } from "@/services/registrationService";
@@ -27,53 +27,6 @@ const service = vi.mocked(registrationService);
 
 // Estado simulado do backend em memória para atender ao padrão de testes de integração
 let registeredUsers: RegistrationData[];
-let heldResponses: Array<() => void>;
-let networkIsSlow: boolean;
-
-function jsonResponse(body: unknown, status: number): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
-}
-
-function throttled(init: RequestInit, respond: () => Response): Promise<Response> {
-  return new Promise((resolve, reject) => {
-    init.signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));
-    heldResponses.push(() => resolve(respond()));
-  });
-}
-
-async function fakeBackend(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
-  const url = String(input);
-  const method = init.method ?? "GET";
-
-  if (method === "POST" && url.includes("/auth/register")) {
-    const respond = () => {
-      // Criação fake de usuário no backend em memória
-      return jsonResponse({ message: "Cadastro realizado com sucesso." }, 201);
-    };
-    return networkIsSlow ? throttled(init, respond) : Promise.resolve(respond());
-  }
-
-  return Promise.resolve(jsonResponse({ message: "Not Found" }, 404));
-}
-
-function requestsWithMethod(method: string) {
-  return vi
-    .mocked(fetch)
-    .mock.calls.filter(([, init]) => (init?.method ?? "GET") === method)
-    .map(([url, init]) => ({
-      url: String(url),
-      body: init?.body ? String(init.body) : undefined,
-    }));
-}
-
-function releaseHeldResponses() {
-  const current = [...heldResponses];
-  heldResponses = [];
-  current.forEach((resolve) => resolve());
-}
 
 /**
  * Promessa controlada para testar o atraso e a transição do estado visual
@@ -91,10 +44,7 @@ function deferred<T>() {
 describe("[US01] RegisterAuth Integration", () => {
   beforeEach(() => {
     registeredUsers = [];
-    heldResponses = [];
-    networkIsSlow = false;
     vi.clearAllMocks();
-    vi.stubGlobal("fetch", vi.fn(fakeBackend));
   });
 
   it("Deve completar o fluxo de cadastro sem foto com sucesso, exibindo estado de carregamento e toast de sucesso", async () => {

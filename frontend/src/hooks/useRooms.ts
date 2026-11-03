@@ -1,64 +1,89 @@
-// src/hooks/useRooms.ts
 import { useState, useEffect, useCallback } from "react";
-import type { Room } from "../types/room";
+import { Room } from "../types/room";
 import { roomService } from "../services/roomService";
-import { USE_REAL_API } from "@/services/apiMode";
+import { USE_REAL_API } from "../services/apiMode";
+
+function toErrorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : "Erro ao carregar as salas.";
+}
 
 export function useRooms() {
   const [rooms, setRooms] = useState<Room[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchAllRooms = useCallback(async () => {
+  // Carga inicial: todos os setState acontecem nos callbacks da Promise
+  // (nunca de forma síncrona no corpo do effect — regra react-hooks/set-state-in-effect).
+  useEffect(() => {
+    let isActive = true;
+
+    roomService
+      .fetchRooms()
+      .then((data) => {
+        if (isActive && Array.isArray(data)) setRooms(data);
+      })
+      .catch((err: unknown) => {
+        if (isActive) setError(toErrorMessage(err));
+      })
+      .finally(() => {
+        if (isActive) setIsLoading(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  // Recarga manual (chamada por eventos, fora de effects)
+  const refreshRooms = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
     try {
       const data = await roomService.fetchRooms();
-      setRooms(data);
-    } catch (error) {
-      console.error("Erro ao carregar salas:", error);
+      if (Array.isArray(data)) setRooms(data);
+    } catch (err) {
+      setError(toErrorMessage(err));
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    let mounted = true;
-    async function init() {
-      await fetchAllRooms();
-      if (mounted) setIsLoading(false);
-    }
-    init();
-    return () => {
-      mounted = false;
-    };
-  }, [fetchAllRooms]);
-
   const createRoom = async (name: string) => {
-    const generated = await roomService.createRoom(name);
-    // Optimistic UI local + refetch para testes
-    setRooms((prev) => [
-      ...prev,
-      {
-        id: String(Date.now()),
-        name,
-        code: generated.code,
-        joinLink: generated.joinLink,
-        semester: "2026.2",
-        tutor: "Marlus Rios",
-      },
-    ]);
-    if (USE_REAL_API) await fetchAllRooms();
+    const newRoom = await roomService.createRoom(name);
+    const created: Room = {
+      id: newRoom?.id || `room-${newRoom?.code || Date.now()}`,
+      name: newRoom?.name || name,
+      code: newRoom?.code || "",
+      joinLink: newRoom?.joinLink || `app/join/${newRoom?.code || ""}`,
+      semester: newRoom?.semester || "2026.2",
+      ...newRoom,
+    };
+    setRooms((prev) => [...prev, created]);
+
+    // Com a API real, sincroniza a lista com o que o servidor gravou
+    if (USE_REAL_API) {
+      const data = await roomService.fetchRooms();
+      if (Array.isArray(data)) setRooms(data);
+    }
   };
 
-  const updateRoom = async (id: string, name: string) => {
-    await roomService.updateRoom(id, name);
-    setRooms((prev) =>
-      prev.map((room) => (room.id === id ? { ...room, name } : room))
-    );
-    if (USE_REAL_API) await fetchAllRooms();
+  const updateRoom = async (roomId: string, newName: string) => {
+    await roomService.updateRoom(roomId, newName);
+    setRooms((prev) => prev.map((r) => (r.id === roomId ? { ...r, name: newName } : r)));
   };
 
-  const deleteRoom = async (id: string) => {
-    await roomService.deleteRoom(id);
-    setRooms((prev) => prev.filter((room) => room.id !== id));
-    if (USE_REAL_API) await fetchAllRooms();
+  const deleteRoom = async (roomId: string) => {
+    await roomService.deleteRoom(roomId);
+    setRooms((prev) => prev.filter((r) => r.id !== roomId));
   };
 
-  return { rooms, isLoading, createRoom, updateRoom, deleteRoom };
+  return {
+    rooms,
+    isLoading,
+    error,
+    createRoom,
+    updateRoom,
+    deleteRoom,
+    refreshRooms,
+  };
 }

@@ -3,12 +3,14 @@
 
 import React from "react";
 import { ClipboardCheck, CheckCircle2 } from "lucide-react";
-import type { EvaluationType } from "../../../types/evaluation";
+import type { EvaluationType, ReleasableEvaluationType } from "../../../types/evaluation";
 
 interface ReleaseEvaluationButtonProps {
   onClick: () => void;
   isLoading?: boolean;
   activeType?: EvaluationType;
+  // Quando as duas avaliações estão liberadas juntas
+  activeTypes?: ReleasableEvaluationType[];
   isReleased?: boolean;
   label?: string;
 }
@@ -17,6 +19,7 @@ export function ReleaseEvaluationButton({
   onClick,
   isLoading = false,
   activeType,
+  activeTypes,
   isReleased = false,
   label,
 }: ReleaseEvaluationButtonProps) {
@@ -24,6 +27,7 @@ export function ReleaseEvaluationButton({
     if (label) return label;
     if (isLoading) return "Carregando...";
     if (isReleased) {
+      if (activeTypes && activeTypes.length > 1) return "Avaliações Liberadas";
       if (activeType === "self_evaluation") return "Autoavaliação Liberada";
       if (activeType === "peer_evaluation") return "Avaliação entre Pares Liberada";
       return "Avaliação Liberada";

@@ -56,6 +56,12 @@ export function LoginAuth() {
         />
       </div>
 
+      <div className="text-right -mt-2">
+        <Link href="/forgot-password" className="text-xs font-semibold text-[#182860] hover:text-[#757DC3] hover:underline">
+          Esqueci minha senha
+        </Link>
+      </div>
+
       <LoginButton text={isLoading ? "Entrando..." : "Entrar"} type="submit" disabled={isLoading} />
 
       <div className="text-center pt-2">

@@ -71,6 +71,7 @@ export function PeerEvaluationCard({
       >
         <div className="w-10 h-10 shrink-0 rounded-full overflow-hidden bg-[#EEEDF8] text-[#4354A0] text-xs font-bold flex items-center justify-center">
           {peer.avatarUrl && !imageError ? (
+            // eslint-disable-next-line @next/next/no-img-element -- avatar de URL externa arbitrária (mesmo padrão do ui/Avatar)
             <img src={peer.avatarUrl} alt="" className="w-full h-full object-cover" onError={() => setImageError(true)} />
           ) : (
             getInitials(peer.name)

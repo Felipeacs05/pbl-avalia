@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
-import java.time.Instant;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
@@ -55,10 +54,6 @@ public class AttendanceService {
             if (attendance.getStatus() == request.getStatus()) {
                 return mapToResponse(attendance);
             }
-
-            // Se o status mudou, atualiza o status e renova o timestamp com o horário atual
-            attendance.setStatus(request.getStatus());
-            attendance.setRecordedAt(clock.instant());
         } else {
             // 3. Criação de um novo registo de presença
             User student = userRepository.findById(studentId)
@@ -67,9 +62,11 @@ public class AttendanceService {
             attendance = new Attendance();
             attendance.setSession(session);
             attendance.setStudent(student);
-            attendance.setStatus(request.getStatus());
-            attendance.setRecordedAt(clock.instant());
         }
+
+        // Se o status mudou ou é um novo registo, atualiza o status e renova o timestamp com o horário atual
+        attendance.setStatus(request.getStatus());
+        attendance.setRecordedAt(clock.instant());
 
         // 4. Salva no banco de dados e retorna o DTO
         Attendance savedAttendance = attendanceRepository.save(attendance);

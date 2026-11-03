@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Home from "@/app/teacher-rooms/page";
 import type { Room } from "@/types/room";
@@ -113,6 +113,8 @@ describe("[US03] Rooms page integration", () => {
     const { user } = await renderPage();
 
     await user.click(screen.getByRole("button", { name: /excluir/i }));
+    const confirmDialog = await screen.findByRole("alertdialog");
+    await user.click(within(confirmDialog).getByRole("button", { name: /^excluir$/i }));
 
     await waitFor(() => expect(screen.queryByText(makeRoom().name)).not.toBeInTheDocument());
     const deletes = requestsWithMethod("DELETE");
@@ -127,6 +129,6 @@ describe("[US03] Rooms page integration", () => {
 
     expect(await screen.findByText(/link copiado/i)).toBeVisible();
     // userEvent.setup() substitui o navigator.clipboard por um stub próprio; a URL é lida dele
-    await expect(navigator.clipboard.readText()).resolves.toBe(`${window.location.origin}/app/join/A1B2C`);
+    await expect(navigator.clipboard.readText()).resolves.toBe(`${window.location.origin}/${makeRoom().joinLink}`);
   });
 });

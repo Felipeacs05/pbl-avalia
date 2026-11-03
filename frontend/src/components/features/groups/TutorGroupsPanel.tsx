@@ -23,35 +23,21 @@ export function TutorGroupsPanel({ roomId }: { roomId: string }) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<Group | null>(null);
   const [addingToGroup, setAddingToGroup] = useState<Group | null>(null);
-  
+
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
-  const getErrorMessage = (err: unknown, fallback: string) =>
-    err instanceof Error && err.message ? err.message : fallback;
-
   const handleCreateGroup = async (name: string) => {
-    try {
-      await createGroup(name);
-      setToast({ message: "Grupo criado com sucesso!", type: "success" });
-    } catch (err: unknown) {
-      setToast({ message: getErrorMessage(err, "Erro ao criar grupo."), type: "error" });
-      throw err;
-    }
+    await createGroup(name);
+    setToast({ message: "Grupo criado com sucesso!", type: "success" });
   };
 
   const handleUpdateGroup = async (name: string) => {
     if (!editingGroup) return;
-    try {
-      await updateGroup(editingGroup.id, name);
-      setToast({ message: "Grupo atualizado com sucesso!", type: "success" });
-    } catch (err: unknown) {
-      setToast({ message: getErrorMessage(err, "Erro ao atualizar grupo."), type: "error" });
-      throw err;
-    }
+    await updateGroup(editingGroup.id, name);
+    setToast({ message: "Grupo atualizado com sucesso!", type: "success" });
   };
 
   const handleDeleteGroup = async (groupId: string) => {
-    if (!window.confirm("Tem certeza que deseja excluir este grupo?")) return;
     try {
       await deleteGroup(groupId);
       setToast({ message: "Grupo excluído com sucesso!", type: "success" });
@@ -62,13 +48,8 @@ export function TutorGroupsPanel({ roomId }: { roomId: string }) {
 
   const handleAddMember = async (studentId: string) => {
     if (!addingToGroup) return;
-    try {
-      await addMember(addingToGroup.id, studentId);
-      setToast({ message: "Aluno adicionado com sucesso!", type: "success" });
-    } catch (err: unknown) {
-      setToast({ message: getErrorMessage(err, "Erro ao adicionar aluno."), type: "error" });
-      throw err;
-    }
+    await addMember(addingToGroup.id, studentId);
+    setToast({ message: "Aluno adicionado com sucesso!", type: "success" });
   };
 
   const handleRemoveMember = async (groupId: string, studentId: string) => {

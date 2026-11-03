@@ -6,6 +6,12 @@ import { gradeMock } from "../mocks/grade.mock";
 /**
  * Hook to fetch a specific discipline from a room.
  * Currently uses mock data; will consume the API in the future.
+ *
+ * Back-end: ainda não há service nem endpoint para disciplinas; os dois hooks leem o gradeMock direto.
+ * Endpoints previstos (criar um disciplineService no padrão dos outros services, com o desvio USE_REAL_API):
+ *   GET /api/v1/rooms/{roomId}/disciplines                 -> Discipline[] (cada uma com seus problems)
+ *   GET /api/v1/rooms/{roomId}/disciplines/{disciplineId}  -> Discipline
+ * A tela de disciplinas do professor e a sala do aluno usam estes hooks: trocando aqui, as duas passam a usar a API.
  */
 export function useDiscipline(roomId: string, disciplineId: string) {
   const [discipline, setDiscipline] = useState<Discipline | null>(null);

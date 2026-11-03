@@ -33,6 +33,9 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token');
+        // O interceptor do axios roda fora da árvore React (não há useRouter aqui). O reload completo
+        // é intencional: com a sessão expirada, todo o estado em memória da aplicação precisa ser descartado.
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination
         window.location.href = '/';
       }
     }
@@ -47,4 +50,4 @@ api.interceptors.response.use(
 
     return Promise.reject(error);
   }
-); 
+);

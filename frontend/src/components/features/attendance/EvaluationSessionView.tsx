@@ -2,12 +2,13 @@
 "use client";
 
 import React, { useCallback, useState } from "react";
-import { ArrowLeft, BarChart3 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useRooms } from "../../../hooks/useRooms";
 import { useSessionRoster } from "../../../hooks/useSessionRoster";
 import type { SessionStudent } from "../../../types/attendance";
 import { useSessionGrades } from "../../../hooks/useSessionGrades";
 import { Toast } from "../../ui/Toast";
+import { ReportExportPanel } from "../reports/ReportExportPanel";
 import { EvaluationStudentList } from "./EvaluationStudentList";
 
 interface EvaluationSessionViewProps {
@@ -25,7 +26,6 @@ export function EvaluationSessionView({
   roomId,
   sessionId,
   onBack,
-  onGenerateReport,
   onCloseSession,
   onConfigureEvaluation,
 }: EvaluationSessionViewProps) {
@@ -144,19 +144,18 @@ export function EvaluationSessionView({
           </div>
         ) : null}
 
-        {/* Botões de Ação do Rodapé */}
-        <div className="w-full pt-4 pb-6 mt-auto flex flex-col gap-3">
-          {/* Botão 1: Gerar Relatório da sessão */}
-          <button
-            type="button"
-            onClick={onGenerateReport}
-            className="w-full bg-[#757DC3] hover:bg-[#6870B5] active:scale-[0.99] text-white py-3.5 px-6 rounded-2xl font-semibold text-base shadow-sm transition-all flex items-center justify-center gap-2.5 cursor-pointer"
-          >
-            <BarChart3 size={20} className="shrink-0" />
-            <span>Gerar Relatório da sessão</span>
-          </button>
+        {/* Painel de Exportação da Sessão (US19) - ocupa 100% da largura da coluna */}
+        <ReportExportPanel
+          scope={{
+            type: "session",
+            roomId: roomId ?? "",
+            sessionId,
+          }}
+        />
 
-          {/* Botão 2: Publicar notas (vira "Atualizar notas" depois da 1ª publicação), só para os alunos marcados */}
+        {/* Botões de Ação do Rodapé */}
+        <div className="w-full pt-2 pb-6 mt-auto flex flex-col gap-3">
+          {/* Botão: Publicar notas (vira "Atualizar notas" depois da 1ª publicação), só para os alunos marcados */}
           <button
             type="button"
             onClick={handlePublish}
@@ -166,7 +165,7 @@ export function EvaluationSessionView({
             {hasPublished ? "Atualizar notas" : "Publicar notas"}
           </button>
 
-          {/* Botão 3: Despublicar notas dos alunos marcados que já estão publicados */}
+          {/* Botão: Despublicar notas dos alunos marcados que já estão publicados */}
           <button
             type="button"
             onClick={handleUnpublish}
@@ -176,7 +175,7 @@ export function EvaluationSessionView({
             Despublicar notas
           </button>
 
-          {/* Botão 4: Sair da sessão (só sai da tela) */}
+          {/* Botão: Sair da sessão (só sai da tela) */}
           <button
             type="button"
             onClick={onCloseSession}
