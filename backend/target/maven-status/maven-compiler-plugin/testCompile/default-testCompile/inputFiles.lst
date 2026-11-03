@@ -34,9 +34,7 @@ C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\test\java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\test\java\com\uefs\tfs\avaliasystem\US07\e2e\PerformanceTablePage.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\test\java\com\uefs\tfs\avaliasystem\US07\e2e\PerformanceTableSeleniumTest.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\test\java\com\uefs\tfs\avaliasystem\US07\InvalidCriterionPayloads.java
-C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\test\java\com\uefs\tfs\avaliasystem\US07\PerformanceTableControllerTest.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\test\java\com\uefs\tfs\avaliasystem\US07\PerformanceTableIntegrationTest.java
-C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\test\java\com\uefs\tfs\avaliasystem\US07\PerformanceTableServiceTest.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\test\java\com\uefs\tfs\avaliasystem\US08\CriteriaWeightControllerTest.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\test\java\com\uefs\tfs\avaliasystem\US08\CriteriaWeightIntegrationTest.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\test\java\com\uefs\tfs\avaliasystem\US08\CriteriaWeightRepositoryTest.java
@@ -77,9 +75,8 @@ C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\test\java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\test\java\com\uefs\tfs\avaliasystem\US18\ClassRosterControllerTest.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\test\java\com\uefs\tfs\avaliasystem\US18\ClassRosterIntegrationTest.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\test\java\com\uefs\tfs\avaliasystem\US18\ClassRosterServiceTest.java
-C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\test\java\com\uefs\tfs\avaliasystem\US19\ReportControllerTest.java
-C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\test\java\com\uefs\tfs\avaliasystem\US19\ReportExportServiceTest.java
-C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\test\java\com\uefs\tfs\avaliasystem\US20\ClassReportIntegrationTest.java
-C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\test\java\com\uefs\tfs\avaliasystem\US20\ClassReportServiceTest.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\test\java\com\uefs\tfs\avaliasystem\US21\EmailServiceTest.java
+C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\test\java\com\uefs\tfs\avaliasystem\US21\EmailTemplateServiceTest.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\test\java\com\uefs\tfs\avaliasystem\US21\PasswordRecoveryIntegrationTest.java
+C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\test\java\com\uefs\tfs\avaliasystem\US21\PasswordResetControllerTest.java
+C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\test\java\com\uefs\tfs\avaliasystem\US21\PasswordResetServiceTest.java

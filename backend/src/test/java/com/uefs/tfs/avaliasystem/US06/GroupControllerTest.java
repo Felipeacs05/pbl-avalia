@@ -10,6 +10,7 @@ import com.uefs.tfs.avaliasystem.dto.GroupResponse;
 import com.uefs.tfs.avaliasystem.dto.GroupMemberResponse;
 import com.uefs.tfs.avaliasystem.dto.GroupMemberRequest;
 import com.uefs.tfs.avaliasystem.service.GroupService;
+import com.uefs.tfs.avaliasystem.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,6 +44,9 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 @Import(SecurityConfig.class)
 @TestConfig
 class GroupControllerTest {
+
+    @MockitoBean
+    private UserRepository userRepository;
 
     @Autowired
     private MockMvc mockMvc;

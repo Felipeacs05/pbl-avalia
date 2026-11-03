@@ -8,6 +8,8 @@ import com.uefs.tfs.avaliasystem.dto.LoginRequest;
 import com.uefs.tfs.avaliasystem.dto.LoginResponse;
 import com.uefs.tfs.avaliasystem.exception.InvalidCredentialsException;
 import com.uefs.tfs.avaliasystem.service.UserService;
+import com.uefs.tfs.avaliasystem.service.PasswordResetService;
+import com.uefs.tfs.avaliasystem.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -44,6 +46,9 @@ import org.springframework.test.context.ContextConfiguration;
 @ContextConfiguration(classes = AvaliaSystemApplication.class)
 class AuthLoginControllerTest {
 
+    @MockitoBean
+    private UserRepository userRepository;
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -52,6 +57,9 @@ class AuthLoginControllerTest {
 
     @MockitoBean
     private UserService userService;
+
+    @MockitoBean
+    private PasswordResetService passwordResetService;
 
     // ────────────────────────────────────────────────────────────────────────
     //  TESTES VÁLIDOS

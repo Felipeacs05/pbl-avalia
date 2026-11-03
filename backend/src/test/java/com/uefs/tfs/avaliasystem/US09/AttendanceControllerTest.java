@@ -7,6 +7,7 @@ import com.uefs.tfs.avaliasystem.dto.AttendanceRequest;
 import com.uefs.tfs.avaliasystem.dto.AttendanceResponse;
 import com.uefs.tfs.avaliasystem.model.AttendanceStatus;
 import com.uefs.tfs.avaliasystem.service.AttendanceService;
+import com.uefs.tfs.avaliasystem.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -38,6 +39,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestConfig
 @DisplayName("[US09] Controller de registro de chamada")
 class AttendanceControllerTest {
+
+    @MockitoBean
+    private UserRepository userRepository;
 
     @Autowired
     private MockMvc mockMvc;
@@ -113,5 +117,4 @@ class AttendanceControllerTest {
                 argThat(r -> r.getStatus() == AttendanceStatus.ABSENT), eq(OTHER_TUTOR_UUID));
     }
 }
-
 

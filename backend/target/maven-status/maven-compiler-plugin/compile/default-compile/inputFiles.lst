@@ -45,6 +45,8 @@ C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\dto\LoginRequest.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\dto\LoginResponse.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\dto\PageResponse.java
+C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\dto\PasswordRecoveryRequest.java
+C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\dto\PasswordResetRequest.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\dto\PerformanceTableRequest.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\dto\PerformanceTableResponse.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\dto\ProblemReportResponse.java
@@ -105,6 +107,7 @@ C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\repository\FeedbackRepository.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\repository\GroupMemberRepository.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\repository\GroupRepository.java
+C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\repository\PasswordResetTokenRepository.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\repository\PerformanceTableRepository.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\repository\ProblemRepository.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\repository\RoomMemberRepository.java
@@ -117,17 +120,20 @@ C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\security\PerformanceTableSecurity.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\security\RoomSecurity.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\security\TutoringSessionSecurity.java
+C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\security\UserTokenVersionValidator.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\service\AssessmentReleaseService.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\service\AttendanceService.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\service\BehaviorRecordService.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\service\ClassRosterService.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\service\EmailService.java
+C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\service\EmailTemplateService.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\service\FeedbackRetrievalService.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\service\FeedbackService.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\service\GradeAdjustmentService.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\service\GroupService.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\service\JoinAttemptLimiter.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\service\JwtService.java
+C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\service\PasswordResetService.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\service\PeerAssessmentService.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\service\PerformanceTableService.java
 C:\Users\User\Documents\Projetos\Java\AvaliaPBL\pbl-avalia\backend\src\main\java\com\uefs\tfs\avaliasystem\service\ProblemService.java

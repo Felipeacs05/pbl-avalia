@@ -6,6 +6,7 @@ import com.uefs.tfs.avaliasystem.controller.GradeAdjustmentController;
 import com.uefs.tfs.avaliasystem.dto.GradeAdjustmentResponse;
 import com.uefs.tfs.avaliasystem.exception.AssessmentNotFoundException;
 import com.uefs.tfs.avaliasystem.service.GradeAdjustmentService;
+import com.uefs.tfs.avaliasystem.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(SecurityConfig.class)
 @TestConfig
 class GradeAdjustmentControllerTest {
+
+    @MockitoBean
+    private UserRepository userRepository;
 
     private static final String URL = "/api/v1/assessments/{assessmentId}/grade-adjustment";
 

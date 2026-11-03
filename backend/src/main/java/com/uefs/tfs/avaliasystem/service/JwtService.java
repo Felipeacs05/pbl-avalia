@@ -23,7 +23,7 @@ public class JwtService {
     private final JwtDecoder jwtDecoder;
     private final Duration expiration;
 
-    public JwtService(
+    public JwtService( 
             JwtEncoder jwtEncoder,
             JwtDecoder jwtDecoder,
             @Value("${security.jwt.expiration-time}") long expirationTime
@@ -34,11 +34,16 @@ public class JwtService {
     }
 
     public String generateToken(UUID id) {
+        return generateToken(id, 0);
+    }
+
+    public String generateToken(UUID id, int tokenVersion) {
         Instant issuedAt = Instant.now();
         Instant expiresAt = issuedAt.plus(expiration);
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .subject(id.toString())
+                .claim("tokenVersion", tokenVersion)
                 .issuedAt(issuedAt)
                 .expiresAt(expiresAt)
                 .build();
