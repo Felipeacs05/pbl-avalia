@@ -1,12 +1,10 @@
 import React from "react";
-import { Room } from "../../../types/room";
+import { StudentRoom } from "../../../types/studentRoom"; // ✅ Aponta para o tipo do estudante
 import { getInitials } from "../../ui/Avatar";
 
-// src/components/features/rooms-student/StudentRoomCard.tsx
-
 interface StudentRoomCardProps {
-  room: Room;
-  index: number; // usado só para variar o tom de azul de cada card
+  room: StudentRoom; // ✅ Usa o tipo dedicado do estudante
+  index: number; 
   onEnter: () => void;
 }
 

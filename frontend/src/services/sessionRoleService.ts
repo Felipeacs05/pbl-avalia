@@ -27,17 +27,21 @@ const GENERIC_MESSAGE = "Não foi possível atribuir o papel. Tente novamente.";
 async function toRequestError(response: Response): Promise<SessionRoleRequestError> {
   const text = (await response.text()).trim();
   let message = text;
-  try {
-    const body: unknown = JSON.parse(text);
-    if (typeof body === "object" && body !== null && "message" in body) {
-      message = String((body as { message: unknown }).message);
+  
+  // Só tenta dar parse se a string realmente começar com '{' ou '['
+  if (text && (text.startsWith("{") || text.startsWith("["))) {
+    try {
+      const body: unknown = JSON.parse(text);
+      if (typeof body === "object" && body !== null && "message" in body) {
+        message = String((body as { message: unknown }).message);
+      }
+    } catch {
+      // Se falhar, mantém o texto puro original
     }
-  } catch {
-    // corpo não é JSON: mantém o texto puro
   }
+  
   return { status: response.status, message: message || GENERIC_MESSAGE };
 }
-
 export const sessionRoleService = {
   /** Rejeita com { status, message }; status 0 indica falha de rede. */
   async assignRole(

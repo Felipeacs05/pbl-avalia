@@ -43,10 +43,18 @@ public class RoomController {
         roomService.deleteRoom(id, userId(principal));
     }
 
-    @GetMapping
+    // Retorna apenas as salas criadas pelo professor logado
+    @GetMapping("/tutor")
     @ResponseStatus(HttpStatus.OK)
-    public List<RoomResponse> listRooms(Principal principal) {
-        return roomService.listRooms(userId(principal));
+    public List<RoomResponse> listRoomsAsTutor(Principal principal) {
+        return roomService.listRoomsAsTutor(userId(principal));
+    }
+
+    // Retorna apenas as turmas em que o aluno está matriculado
+    @GetMapping("/student")
+    @ResponseStatus(HttpStatus.OK)
+    public List<RoomResponse> listRoomsAsStudent(Principal principal) {
+        return roomService.listRoomsAsStudent(userId(principal));
     }
 
     @GetMapping("/{roomId}/members")
@@ -73,6 +81,7 @@ public class RoomController {
     }
 
     private UUID userId(Principal principal) {
+        System.out.println("🔍 [DEBUG] Principal Name (sub do JWT): " + principal.getName());
         return UUID.fromString(principal.getName());
     }
 

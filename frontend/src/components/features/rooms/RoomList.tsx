@@ -25,10 +25,12 @@ export function RoomList({ rooms, onEnter, onEdit, onShare, onCopyLink, onDelete
         }
     };
 
+    // Garante que se rooms for undefined/null, renderiza um array vazio para evitar crash
+    const safeRooms = Array.isArray(rooms) ? rooms : [];
+
     return (
-    // INJEÇÃO TDD: Mudado de <div> para <ul>
     <ul className="space-y-4 m-0 p-0">
-        {rooms.map((room) => (
+        {safeRooms.map((room) => (
         <RoomCard
             key={room.id}
             room={room}

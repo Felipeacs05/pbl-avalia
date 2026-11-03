@@ -1,20 +1,30 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
-import { useRooms } from "../../hooks/useRooms";
+import React, { useState, useEffect, Suspense } from "react";
+import { useStudentsRoom} from  "../../hooks/useStudentsRoom";
 import { BottomTabBar } from "../../components/features/navigation/BottomTabBar";
 import { StudentRoomCard } from "../../components/features/rooms-student/StudentRoomCard";
 import { useRouter, useSearchParams } from "next/navigation";
 import { EnterRoomModal } from "../../components/features/rooms-student/EnterRoomModal";
-import { attemptEnterRoom } from "../../mocks/roomCode.mock";
 
-type HttpError = { response?: { status?: number; headers?: Record<string, string> } };
+type HttpError = { response?: { status?: number; data?: { message?: string }; headers?: Record<string, string> } };
 
 function StudentContent() {
-  const { rooms, isLoading } = useRooms();
+  // Consome exclusivamente a estrutura de estudantes
+  const { rooms, isLoading, joinRoom } = useStudentsRoom();
   const router = useRouter();
 
-  const handleEnter = (roomId: number | string) => {
+  const [userName, setUserName] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+
+  useEffect(() => {
+    const storedName = localStorage.getItem("userName") || "Estudante";
+    const storedEmail = localStorage.getItem("userEmail") || "";
+    setUserName(storedName);
+    setUserEmail(storedEmail);
+  }, []);
+
+  const handleEnter = (roomId: string) => {
     router.push(`/student-rooms/${roomId}`);
   };
 
@@ -27,46 +37,47 @@ function StudentContent() {
   const handleConfirmCode = async (code: string) => {
     setBlockMessage(null);
     try {
-      if (await attemptEnterRoom(code)) {
-        setIsModalOpen(false);
-        router.push("/student-rooms/1");
-      } else {
-        setAttemptedCode(code);
-        setIsModalOpen(false);
-        setIsErrorModalOpen(true);
-      }
-    } catch (error) {
-      const response = (error as HttpError).response;
+      const joinedRoom = await joinRoom(code);
+      setIsModalOpen(false);
+      router.push(`/student-rooms/${joinedRoom.id}`);
+    } catch (error: unknown) {
+      const err = error as HttpError;
+      const response = err?.response;
+      
       if (response?.status === 429) {
         const minutes = Math.ceil(Number(response.headers?.["retry-after"]) / 60);
         setBlockMessage(
-          "Você fez muitas tentativas com códigos inválidos, então seu acesso foi bloqueado temporariamente por segurança. " +
+          "Fez demasiadas tentativas com códigos inválidos, pelo que o seu acesso foi bloqueado temporariamente por segurança. " +
             (minutes > 0
-              ? `Tente novamente em cerca de ${minutes} min.`
+              ? `Tente novamente daqui a cerca de ${minutes} min.`
               : "Aguarde alguns minutos e tente novamente.")
         );
         setIsModalOpen(false);
         setIsErrorModalOpen(true);
       } else {
-        console.error("Erro ao entrar na sala:", error);
+        setAttemptedCode(code);
+        setIsModalOpen(false);
+        setIsErrorModalOpen(true);
       }
     }
   };
+
+  const safeRooms = Array.isArray(rooms) ? rooms : [];
 
   return (
     <main className="w-full min-h-screen bg-[#F8F9FA] font-sans relative flex flex-col">
       <div className="flex-1 px-5 pt-12 pb-36 overflow-y-auto">
         <h1 className="text-2xl font-bold text-center text-[#182860] mb-8 tracking-tight">
-          Avalia - Suas Salas
+          Avalia - As Suas Turmas
         </h1>
 
         {isLoading ? (
           <p className="mt-10 text-center text-sm text-gray-500 animate-pulse">
-            Carregando salas...
+            A carregar turmas...
           </p>
         ) : (
           <div className="space-y-4">
-            {rooms.map((room, index) => (
+            {safeRooms.map((room, index) => (
               <StudentRoomCard
                 key={room.id}
                 room={room}
@@ -82,8 +93,8 @@ function StudentContent() {
 
       {isModalOpen && (
         <EnterRoomModal
-          name="Marlus Rios"
-          email="marlus@uefs.br"
+          name={userName}
+          email={userEmail}
           initialCode={codeFromUrl}
           onClose={() => setIsModalOpen(false)}
           onEnter={handleConfirmCode}
@@ -93,23 +104,8 @@ function StudentContent() {
       {isErrorModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-xs bg-white rounded-2xl p-6 text-center shadow-xl border border-gray-100 flex flex-col items-center">
-            <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mb-3">
-              <svg
-                className="w-6 h-6 stroke-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
-                />
-              </svg>
-            </div>
-
             <h3 className="text-base font-bold text-gray-900 mb-1">
-              {blockMessage ? "Muitas tentativas" : "Código errado"}
+              {blockMessage ? "Demasiadas tentativas" : "Código incorreto"}
             </h3>
             <p className="text-xs text-gray-500 mb-5 leading-relaxed">
               {blockMessage ?? (
@@ -118,8 +114,7 @@ function StudentContent() {
                   <span className="font-semibold text-gray-700">
                     “{attemptedCode}”
                   </span>{" "}
-                  não corresponde a nenhuma sala ativa. Verifique com seu
-                  professor e tente novamente.
+                  não corresponde a nenhuma sala ativa. Verifique com o seu professor e tente novamente.
                 </>
               )}
             </p>
@@ -130,7 +125,7 @@ function StudentContent() {
                 onClick={() => setIsErrorModalOpen(false)}
                 className="flex-1 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                {blockMessage ? "Entendi" : "Fechar"}
+                {blockMessage ? "Entendido" : "Fechar"}
               </button>
               {!blockMessage && (
                 <button
@@ -141,7 +136,7 @@ function StudentContent() {
                   }}
                   className="flex-1 py-2 text-xs font-semibold text-white bg-[#182860] hover:bg-[#121e48] rounded-lg transition-colors"
                 >
-                  Tentar de novo
+                  Tentar novamente
                 </button>
               )}
             </div>

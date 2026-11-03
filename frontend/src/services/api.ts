@@ -1,11 +1,14 @@
-// src/services/api.ts
 import axios from 'axios';
 
+// Garante a URL do Spring Boot local no Docker
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1',
+  baseURL: API_URL,
+  withCredentials: true, // Necessário quando o backend possui configuration.setAllowCredentials(true)
 });
 
-// Interceptor para injetar o token JWT e logar requisições
+// Interceptor para injetar o Token JWT automaticamente em chamadas autenticadas
 api.interceptors.request.use(
   (config) => {
     if (typeof window !== 'undefined') {
@@ -14,40 +17,16 @@ api.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
     }
-
-    // Log para depurar e ver a rota completa sendo chamada
-    console.log(`🚀 [AXIOS OUT] ${config.method?.toUpperCase()} -> ${config.baseURL}${config.url}`);
-
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Interceptor de resposta
+// Interceptor de erro
 api.interceptors.response.use(
-  (response) => {
-    console.log(`✅ [AXIOS IN] ${response.status} <- ${response.config.url}`);
-    return response;
-  },
+  (response) => response,
   (error) => {
     console.error(`❌ [AXIOS ERROR] ${error.config?.url}:`, error.response?.status || error.message);
-
-    if (error.response?.status === 401) {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('token');
-        window.location.href = '/';
-      }
-    }
-
-    if (error.response?.status === 429) {
-      error.response.data = {
-        ...(typeof error.response.data === 'object' ? error.response.data : {}),
-        message: 'Muitas tentativas em pouco tempo. Seu acesso foi temporariamente bloqueado. Aguarde alguns minutos e tente novamente.',
-      };
-    }
-
     return Promise.reject(error);
   }
 );

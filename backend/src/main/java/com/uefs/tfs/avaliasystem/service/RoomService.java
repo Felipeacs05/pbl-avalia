@@ -92,12 +92,23 @@ public class RoomService {
     }
 
     @Transactional(readOnly = true)
-    public List<RoomResponse> listRooms(UUID userId) {
-        return roomRepository.findAllByTutorOrActiveMember(userId).stream()
+    public List<RoomResponse> listRoomsAsTutor(UUID userId) {
+        var rooms = roomRepository.findByTutorId(userId);
+        if (rooms == null) return new ArrayList<>();
+        return rooms.stream()
                 .map(room -> new RoomResponse(room.getId(), room.getName(), room.getAccessCode(), room.getInviteLink()))
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<RoomResponse> listRoomsAsStudent(UUID userId) {
+        var rooms = roomRepository.findRoomsByParticipantId(userId);
+        if (rooms == null) return new ArrayList<>();
+        return rooms.stream()
+                .map(room -> new RoomResponse(room.getId(), room.getName(), room.getAccessCode(), room.getInviteLink()))
+                .collect(Collectors.toList());
+    }
+    
     @Transactional(readOnly = true)
     public List<RoomMemberResponse> listRoomMembers(UUID roomId) {
         Room room = roomRepository.findById(roomId)

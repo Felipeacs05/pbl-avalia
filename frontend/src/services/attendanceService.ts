@@ -7,8 +7,8 @@ import type {
 import type { SessionRoster } from "../types/session";
 import { sessionMock } from "../mocks/session.mock";
 import { USE_REAL_API } from "./apiMode";
-
-const BASE_URL = "/api/v1/sessions";
+import { api } from "./api"; // Instância do Axios configurada com baseUrl e Token JWT
+import axios from "axios";
 
 export const ATTENDANCE_TIMEOUT_MS = 8000;
 
@@ -27,26 +27,27 @@ function isRequestError(error: unknown): error is AttendanceRequestError {
   );
 }
 
-/** O backend responde o 403 em texto puro e outros erros em JSON ({ message }). */
-async function toRequestError(response: Response): Promise<AttendanceRequestError> {
-  const text = (await response.text()).trim();
-  let message = text;
-  try {
-    const body: unknown = JSON.parse(text);
-    if (typeof body === "object" && body !== null && "message" in body) {
-      message = String((body as { message: unknown }).message);
-    }
-  } catch {
-    // corpo não é JSON: mantém o texto puro
-  }
-  return { status: response.status, message: message || GENERIC_MESSAGE };
-}
-
 function normalizeError(error: unknown): AttendanceRequestError {
   if (isRequestError(error)) return error;
-  if ((error as { name?: string } | null)?.name === "AbortError") {
-    return { status: 0, message: TIMEOUT_MESSAGE };
+  
+  if (axios.isAxiosError(error)) {
+    if (error.code === "ECONNABORTED" || error.message.includes("timeout")) {
+      return { status: 0, message: TIMEOUT_MESSAGE };
+    }
+    if (error.response) {
+      const data = error.response.data;
+      let message = GENERIC_MESSAGE;
+      
+      if (typeof data === "string") {
+        message = data.trim() || GENERIC_MESSAGE;
+      } else if (data && typeof data === "object" && "message" in data) {
+        message = String((data as { message: unknown }).message);
+      }
+      
+      return { status: error.response.status, message };
+    }
   }
+  
   return { status: 0, message: NETWORK_MESSAGE };
 }
 
@@ -54,12 +55,12 @@ export const attendanceService = {
   async fetchSessionRoster(sessionId: string): Promise<SessionRoster> {
     if (!USE_REAL_API) return sessionMock.fetchRoster(sessionId);
 
-    const response = await fetch(`${BASE_URL}/${sessionId}`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
-    if (!response.ok) throw await toRequestError(response);
-    return response.json();
+    try {
+      const response = await api.get<SessionRoster>(`/sessions/${sessionId}`);
+      return response.data;
+    } catch (error) {
+      throw normalizeError(error);
+    }
   },
 
   /**
@@ -73,21 +74,15 @@ export const attendanceService = {
   ): Promise<Attendance> {
     if (!USE_REAL_API) return sessionMock.registerAttendance(sessionId, studentId, status);
 
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), ATTENDANCE_TIMEOUT_MS);
     try {
-      const response = await fetch(`${BASE_URL}/${sessionId}/attendances/${studentId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-        signal: controller.signal,
-      });
-      if (!response.ok) throw await toRequestError(response);
-      return (await response.json()) as Attendance;
+      const response = await api.put<Attendance>(
+        `/sessions/${sessionId}/attendances/${studentId}`,
+        { status },
+        { timeout: ATTENDANCE_TIMEOUT_MS }
+      );
+      return response.data;
     } catch (error) {
       throw normalizeError(error);
-    } finally {
-      clearTimeout(timer);
     }
   },
 
