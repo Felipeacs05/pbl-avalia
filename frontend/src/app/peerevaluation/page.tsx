@@ -8,6 +8,7 @@
 import React, { useState } from "react";
 import { Users, Lock } from "lucide-react";
 import { useEvaluationManager } from "../../hooks/useEvaluationManager";
+import { isEvaluationTypeReleased } from "../../types/evaluation";
 import { PeerEvaluationModal } from "../../components/features/evaluations/PeerEvaluationModal";
 import { Toast } from "../../components/ui/Toast";
 import {
@@ -28,7 +29,7 @@ export default function PeerEvaluationPage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Botão ativado só quando o tipo liberado pelo tutor é a avaliação entre pares
-  const isPeerEvaluationOpen = evaluationStatus.activeType === "peer_evaluation";
+  const isPeerEvaluationOpen = isEvaluationTypeReleased(evaluationStatus, "peer_evaluation");
 
   return (
     <main className="w-full min-h-screen bg-[#F5F5F5] font-sans flex flex-col items-center justify-center px-5">

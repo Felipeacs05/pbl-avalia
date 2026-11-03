@@ -10,19 +10,27 @@ interface ReleaseEvaluationModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedType: EvaluationType;
+  // Tipos marcados quando os dois podem ser liberados juntos (tem prioridade sobre selectedType)
+  selectedTypes?: Array<"self_evaluation" | "peer_evaluation">;
   onToggleType: (type: "self_evaluation" | "peer_evaluation") => void;
   onConfirm: () => void;
   isSubmitting?: boolean;
+  error?: string | null;
 }
 
 export function ReleaseEvaluationModal({
   isOpen,
   onClose,
   selectedType,
+  selectedTypes,
   onToggleType,
   onConfirm,
   isSubmitting = false,
+  error = null,
 }: ReleaseEvaluationModalProps) {
+  const isSelected = (type: "self_evaluation" | "peer_evaluation") =>
+    selectedTypes ? selectedTypes.includes(type) : selectedType === type;
+
   // Close on Escape key
   useEffect(() => {
     if (!isOpen) return;
@@ -82,7 +90,7 @@ export function ReleaseEvaluationModal({
             id="evaluation-option-self"
             title="Autoavaliação"
             description="Aluno lança nota nos mesmos critérios da Tabela de Desempenho"
-            isChecked={selectedType === "self_evaluation"}
+            isChecked={isSelected("self_evaluation")}
             onToggle={() => onToggleType("self_evaluation")}
             disabled={isSubmitting}
           />
@@ -92,11 +100,18 @@ export function ReleaseEvaluationModal({
             id="evaluation-option-peer"
             title="Avaliação entre Pares"
             description="Cada aluno avalia os colegas da turma."
-            isChecked={selectedType === "peer_evaluation"}
+            isChecked={isSelected("peer_evaluation")}
             onToggle={() => onToggleType("peer_evaluation")}
             disabled={isSubmitting}
           />
         </div>
+
+        {/* Falha ao gravar: o modal continua aberto com a seleção para tentar de novo */}
+        {error && (
+          <p role="alert" className="text-sm font-semibold text-red-100 bg-red-500/20 border border-red-300/40 rounded-xl px-4 py-2.5">
+            {error}
+          </p>
+        )}
 
         {/* Action Button */}
         <div>

@@ -9,7 +9,7 @@ import { DisciplineHeader } from "../../../../components/features/disciplines/Di
 import { ProblemCard } from "../../../../components/features/disciplines/ProblemCard";
 import { DisciplineTabBar } from "../../../../components/features/disciplines/DisciplineTabBar";
 import { PhotoRosterList } from "../../../../components/PhotoRoster/PhotoRosterList";
-import { ArrowLeft, Share2, BookOpen } from "lucide-react";
+import { ArrowLeft, Share2, BookOpen, Table2 } from "lucide-react";
 import { CreateProblemModal } from "../../../../components/features/disciplines/CreateProblemModal";
 import { ReportExportPanel } from "../../../../components/features/reports/ReportExportPanel";
 import { ReportExportModal } from "../../../../components/features/reports/ReportExportModal";
@@ -204,6 +204,16 @@ function DisciplinesContent() {
                 </div>
               </>
             )}
+
+            {/* Relatório final da turma na tela, com as notas por problema (US20) */}
+            <button
+              type="button"
+              onClick={() => router.push(`/teacher-rooms/${roomId}/reports/final`)}
+              className="w-full py-3.5 rounded-2xl font-semibold text-sm shadow-sm transition-all flex items-center justify-center gap-2 bg-[#4354A0] hover:bg-[#364485] text-white active:scale-[0.98] cursor-pointer"
+            >
+              <Table2 size={18} aria-hidden="true" />
+              <span>Ver Relatório Final da Turma</span>
+            </button>
 
             {/* Painel de Exportação do Relatório Final da Turma (US19) */}
             <ReportExportPanel scope={{ type: "class", roomId }} />

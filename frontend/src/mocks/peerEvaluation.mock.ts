@@ -5,6 +5,7 @@
 //   prob_1 -> só a autoavaliação liberada    (botão desativado)
 //   prob_2 -> nada liberado                  (botão desativado)
 import { evaluationMock } from "./evaluationMock";
+import { isEvaluationTypeReleased } from "../types/evaluation";
 import type { Student } from "../types/student";
 import type { PeerEvaluationSubmission } from "../types/evaluation";
 
@@ -38,7 +39,7 @@ const FAKE_DELAY_MS = 600;
 export const peerEvaluationMock = {
   // A avaliação entre pares está aberta quando o tutor liberou o tipo "peer_evaluation"
   isOpen(problemId: string): boolean {
-    return evaluationMock.getStatus(problemId).activeType === "peer_evaluation";
+    return isEvaluationTypeReleased(evaluationMock.getStatus(problemId), "peer_evaluation");
   },
 
   // Simula o POST de envio. Se a avaliação não estiver liberada, o back-end responde 403.

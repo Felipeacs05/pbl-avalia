@@ -8,7 +8,11 @@ import { ProblemDetailsHeader } from "../../../../../../../components/features/p
 import { SelfAssessmentGrade } from "../../../../../../../components/features/grade-adjustment/SelfAssessmentGrade";
 import { SessionQuickTagsCard } from "../../../../../../../components/features/feedback/SessionQuickTagsCard";
 import { StudentFeedbacksModal } from "../../../../../../../components/features/feedback/StudentFeedbacksModal";
+import { StudentSelfEvaluationModal } from "../../../../../../../components/features/evaluations/StudentSelfEvaluationModal";
+import { StudentPeerEvaluationModal } from "../../../../../../../components/features/evaluations/StudentPeerEvaluationModal";
+import { Toast } from "../../../../../../../components/ui/Toast";
 import { useFeedback } from "../../../../../../../hooks/useFeedback";
+import { useProblemDetails } from "../../../../../../../hooks/useProblemDetails";
 import { MOCK_SESSION_SUMMARY } from "../../../../../../../mocks/feedback.mock";
 import { gradeAdjustmentMock } from "../../../../../../../mocks/gradeAdjustment.mock";
 import type { SubmittedSelfAssessment } from "../../../../../../../types/gradeAdjustment";
@@ -25,6 +29,9 @@ export default function StudentSessionDashboardPage() {
     typeof params?.sessionId === "string" ? params.sessionId : "session_01";
 
   const [isFeedbacksModalOpen, setIsFeedbacksModalOpen] = useState(false);
+  // Autoavaliação e avaliação por pares abrem como modal, sem trocar de tela
+  const [activeModal, setActiveModal] = useState<"self" | "peer" | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [myAssessment, setMyAssessment] = useState<SubmittedSelfAssessment>(() =>
     gradeAdjustmentMock.getAssessmentById(DEFAULT_STUDENT_ASSESSMENT_ID)
   );
@@ -47,6 +54,9 @@ export default function StudentSessionDashboardPage() {
     };
   }, [refreshFeedbacks]);
 
+  // Back-end: a nota e as tags rápidas da sessão ainda vêm do MOCK_SESSION_SUMMARY (feedback.mock).
+  // Endpoint previsto: GET /api/v1/sessions/{sessionId}/students/{studentId}/summary -> { grade, quickTags }
+  // (o título do problema e a data da sessão já vêm do problemService, via useProblemDetails)
   const isModifiedByTutor = Boolean(
     myAssessment.modifiedByTutor ?? myAssessment.ajustado_por_tutor
   );
@@ -54,12 +64,12 @@ export default function StudentSessionDashboardPage() {
     ? myAssessment.score
     : MOCK_SESSION_SUMMARY.grade ?? 7.5;
 
-  const sessionDateLabel =
-    sessionId === "session_hoje"
-      ? "Hoje"
-      : sessionId === "session_02"
-      ? "03/04"
-      : MOCK_SESSION_SUMMARY.sessionDate;
+  // Título do problema e data da sessão vêm do mesmo problema da tela do professor
+  const { problem } = useProblemDetails(problemId);
+  const session = problem?.sessions.find((s) => s.id === sessionId);
+  const problemTitle = problem?.title ?? MOCK_SESSION_SUMMARY.problemTitle;
+  const sessionDateLabel = session?.displayDate ?? MOCK_SESSION_SUMMARY.sessionDate;
+  const disciplineTag = problem ? `${problem.disciplineCode} - ${problem.semester}` : MOCK_SESSION_SUMMARY.roomCode;
 
   const handleOpenMyFeedbacks = () => {
     void refreshFeedbacks();
@@ -70,7 +80,7 @@ export default function StudentSessionDashboardPage() {
     <main className="w-full min-h-screen bg-[#F5F5F5] font-sans relative flex flex-col">
       {/* Header responsivo igual ao fluxo do professor */}
       <ProblemDetailsHeader
-        disciplineTag={MOCK_SESSION_SUMMARY.roomCode}
+        disciplineTag={disciplineTag}
         onBack={() =>
           router.push(`/student-rooms/${roomId}/problems/${problemId}`)
         }
@@ -85,7 +95,7 @@ export default function StudentSessionDashboardPage() {
       <div className="flex-1 flex flex-col md:hidden px-5 pt-5 pb-10 space-y-5">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 leading-snug underline decoration-gray-200 underline-offset-4">
-            {MOCK_SESSION_SUMMARY.problemTitle}
+            {problemTitle}
           </h1>
           <p className="text-lg font-bold text-gray-800 mt-1">
             Sessão de {sessionDateLabel}
@@ -118,7 +128,7 @@ export default function StudentSessionDashboardPage() {
 
           <button
             type="button"
-            onClick={() => router.push("/selfevaluation")}
+            onClick={() => setActiveModal("self")}
             className="rounded-2xl bg-[#E2E4EC] hover:bg-[#D5D8E4] border-2 border-[#C8CCDC] py-3.5 px-2 flex flex-col items-center justify-center gap-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
           >
             <UserCheck size={24} className="text-[#3E4875]" strokeWidth={2.2} />
@@ -129,7 +139,7 @@ export default function StudentSessionDashboardPage() {
 
           <button
             type="button"
-            onClick={() => router.push("/peerevaluation")}
+            onClick={() => setActiveModal("peer")}
             className="rounded-2xl bg-[#E2E4EC] hover:bg-[#D5D8E4] border-2 border-[#C8CCDC] py-3.5 px-2 flex flex-col items-center justify-center gap-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
           >
             <Users size={24} className="text-[#3E4875]" strokeWidth={2.2} />
@@ -150,7 +160,7 @@ export default function StudentSessionDashboardPage() {
         <div className="w-1/2 flex flex-col gap-5">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 w-full">
             <h1 className="text-2xl font-bold text-gray-900 leading-tight mb-2">
-              {MOCK_SESSION_SUMMARY.problemTitle}
+              {problemTitle}
             </h1>
             <div className="w-full h-px bg-gray-200 mb-3" />
             <p className="text-sm font-semibold text-[#4354A0]">
@@ -182,7 +192,7 @@ export default function StudentSessionDashboardPage() {
 
             <button
               type="button"
-              onClick={() => router.push("/selfevaluation")}
+              onClick={() => setActiveModal("self")}
               className="rounded-2xl bg-white hover:bg-[#EEEDF8] border-2 border-gray-200 hover:border-[#757DC3]/50 py-4 px-3 flex flex-col items-center justify-center gap-2 shadow-xs transition-all hover:shadow-md active:scale-95 cursor-pointer"
             >
               <UserCheck size={26} className="text-[#4354A0]" strokeWidth={2.2} />
@@ -193,7 +203,7 @@ export default function StudentSessionDashboardPage() {
 
             <button
               type="button"
-              onClick={() => router.push("/peerevaluation")}
+              onClick={() => setActiveModal("peer")}
               className="rounded-2xl bg-white hover:bg-[#EEEDF8] border-2 border-gray-200 hover:border-[#757DC3]/50 py-4 px-3 flex flex-col items-center justify-center gap-2 shadow-xs transition-all hover:shadow-md active:scale-95 cursor-pointer"
             >
               <Users size={26} className="text-[#4354A0]" strokeWidth={2.2} />
@@ -215,6 +225,25 @@ export default function StudentSessionDashboardPage() {
         <StudentFeedbacksModal
           feedbacks={feedbacks}
           onClose={() => setIsFeedbacksModalOpen(false)}
+        />
+      )}
+
+      {toastMessage && <Toast message={toastMessage} type="success" onClose={() => setToastMessage(null)} />}
+
+      {activeModal === "self" && (
+        <StudentSelfEvaluationModal
+          roomId={roomId}
+          problemId={problemId}
+          onClose={() => setActiveModal(null)}
+          onSubmitted={setToastMessage}
+        />
+      )}
+      {activeModal === "peer" && (
+        <StudentPeerEvaluationModal
+          roomId={roomId}
+          problemId={problemId}
+          onClose={() => setActiveModal(null)}
+          onSubmitted={setToastMessage}
         />
       )}
     </main>

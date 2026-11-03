@@ -41,7 +41,10 @@ export async function attemptEnterRoom(code: string): Promise<boolean> {
     });
   }
 
-  if (validateRoomCode(code)) return true;
+  if (validateRoomCode(code)) {
+    failedAttempts = 0; // acerto zera a sequência: o bloqueio é por falhas SEGUIDAS
+    return true;
+  }
 
   failedAttempts += 1;
   if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
