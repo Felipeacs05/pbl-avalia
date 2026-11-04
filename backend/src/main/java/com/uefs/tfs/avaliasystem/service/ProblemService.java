@@ -411,8 +411,13 @@ public class ProblemService {
             if (behaviorRecordRepository != null) {
                 List<String> tags = behaviorRecordRepository.findBySessionIdAndStudentId(sessionId, u.getId())
                         .stream()
-                        .filter(r -> r.getTag() != null && r.getTag().getName() != null)
-                        .map(r -> r.getTag().getName())
+                        .map(r -> {
+                            if (r.getTag() != null && r.getTag().getName() != null) {
+                                return r.getTag().getName();
+                            }
+                            return r.getText();
+                        })
+                        .filter(t -> t != null && !t.isBlank())
                         .toList();
                 if (!tags.isEmpty()) {
                     studentMap.put("tags", tags);

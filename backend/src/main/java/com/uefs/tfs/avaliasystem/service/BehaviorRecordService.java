@@ -74,6 +74,32 @@ public class BehaviorRecordService {
         return toResponse(behaviorRecordRepository.save(record));
     }
 
+    @Transactional
+    @PreAuthorize("@tutoringSessionSecurity.requireTutor(#sessionId, #requesterId)")
+    public void updateStudentTags(UUID sessionId, UUID studentId, List<String> tags, UUID requesterId) {
+        TutoringSession session = tutoringSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Sessão não encontrada."));
+
+        User student = userRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Aluno não encontrado."));
+
+        List<BehaviorRecord> existing = behaviorRecordRepository.findBySessionIdAndStudentId(sessionId, studentId);
+        behaviorRecordRepository.deleteAll(existing);
+
+        if (tags != null) {
+            for (String tagText : tags) {
+                if (tagText != null && !tagText.isBlank()) {
+                    BehaviorRecord record = new BehaviorRecord();
+                    record.setSession(session);
+                    record.setStudent(student);
+                    record.setText(tagText.trim());
+                    record.setRecordedAt(clock.instant());
+                    behaviorRecordRepository.save(record);
+                }
+            }
+        }
+    }
+
     private void validateContent(BehaviorRecordRequest request) {
         if (request.getTagId() == null && (request.getText() == null || request.getText().isBlank())) {
             throw new IllegalArgumentException("Informe uma tag ou um texto.");

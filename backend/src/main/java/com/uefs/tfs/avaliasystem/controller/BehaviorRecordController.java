@@ -15,12 +15,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -63,5 +65,24 @@ public class BehaviorRecordController {
                 requesterId
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PutMapping("/sessions/{sessionId}/students/{studentId}/tags")
+    @Operation(summary = "Atualizar tags de observação de um aluno na sessão")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Tags atualizadas com sucesso"),
+            @ApiResponse(responseCode = "403", description = "Usuário não é o tutor responsável"),
+            @ApiResponse(responseCode = "404", description = "Sessão ou aluno não encontrado")
+    })
+    public ResponseEntity<Void> updateStudentTags(
+            @PathVariable UUID sessionId,
+            @PathVariable UUID studentId,
+            @RequestBody(required = false) Map<String, List<String>> body,
+            Principal principal
+    ) {
+        UUID requesterId = UUID.fromString(principal.getName());
+        List<String> tags = body != null ? body.get("tags") : List.of();
+        behaviorRecordService.updateStudentTags(sessionId, studentId, tags, requesterId);
+        return ResponseEntity.noContent().build();
     }
 }

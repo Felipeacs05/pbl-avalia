@@ -6,6 +6,7 @@ import { Avatar } from "../../ui/Avatar";
 import { Check, Settings } from "lucide-react";
 import type { SessionStudent } from "../../../types/attendance";
 import { PRESENT_LIKE_STATUSES } from "./attendanceStatusOptions";
+import { SESSION_ROLE_LABELS, toSessionRole } from "../session-roles/sessionRoleOptions";
 
 interface EvaluationStudentRowProps {
   student: SessionStudent;
@@ -34,10 +35,13 @@ export function EvaluationStudentRow({
     : "bg-black/30 text-white hover:bg-black/40 active:bg-black/50";
 
   // Determina o texto de subtítulo:
-  // Se presente -> mostra o cargo (Coordenador, Quadro, Mesa ou Membro)
+  // Se presente -> mostra o cargo traduzido (Coordenador, Secretário de Quadro, Secretário de Mesa ou Membro)
   // Se ausente -> mostra "Ausente" ou "Ausente com justificativa"
+  const roleEnum = toSessionRole(student.role);
+  const roleLabel = roleEnum ? SESSION_ROLE_LABELS[roleEnum] : (student.role || "Membro");
+
   const subtitle = isPresentLike
-    ? student.role || "Membro"
+    ? roleLabel
     : student.status === "JUSTIFIED_ABSENCE"
     ? "Ausente com justificativa"
     : "Ausente";

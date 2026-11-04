@@ -34,7 +34,6 @@ export function StudentPerformanceTableView({
 
   // Localiza o aluno correspondente ao ID
   const currentStudent = roster?.students.find((s) => s.id === studentId);
-  // antes caía no nome fixo "Luana Angélica"
   const studentName = currentStudent?.name || "Aluno";
   const studentTags = currentStudent?.tags || [];
 
@@ -75,8 +74,10 @@ export function StudentPerformanceTableView({
 
   const scores = evaluation?.criteria ?? {};
 
-  // sem tags de exemplo: mostra só as marcações reais da sessão
-  const tags = evaluation?.tags ?? [];
+  // Marcações reais recebidas na sessão (do aluno no roster ou salvas na avaliação)
+  const tags = (currentStudent?.tags && currentStudent.tags.length > 0)
+    ? currentStudent.tags
+    : (evaluation?.tags ?? []);
 
   const message = evaluation?.message || "";
 
