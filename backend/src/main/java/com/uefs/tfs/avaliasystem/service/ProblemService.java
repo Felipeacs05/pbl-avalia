@@ -221,7 +221,7 @@ public class ProblemService {
                 item.put("id", a.getId().toString());
                 item.put("studentId", student.getId().toString());
                 item.put("studentName", student.getName());
-                item.put("avatarUrl", student.getPhotoUrl());
+                item.put("avatarUrl", student.getProfilePictureUrl());
                 item.put("sessionId", sessionId.toString());
                 item.put("status", "submitted");
                 item.put("score", a.getScore());
@@ -236,7 +236,7 @@ public class ProblemService {
                 item.put("id", "pending-" + student.getId());
                 item.put("studentId", student.getId().toString());
                 item.put("studentName", student.getName());
-                item.put("avatarUrl", student.getPhotoUrl());
+                item.put("avatarUrl", student.getProfilePictureUrl());
                 item.put("sessionId", sessionId.toString());
                 item.put("status", "pending");
                 item.put("score", null);
@@ -387,7 +387,7 @@ public class ProblemService {
             Map<String, Object> studentMap = new LinkedHashMap<>();
             studentMap.put("id", u.getId().toString());
             studentMap.put("name", u.getName());
-            studentMap.put("avatarUrl", u.getPhotoUrl());
+            studentMap.put("avatarUrl", u.getProfilePictureUrl());
 
             if (attendanceRepository != null) {
                 Optional<Attendance> attOpt = attendanceRepository.findBySessionIdAndStudentId(sessionId, u.getId());
