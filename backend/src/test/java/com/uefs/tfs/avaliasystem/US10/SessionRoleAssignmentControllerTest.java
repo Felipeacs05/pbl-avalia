@@ -8,6 +8,7 @@ import com.uefs.tfs.avaliasystem.dto.SessionRoleAssignmentResponse;
 import com.uefs.tfs.avaliasystem.exception.SessionRoleConflictException;
 import com.uefs.tfs.avaliasystem.model.SessionRole;
 import com.uefs.tfs.avaliasystem.service.SessionRoleAssignmentService;
+import com.uefs.tfs.avaliasystem.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -42,6 +43,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestConfig
 @DisplayName("[US10] Controller de papéis da sessão")
 class SessionRoleAssignmentControllerTest {
+
+    @MockitoBean
+    private UserRepository userRepository;
 
     @Autowired
     private MockMvc mockMvc;

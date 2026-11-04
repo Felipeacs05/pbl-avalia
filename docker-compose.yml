@@ -30,6 +30,8 @@ services:
       - SPRING_DATASOURCE_PASSWORD=tfs_pass
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - JWT_SECRET_KEY=bXlfc3VwZXJfc2VjcmV0X2tleV9mb3JfdGVzdGluZ18xMjM0NTY3ODkwMTI=
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
     depends_on:
       postgres:
         condition: service_healthy

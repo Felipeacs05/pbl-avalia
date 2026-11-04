@@ -25,10 +25,22 @@ describe("[US21] ResetPasswordForm", () => {
     const { user, onSubmit } = renderForm();
 
     await user.type(screen.getByLabelText(/nova senha/i), NEW_PASSWORD);
+    await user.type(screen.getByLabelText(/confirmar senha/i), NEW_PASSWORD);
     await user.click(screen.getByRole("button", { name: /redefinir senha/i }));
 
     expect(onSubmit).toHaveBeenCalledTimes(1);
     expect(onSubmit).toHaveBeenCalledWith(RESET_TOKEN, NEW_PASSWORD);
+  });
+
+  it("Deve bloquear o envio e avisar quando a confirmação não bate com a nova senha", async () => {
+    const { user, onSubmit } = renderForm();
+
+    await user.type(screen.getByLabelText(/nova senha/i), NEW_PASSWORD);
+    await user.type(screen.getByLabelText(/confirmar senha/i), "outraSenha123");
+    await user.click(screen.getByRole("button", { name: /redefinir senha/i }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(/as senhas não coincidem/i);
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 
   it("Deve exibir o sucesso, levar ao login e não oferecer novo envio quando a senha é redefinida", () => {

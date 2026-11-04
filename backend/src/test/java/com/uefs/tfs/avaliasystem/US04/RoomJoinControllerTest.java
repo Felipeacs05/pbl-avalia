@@ -6,6 +6,7 @@ import com.uefs.tfs.avaliasystem.dto.RoomResponse;
 import com.uefs.tfs.avaliasystem.exception.InvalidAccessCodeException;
 import com.uefs.tfs.avaliasystem.exception.TooManyAttemptsException;
 import com.uefs.tfs.avaliasystem.service.RoomService;
+import com.uefs.tfs.avaliasystem.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(SecurityConfig.class)
 @TestConfig
 class RoomJoinControllerTest {
+
+    @MockitoBean
+    private UserRepository userRepository;
 
     private static final String IP = "192.168.1.1";
     private static final UUID USER = UUID.fromString("555e4567-e89b-12d3-a456-426614174000");

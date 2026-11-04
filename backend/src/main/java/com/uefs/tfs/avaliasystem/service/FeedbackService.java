@@ -113,7 +113,6 @@ public class FeedbackService {
     private Feedback build(Problem problem, User student, FeedbackRequest request) {
         Feedback feedback = new Feedback();
         feedback.setProblem(problem);
-        feedback.setTutor(problem.getRoom().getTutor());
         feedback.setStudent(student);
         feedback.setGrade(request.grade());
         feedback.setText(request.text().trim());

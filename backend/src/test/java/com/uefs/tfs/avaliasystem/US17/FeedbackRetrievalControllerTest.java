@@ -9,6 +9,7 @@ import com.uefs.tfs.avaliasystem.dto.FeedbackDTO;
 import com.uefs.tfs.avaliasystem.dto.PageResponse;
 import com.uefs.tfs.avaliasystem.security.FeedbackSecurity;
 import com.uefs.tfs.avaliasystem.service.FeedbackRetrievalService;
+import com.uefs.tfs.avaliasystem.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -48,6 +49,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(SecurityConfig.class)
 @TestConfig
 class FeedbackRetrievalControllerTest {
+
+    @MockitoBean
+    private UserRepository userRepository;
 
     private static final String URL = "/api/v1/students/{studentId}/feedbacks";
 

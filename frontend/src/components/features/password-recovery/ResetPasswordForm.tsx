@@ -17,11 +17,21 @@ interface ResetPasswordFormProps {
 // some o formulário e fica só o caminho para o login (as sessões antigas foram encerradas).
 export function ResetPasswordForm({ token, successMessage, error, isSubmitting = false, onSubmit }: ResetPasswordFormProps) {
   const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [mismatchError, setMismatchError] = useState<string | null>(null);
 
+  // A confirmação é só do front: o back-end continua recebendo apenas o newPassword
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      setMismatchError("As senhas não coincidem.");
+      return;
+    }
+    setMismatchError(null);
     void onSubmit(token, newPassword);
   }
+
+  const shownError = mismatchError ?? error;
 
   if (successMessage) {
     return (
@@ -38,9 +48,9 @@ export function ResetPasswordForm({ token, successMessage, error, isSubmitting =
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-sm">
-      {error && (
+      {shownError && (
         <div role="alert" className="p-3 text-xs text-red-600 bg-red-100 rounded-lg border border-red-200">
-          {error}
+          {shownError}
         </div>
       )}
 
@@ -51,6 +61,20 @@ export function ResetPasswordForm({ token, successMessage, error, isSubmitting =
           type="password"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
+          required
+          placeholder="••••••••"
+          disabled={isSubmitting}
+          className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#757DC3] text-black placeholder-gray-500 disabled:opacity-60"
+        />
+      </div>
+
+      <div>
+        <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">Confirmar senha</label>
+        <input
+          id="confirm-password"
+          type="password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
           required
           placeholder="••••••••"
           disabled={isSubmitting}
