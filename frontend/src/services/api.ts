@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Garante a URL do Spring Boot local no Docker
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+// Usa o proxy relativo do Next.js (/api/v1) para funcionar em localhost, IP local (celular) e produção
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api/v1';
 
 const RATE_LIMIT_MESSAGE =
   'Muitas tentativas em pouco tempo. Seu acesso foi temporariamente bloqueado. Aguarde alguns minutos e tente novamente.';
@@ -53,8 +53,12 @@ api.interceptors.response.use(
       }
     }
 
-    if (error.response?.status === 429 && error.response.data) {
-      error.response.data.message = RATE_LIMIT_MESSAGE;
+    if (error.response?.status === 429) {
+      if (typeof error.response.data === 'string' || !error.response.data) {
+        error.response.data = { message: RATE_LIMIT_MESSAGE };
+      } else {
+        error.response.data.message = RATE_LIMIT_MESSAGE;
+      }
     }
 
     console.warn(`⚠️ [AXIOS ERROR] ${error.config?.url}:`, error.response?.status || error.message);
