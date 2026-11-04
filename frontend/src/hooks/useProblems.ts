@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from "react";
 import type { Problem } from "@/types/discipline";
 import { problemService } from "@/services/problemService";

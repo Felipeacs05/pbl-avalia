@@ -1,4 +1,4 @@
-﻿// src/app/teacher-rooms/[id]/problems/[problemId]/page.tsx
+// src/app/teacher-rooms/[id]/problems/[problemId]/page.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -20,6 +20,7 @@ import { IS_TEST } from "../../../../../services/apiMode";
 import type { FeedbackStudentOption } from "../../../../../types/feedback";
 import { Toast } from "../../../../../components/ui/Toast";
 import type { Session } from "../../../../../types/problem";
+import type { Student } from "../../../../../types/student";
 import { getReleasedTypes } from "../../../../../types/evaluation";
 import type { ReportScope } from "../../../../../types/reportExport";
 import {
@@ -68,7 +69,7 @@ export default function ProblemDetailsPage() {
       .then((students) => {
         if (Array.isArray(students)) {
           setRealStudents(
-            students.filter((s: any) => s.role !== "TUTOR").map((s) => ({
+            students.filter((s: Student) => s.role !== "TUTOR").map((s) => ({
               id: s.id,
               name: s.name,
               email: s.email,

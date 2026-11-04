@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 // src/hooks/useClassRoster.ts
 "use client";
 

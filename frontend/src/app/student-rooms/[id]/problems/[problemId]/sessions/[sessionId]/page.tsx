@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 // src/app/student-rooms/[id]/problems/[problemId]/sessions/[sessionId]/page.tsx
 "use client";
 
