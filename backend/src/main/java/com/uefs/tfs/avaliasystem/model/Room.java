@@ -32,6 +32,9 @@ public class Room {
 
     private String inviteLink;
 
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
     @ManyToOne(optional = false)
     @JoinColumn(name = "tutor_id", nullable = false)
     private User tutor;

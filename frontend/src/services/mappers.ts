@@ -134,6 +134,7 @@ export function mapRoomFromApi(raw: Record<string, unknown>): Room {
   return {
     id: String(raw.id ?? ""),
     name: String(raw.name ?? "Sala sem nome"),
+    description: typeof raw.description === "string" ? raw.description : undefined,
     code,
     joinLink,
     semester: typeof raw.semester === "string" && raw.semester ? raw.semester : "2026.2",
@@ -162,6 +163,7 @@ export function mapStudentRoomFromApi(
   return {
     id: String(raw.id ?? ""),
     name: String(raw.name ?? (code ? `Sala ${code}` : "Turma sem nome")),
+    description: typeof raw.description === "string" ? raw.description : undefined,
     code,
     inviteLink,
     semester: typeof raw.semester === "string" && raw.semester ? raw.semester : "2026.2",
@@ -307,9 +309,11 @@ export function mapDisciplineFromRoomAndProblems(
     id: roomId,
     roomId,
     name: room?.name || "Sala Tutorial PBL",
-    description: room?.tutor
-      ? `Tutoria conduzida por ${room.tutor}`
-      : "Ambiente de Aprendizagem Baseada em Problemas (PBL)",
+    description: room?.description
+      ? room.description
+      : room?.tutor
+        ? `Tutoria conduzida por ${room.tutor}`
+        : "Ambiente de Aprendizagem Baseada em Problemas (PBL)",
     problems,
   };
 }

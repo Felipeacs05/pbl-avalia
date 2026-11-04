@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 
 interface CreateRoomModalProps {
   onClose: () => void;
-  onSubmit: (name: string) => Promise<void>; 
+  onSubmit: (name: string, description?: string) => Promise<void>; 
 }
 
 export function CreateRoomModal({ onClose, onSubmit }: CreateRoomModalProps) {
@@ -24,7 +24,12 @@ export function CreateRoomModal({ onClose, onSubmit }: CreateRoomModalProps) {
     setIsSubmitting(true);
     
     try {
-      await onSubmit(trimmedName);
+      const trimmedDesc = description.trim();
+      if (trimmedDesc) {
+        await onSubmit(trimmedName, trimmedDesc);
+      } else {
+        await onSubmit(trimmedName);
+      }
       onClose();
     } catch {
       setError("Erro ao criar a sala. Tente novamente.");

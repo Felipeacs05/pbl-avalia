@@ -15,6 +15,7 @@ import java.util.UUID;
 public class RoomDto {
     private UUID id;
     private String name;
+    private String description;
     private String accessCode;
     private UUID tutorId;
     private String tutorName;
@@ -26,16 +27,26 @@ public class RoomDto {
         this.tutorId = tutorId;
     }
 
+    public RoomDto(UUID id, String name, String accessCode, UUID tutorId, String tutorName) {
+        this.id = id;
+        this.name = name;
+        this.accessCode = accessCode;
+        this.tutorId = tutorId;
+        this.tutorName = tutorName;
+    }
+
     public static RoomDto from(Room room) {
         UUID tutorId = room.getTutor() != null ? room.getTutor().getId() : null;
         String tutorName = room.getTutor() != null ? room.getTutor().getName() : null;
 
-        return new RoomDto(
+        RoomDto dto = new RoomDto(
                 room.getId(),
                 room.getName(),
                 room.getAccessCode(),
                 tutorId,
                 tutorName
         );
+        dto.setDescription(room.getDescription());
+        return dto;
     }
 }

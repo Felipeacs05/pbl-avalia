@@ -48,11 +48,15 @@ export function useRooms() {
     }
   }, []);
 
-  const createRoom = async (name: string) => {
-    const newRoom = await roomService.createRoom(name);
+  const createRoom = async (name: string, description?: string) => {
+    const newRoom =
+      description !== undefined
+        ? await roomService.createRoom(name, description)
+        : await roomService.createRoom(name);
     const created: Room = {
       id: newRoom?.id || `room-${newRoom?.code || Date.now()}`,
       name: newRoom?.name || name,
+      description: newRoom?.description || description,
       code: newRoom?.code || "",
       joinLink: newRoom?.joinLink || `app/join/${newRoom?.code || ""}`,
       semester: newRoom?.semester || "2026.2",
@@ -67,9 +71,19 @@ export function useRooms() {
     }
   };
 
-  const updateRoom = async (roomId: string, newName: string) => {
-    await roomService.updateRoom(roomId, newName);
-    setRooms((prev) => prev.map((r) => (r.id === roomId ? { ...r, name: newName } : r)));
+  const updateRoom = async (roomId: string, newName: string, description?: string) => {
+    if (description !== undefined) {
+      await roomService.updateRoom(roomId, newName, description);
+    } else {
+      await roomService.updateRoom(roomId, newName);
+    }
+    setRooms((prev) =>
+      prev.map((r) =>
+        r.id === roomId
+          ? { ...r, name: newName, ...(description !== undefined ? { description } : {}) }
+          : r
+      )
+    );
   };
 
   const deleteRoom = async (roomId: string) => {

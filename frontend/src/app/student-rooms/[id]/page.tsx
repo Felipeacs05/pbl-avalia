@@ -76,7 +76,7 @@ export default function StudentRoomDetailsPage() {
             </h1>
             <div className="w-full h-px bg-gray-200 mb-3" />
             <p className="text-sm text-gray-500 leading-relaxed">
-              {disciplines.map((d) => d.name).join(" · ") || "Disciplinas da sala"}
+              {room?.description || disciplineFromHook?.description || (room?.tutor ? `Tutoria conduzida por ${room.tutor}` : "Ambiente de Aprendizagem Baseada em Problemas (PBL)")}
             </p>
           </div>
 
@@ -135,7 +135,7 @@ export default function StudentRoomDetailsPage() {
             </h1>
             <div className="w-full h-px bg-gray-200 mb-3" />
             <p className="text-sm text-gray-500 leading-relaxed">
-              {disciplines.map((d) => d.name).join(" · ") || "Disciplinas da sala"}
+              {room?.description || disciplineFromHook?.description || (room?.tutor ? `Tutoria conduzida por ${room.tutor}` : "Ambiente de Aprendizagem Baseada em Problemas (PBL)")}
             </p>
           </div>
 

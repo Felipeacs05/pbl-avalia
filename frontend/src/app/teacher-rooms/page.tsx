@@ -36,9 +36,9 @@ export default function Home() {
     await copyLink(`app/join/${code}`);
   };
 
-  const handleCreateRoom = async (name: string) => {
+  const handleCreateRoom = async (name: string, description?: string) => {
     try {
-      await createRoom(name);
+      await createRoom(name, description);
       setLocalToast({ message: "Sala criada com sucesso!", type: "success" });
       setIsCreateModalOpen(false);
     } catch {

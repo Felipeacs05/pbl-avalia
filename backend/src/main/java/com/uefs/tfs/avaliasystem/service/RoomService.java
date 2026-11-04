@@ -50,6 +50,9 @@ public class RoomService {
 
         Room room = new Room();
         room.setName(request.getName());
+        if (request.getDescription() != null) {
+            room.setDescription(request.getDescription());
+        }
         room.setTutor(tutor);
 
         String accessCode;
@@ -62,7 +65,7 @@ public class RoomService {
 
         room = roomRepository.save(room);
 
-        return new RoomResponse(room.getId(), room.getName(), room.getAccessCode(), room.getInviteLink(), tutor.getName());
+        return new RoomResponse(room.getId(), room.getName(), room.getDescription(), room.getAccessCode(), room.getInviteLink(), tutor.getName());
     }
 
     @Transactional
@@ -75,10 +78,13 @@ public class RoomService {
         }
 
         room.setName(request.getName());
+        if (request.getDescription() != null) {
+            room.setDescription(request.getDescription());
+        }
         room = roomRepository.save(room);
 
         String tutorName = room.getTutor() != null ? room.getTutor().getName() : null;
-        return new RoomResponse(room.getId(), room.getName(), room.getAccessCode(), room.getInviteLink(), tutorName);
+        return new RoomResponse(room.getId(), room.getName(), room.getDescription(), room.getAccessCode(), room.getInviteLink(), tutorName);
     }
 
     @Transactional(readOnly = true)
@@ -86,7 +92,7 @@ public class RoomService {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("Sala não encontrada"));
         String tutorName = room.getTutor() != null ? room.getTutor().getName() : null;
-        return new RoomResponse(room.getId(), room.getName(), room.getAccessCode(), room.getInviteLink(), tutorName);
+        return new RoomResponse(room.getId(), room.getName(), room.getDescription(), room.getAccessCode(), room.getInviteLink(), tutorName);
     }
 
     @Transactional
@@ -134,6 +140,7 @@ public class RoomService {
                 .map(room -> new RoomResponse(
                         room.getId(),
                         room.getName(),
+                        room.getDescription(),
                         room.getAccessCode(),
                         room.getInviteLink(),
                         room.getTutor() != null ? room.getTutor().getName() : null
@@ -149,6 +156,7 @@ public class RoomService {
                 .map(room -> new RoomResponse(
                         room.getId(),
                         room.getName(),
+                        room.getDescription(),
                         room.getAccessCode(),
                         room.getInviteLink(),
                         room.getTutor() != null ? room.getTutor().getName() : null

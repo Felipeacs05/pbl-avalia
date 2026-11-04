@@ -55,12 +55,13 @@ export const roomService = {
     }
   },
 
-  createRoom: async (name: string): Promise<Partial<Room>> => {
+  createRoom: async (name: string, description?: string): Promise<Partial<Room>> => {
     if (!USE_REAL_API) {
       const code = Math.random().toString(36).substring(2, 8).toUpperCase();
       const newRoom: Room = {
         id: String(Date.now()),
         name,
+        description,
         code,
         joinLink: `app/join/${code}`,
         semester: "2026.2",
@@ -68,12 +69,13 @@ export const roomService = {
       roomsMock.push(newRoom);
       return newRoom;
     }
+    const payload = description ? { name, description } : { name };
     const response = await fetch(
       "/api/v1/rooms",
       withAuthInit({
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify(payload),
       })
     );
     if (!response.ok) {
@@ -86,6 +88,7 @@ export const roomService = {
         ...raw,
         id: mapped.id,
         name: mapped.name,
+        description: mapped.description,
         code: mapped.code,
         joinLink: mapped.joinLink,
         semester: mapped.semester,
@@ -95,18 +98,22 @@ export const roomService = {
     return raw as Partial<Room>;
   },
 
-  updateRoom: async (roomId: string, name: string): Promise<void> => {
+  updateRoom: async (roomId: string, name: string, description?: string): Promise<void> => {
     if (!USE_REAL_API) {
       const room = roomsMock.find((r) => r.id === roomId);
-      if (room) room.name = name;
+      if (room) {
+        room.name = name;
+        if (description !== undefined) room.description = description;
+      }
       return;
     }
+    const payload = description !== undefined ? { name, description } : { name };
     const response = await fetch(
       `/api/v1/rooms/${roomId}`,
       withAuthInit({
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify(payload),
       })
     );
     if (!response.ok) {
