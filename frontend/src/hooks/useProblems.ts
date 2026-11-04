@@ -26,7 +26,7 @@ export function useProblems(roomId: string) {
 
   const createProblem = async (title: string) => {
     try {
-      const created = await (problemService.createProblem as any)(roomId, title);
+      const created = await problemService.createProblem(roomId, { title, description: "" });
       const reloaded = await problemService.fetchProblems(roomId);
       setProblems(reloaded ?? [...problems, created]);
       setError(null);
@@ -39,7 +39,7 @@ export function useProblems(roomId: string) {
 
   const updateProblem = async (problemId: string, title: string) => {
     try {
-      const updated = await (problemService.updateProblem as any)(problemId, title);
+      const updated = await problemService.updateProblem(problemId, { title, description: "" });
       const reloaded = await problemService.fetchProblems(roomId);
       setProblems(reloaded ?? problems.map((p) => (p.id === problemId ? { ...p, title } : p)));
       setError(null);

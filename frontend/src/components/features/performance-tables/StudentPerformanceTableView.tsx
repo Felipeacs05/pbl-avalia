@@ -1,4 +1,4 @@
-// src/components/features/performance-tables/StudentPerformanceTableView.tsx
+﻿// src/components/features/performance-tables/StudentPerformanceTableView.tsx
 "use client";
 
 import React from "react";
@@ -215,7 +215,7 @@ export function StudentPerformanceTableView({
                   <div className="space-y-2">
                     <p className="text-xs text-gray-500 font-medium">Reflexão do Aluno:</p>
                     <p className="text-sm text-gray-800 italic bg-gray-50 p-3 rounded-xl border border-gray-100">
-                      "{evaluation.selfEvaluation.comments || "Sem comentários adicionais."}"
+                      &quot;{evaluation.selfEvaluation.comments || "Sem comentários adicionais."}&quot;
                     </p>
                   </div>
                 ) : (
@@ -260,7 +260,7 @@ export function StudentPerformanceTableView({
                       </div>
                       {peer.comments ? (
                         <p className="text-xs text-gray-600 italic">
-                          "{peer.comments}"
+                          &quot;{peer.comments}&quot;
                         </p>
                       ) : (
                         <p className="text-[11px] text-gray-400 italic">
