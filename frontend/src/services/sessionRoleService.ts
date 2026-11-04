@@ -41,7 +41,11 @@ async function toRequestError(response: Response): Promise<SessionRoleRequestErr
     }
   }
   
-  return { status: response.status, message: message || GENERIC_MESSAGE };
+  if (!message || message === "An unexpected error occurred") {
+    message = GENERIC_MESSAGE;
+  }
+  
+  return { status: response.status, message };
 }
 export const sessionRoleService = {
   /** Rejeita com { status, message }; status 0 indica falha de rede. */
