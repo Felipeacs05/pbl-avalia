@@ -51,7 +51,7 @@ CREATE TABLE room_members (
     unlinked_at TIMESTAMP WITH TIME ZONE,
     team_id UUID,
     CONSTRAINT pk_room_members PRIMARY KEY (id),
-    CONSTRAINT fk_room_members_room FOREIGN KEY (room_id) REFERENCES rooms (id),
+    CONSTRAINT fk_room_members_room FOREIGN KEY (room_id) REFERENCES rooms (id) ON DELETE CASCADE,
     CONSTRAINT fk_room_members_user FOREIGN KEY (user_id) REFERENCES users (id),
     CONSTRAINT fk_room_members_team FOREIGN KEY (team_id) REFERENCES teams (id)
 );
