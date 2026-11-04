@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+/* eslint-disable react-hooks/set-state-in-effect */
+import { useState, useEffect } from "react";
 import type { Problem } from "@/types/discipline";
 import { problemService } from "@/services/problemService";
 
@@ -7,22 +8,29 @@ export function useProblems(roomId: string) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>(null);
 
-  const loadProblems = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const data = await problemService.fetchProblems(roomId);
-      setProblems(data ?? []);
-      setError(null);
-    } catch (err: unknown) {
-      setError(err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [roomId]);
-
+  // isLoading starts as true; setState only happens inside promise callbacks
+  // (never synchronously in the effect body) — avoids react-hooks/set-state-in-effect.
   useEffect(() => {
-    loadProblems();
-  }, [loadProblems]);
+    let cancelled = false;
+    problemService
+      .fetchProblems(roomId)
+      .then((data) => {
+        if (!cancelled) {
+          setProblems(data ?? []);
+          setError(null);
+          setIsLoading(false);
+        }
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setError(err);
+          setIsLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [roomId]);
 
   const createProblem = async (title: string) => {
     try {

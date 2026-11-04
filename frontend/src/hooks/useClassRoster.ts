@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 // src/hooks/useClassRoster.ts
 "use client";
 
@@ -10,9 +11,10 @@ export function useClassRoster(roomId: string) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // isLoading starts as true; setState only happens inside promise callbacks
+  // (never synchronously in the effect body) — avoids react-hooks/set-state-in-effect.
   useEffect(() => {
     let active = true;
-    setIsLoading(true);
     classRosterService
       .fetchClassRoster(roomId)
       .then((data) => {

@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { roomService } from "../../../../services/roomService";
-import { getLoggedUserProfile } from "../../../../services/authFetch";
 
 export default function JoinByLinkPage() {
   const params = useParams();

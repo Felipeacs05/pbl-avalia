@@ -10,7 +10,7 @@ export interface ClassRosterPanelProps {
 }
 
 export function ClassRosterPanel({ roomId }: ClassRosterPanelProps) {
-  const { students, isLoading, error } = useClassRoster(roomId);
+  const { students, error } = useClassRoster(roomId);
 
   return (
     <div className="w-full">

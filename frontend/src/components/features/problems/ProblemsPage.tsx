@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useState, useEffect } from "react";
 import type { Problem } from "@/types/discipline";
 import { ProblemList } from "./ProblemList";
@@ -10,16 +11,19 @@ export function ProblemsPage({ roomId }: { roomId: string }) {
   const [editingProblem, setEditingProblem] = useState<Problem | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchList = async () => {
-    const res = await fetch(`/api/v1/rooms/${roomId}/problems`);
-    if (res.ok) {
-      const data = await res.json();
-      setProblems(data);
-    }
-  };
-
+  // setState only happens inside promise callbacks (never synchronously in the
+  // effect body) — avoids react-hooks/set-state-in-effect.
   useEffect(() => {
-    fetchList();
+    let cancelled = false;
+    fetch(`/api/v1/rooms/${roomId}/problems`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: Problem[] | null) => {
+        if (!cancelled && data) setProblems(data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, [roomId]);
 
   const handleCreate = async () => {

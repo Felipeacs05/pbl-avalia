@@ -28,6 +28,7 @@ export function ClassRosterGrid({ students }: ClassRosterGridProps) {
           >
             <div className="w-16 h-16 rounded-full overflow-hidden bg-[#757DC3] text-white flex items-center justify-center font-bold text-sm mb-2">
               {hasPhoto ? (
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={student.profileImageUrl!}
                   alt=""

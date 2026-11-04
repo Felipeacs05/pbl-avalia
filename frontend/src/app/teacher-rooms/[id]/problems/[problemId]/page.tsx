@@ -1,4 +1,4 @@
-// src/app/teacher-rooms/[id]/problems/[problemId]/page.tsx
+﻿// src/app/teacher-rooms/[id]/problems/[problemId]/page.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -16,7 +16,7 @@ import { ReportExportModal } from "../../../../../components/features/reports/Re
 import { useFeedback } from "../../../../../hooks/useFeedback";
 import { MOCK_FEEDBACK_STUDENTS } from "../../../../../mocks/feedback.mock";
 import { photoRosterService } from "../../../../../services/photoRosterService";
-import { USE_REAL_API, IS_TEST } from "../../../../../services/apiMode";
+import { IS_TEST } from "../../../../../services/apiMode";
 import type { FeedbackStudentOption } from "../../../../../types/feedback";
 import { Toast } from "../../../../../components/ui/Toast";
 import type { Session } from "../../../../../types/problem";

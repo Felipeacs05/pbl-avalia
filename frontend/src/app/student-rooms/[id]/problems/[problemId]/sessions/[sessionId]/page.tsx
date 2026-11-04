@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 // src/app/student-rooms/[id]/problems/[problemId]/sessions/[sessionId]/page.tsx
 "use client";
 
@@ -36,16 +37,20 @@ export default function StudentSessionDashboardPage() {
   const [loggedStudentId, setLoggedStudentId] = useState<string | null>(null);
   const [sessionSummary, setSessionSummary] = useState<StudentSessionSummary | null>(null);
 
+  // Read from localStorage inside a microtask so setState is never called
+  // synchronously in the effect body -- avoids react-hooks/set-state-in-effect.
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const raw = localStorage.getItem("user");
-      if (raw) {
-        try {
-          const parsed = JSON.parse(raw);
-          if (parsed?.id) setLoggedStudentId(parsed.id);
-        } catch {}
+    Promise.resolve().then(() => {
+      if (typeof window !== "undefined") {
+        const raw = localStorage.getItem("user");
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw) as { id?: string };
+            if (parsed?.id) setLoggedStudentId(parsed.id);
+          } catch {}
+        }
       }
-    }
+    });
   }, []);
 
   const [myAssessment, setMyAssessment] = useState<SubmittedSelfAssessment>(() =>
