@@ -8,12 +8,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -36,11 +41,14 @@ class UserServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @TempDir
+    Path tempDir;
+
     private UserServiceImpl userService;
 
     @BeforeEach
     void setUp() {
-        userService = new UserServiceImpl(userRepository, passwordEncoder);
+        userService = new UserServiceImpl(userRepository, passwordEncoder, null, tempDir.toString());
     }
 
     @Test
@@ -89,10 +97,11 @@ class UserServiceTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"image/jpeg", "image/jpg", "image/png"})
-    @DisplayName("US01 - formatos válidos (JPG, JPEG, PNG) devem ser aceitos com sucesso")
-    void shouldAcceptValidFormats(String validContentType) {
+    @DisplayName("US01 - formatos válidos (JPG, JPEG, PNG) devem ser aceitos com sucesso e persistir arquivo no storage e URL pública no usuário")
+    void shouldAcceptValidFormats(String validContentType) throws IOException {
         var request = new RegisterUserRequest("Ana Silva", "ana@uefs.br", "senhaForte123");
-        var validPhoto = new MockMultipartFile("photo", "foto.img", validContentType, "conteudo-ok".getBytes());
+        byte[] photoBytes = "conteudo-ok".getBytes();
+        var validPhoto = new MockMultipartFile("photo", "foto.img", validContentType, photoBytes);
 
         when(passwordEncoder.encode(any())).thenReturn("hash");
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -101,5 +110,17 @@ class UserServiceTest {
 
         assertThat(savedUser).isNotNull();
         assertThat(savedUser.getName()).isEqualTo("Ana Silva");
+
+        String expectedExtension = "image/png".equals(validContentType) ? ".png" : ".jpg";
+        assertThat(savedUser.getProfilePictureUrl())
+                .isNotNull()
+                .contains("/fotosPerfil/")
+                .endsWith(expectedExtension);
+
+        String storedFilename = savedUser.getProfilePictureUrl()
+                .substring(savedUser.getProfilePictureUrl().lastIndexOf('/') + 1);
+        Path storedFile = tempDir.resolve(storedFilename);
+        assertThat(Files.exists(storedFile)).isTrue();
+        assertThat(Files.readAllBytes(storedFile)).isEqualTo(photoBytes);
     }
 }
