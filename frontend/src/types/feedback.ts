@@ -49,6 +49,7 @@ export interface FeedbackPayload {
   sessionId?: string;
   targetType: FeedbackTargetType;
   studentId?: string;
+  studentIds?: string[];
   message: string;
   grade?: number;
 }

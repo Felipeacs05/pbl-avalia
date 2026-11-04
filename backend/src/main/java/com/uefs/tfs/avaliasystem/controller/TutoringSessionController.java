@@ -149,6 +149,7 @@ public class TutoringSessionController {
         Room room = problem.getRoom();
         List<RoomMember> members = roomMemberRepository.findByRoomIdAndActiveTrueAndRole(room.getId(), Role.STUDENT);
 
+        boolean isSelfReleased = Boolean.TRUE.equals(problem.getSelfAssessmentReleased());
         List<Map<String, Object>> result = new ArrayList<>();
         for (RoomMember rm : members) {
             User student = rm.getUser();
@@ -162,39 +163,80 @@ public class TutoringSessionController {
                 perfCalculatedGrade = n.doubleValue();
             }
 
+            List<Assessment> targetAssessments = assessmentRepository.findByProblemIdAndTargetId(problem.getId(), student.getId());
+            List<Map<String, Object>> peerEvals = new ArrayList<>();
+            Map<String, Object> selfEval = null;
+            for (Assessment a : targetAssessments) {
+                if (a.getEvaluator().getId().equals(student.getId())) {
+                    selfEval = Map.of(
+                            "score", a.getScore(),
+                            "comments", a.getComment() != null ? a.getComment() : "",
+                            "submitted", true
+                    );
+                } else {
+                    Map<String, Object> p = new HashMap<>();
+                    p.put("evaluatorName", a.getEvaluator().getName());
+                    p.put("score", a.getScore());
+                    p.put("comments", a.getComment() != null ? a.getComment() : "");
+                    peerEvals.add(p);
+                }
+            }
+
             Map<String, Object> item = new HashMap<>();
             item.put("sessionId", session.getId().toString());
             item.put("problemId", problem.getId().toString());
             item.put("studentId", student.getId().toString());
             item.put("studentName", student.getName());
             item.put("avatarUrl", student.getProfilePictureUrl());
+            item.put("peerEvaluations", peerEvals);
+            item.put("selfEvaluation", selfEval);
+            item.put("studentComment", assessmentOpt.map(Assessment::getComment).orElse(""));
 
-            if (assessmentOpt.isPresent()) {
-                Assessment a = assessmentOpt.get();
-                item.put("id", a.getId().toString());
-                item.put("status", "submitted");
+            if (isSelfReleased) {
+                if (assessmentOpt.isPresent()) {
+                    Assessment a = assessmentOpt.get();
+                    item.put("id", a.getId().toString());
+                    item.put("status", "submitted");
 
-                Double baseScore = (Boolean.TRUE.equals(a.getModifiedByTutor()) && a.getAdjustedGrade() != null)
-                        ? a.getAdjustedGrade()
-                        : (perfCalculatedGrade != null ? perfCalculatedGrade : a.getScore());
+                    boolean isModified = Boolean.TRUE.equals(a.getModifiedByTutor()) && a.getAdjustedGrade() != null;
+                    Double finalScore = isModified ? a.getAdjustedGrade() : a.getScore();
+                    Double origScore = a.getOriginalGrade() != null ? a.getOriginalGrade() : a.getScore();
 
-                item.put("score", baseScore);
-                item.put("nota_original", a.getOriginalGrade() != null ? a.getOriginalGrade() : baseScore);
-                item.put("originalGrade", a.getOriginalGrade() != null ? a.getOriginalGrade() : baseScore);
-                item.put("adjustedGrade", a.getAdjustedGrade());
-                item.put("ajustado_por_tutor", Boolean.TRUE.equals(a.getModifiedByTutor()));
-                item.put("modifiedByTutor", Boolean.TRUE.equals(a.getModifiedByTutor()));
-                item.put("justification", a.getJustification());
+                    item.put("score", finalScore);
+                    item.put("nota_original", origScore);
+                    item.put("originalGrade", origScore);
+                    item.put("adjustedGrade", a.getAdjustedGrade());
+                    item.put("ajustado_por_tutor", isModified);
+                    item.put("modifiedByTutor", isModified);
+                    item.put("justification", a.getJustification());
+                } else {
+                    item.put("id", "pending-" + student.getId().toString());
+                    item.put("status", "pending");
+                    item.put("score", null);
+                    item.put("nota_original", null);
+                    item.put("originalGrade", null);
+                    item.put("adjustedGrade", null);
+                    item.put("ajustado_por_tutor", false);
+                    item.put("modifiedByTutor", false);
+                    item.put("justification", null);
+                }
             } else {
-                item.put("id", "pending-" + student.getId().toString());
-                item.put("status", perfCalculatedGrade != null ? "submitted" : "pending");
-                item.put("score", perfCalculatedGrade);
-                item.put("nota_original", perfCalculatedGrade);
-                item.put("originalGrade", perfCalculatedGrade);
-                item.put("adjustedGrade", null);
-                item.put("ajustado_por_tutor", false);
-                item.put("modifiedByTutor", false);
-                item.put("justification", null);
+                boolean hasPerf = perfCalculatedGrade != null;
+                boolean isModified = assessmentOpt.isPresent() && Boolean.TRUE.equals(assessmentOpt.get().getModifiedByTutor()) && assessmentOpt.get().getAdjustedGrade() != null;
+                Double finalScore = isModified
+                        ? assessmentOpt.get().getAdjustedGrade()
+                        : (hasPerf ? perfCalculatedGrade : assessmentOpt.map(Assessment::getScore).orElse(null));
+                Double origScore = hasPerf ? perfCalculatedGrade : assessmentOpt.map(Assessment::getScore).orElse(null);
+
+                item.put("id", assessmentOpt.map(a -> a.getId().toString()).orElse("pending-" + student.getId().toString()));
+                item.put("status", finalScore != null ? "submitted" : "pending");
+                item.put("score", finalScore);
+                item.put("nota_original", origScore);
+                item.put("originalGrade", origScore);
+                item.put("adjustedGrade", isModified ? assessmentOpt.get().getAdjustedGrade() : null);
+                item.put("ajustado_por_tutor", isModified);
+                item.put("modifiedByTutor", isModified);
+                item.put("justification", assessmentOpt.map(Assessment::getJustification).orElse(null));
             }
             result.add(item);
         }
@@ -234,6 +276,32 @@ public class TutoringSessionController {
             }
             data.put("tags", currentTags);
         }
+
+        TutoringSession session = tutoringSessionRepository.findById(sessionId).orElse(null);
+        if (session != null) {
+            Problem problem = session.getProblem();
+            List<Assessment> targetAssessments = assessmentRepository.findByProblemIdAndTargetId(problem.getId(), studentId);
+            List<Map<String, Object>> peerEvals = new ArrayList<>();
+            Map<String, Object> selfEval = null;
+            for (Assessment a : targetAssessments) {
+                if (a.getEvaluator().getId().equals(studentId)) {
+                    selfEval = Map.of(
+                            "score", a.getScore(),
+                            "comments", a.getComment() != null ? a.getComment() : "",
+                            "submitted", true
+                    );
+                } else {
+                    Map<String, Object> p = new HashMap<>();
+                    p.put("evaluatorName", a.getEvaluator().getName());
+                    p.put("score", a.getScore());
+                    p.put("comments", a.getComment() != null ? a.getComment() : "");
+                    peerEvals.add(p);
+                }
+            }
+            data.put("selfEvaluation", selfEval);
+            data.put("peerEvaluations", peerEvals);
+        }
+
         return ResponseEntity.ok(data);
     }
 
@@ -361,22 +429,34 @@ public class TutoringSessionController {
         boolean isModifiedByTutor = false;
         String justification = null;
 
-        if (assessmentOpt.isPresent()) {
-            Assessment a = assessmentOpt.get();
-            if (a.getAdjustedGrade() != null) {
-                grade = a.getAdjustedGrade();
-                adjustedGrade = a.getAdjustedGrade();
+        boolean isSelfReleased = Boolean.TRUE.equals(problem.getSelfAssessmentReleased());
+        if (isSelfReleased) {
+            if (assessmentOpt.isPresent()) {
+                Assessment a = assessmentOpt.get();
+                if (Boolean.TRUE.equals(a.getModifiedByTutor()) && a.getAdjustedGrade() != null) {
+                    grade = a.getAdjustedGrade();
+                    adjustedGrade = a.getAdjustedGrade();
+                    isModifiedByTutor = true;
+                } else {
+                    grade = a.getScore();
+                }
+                originalGrade = a.getOriginalGrade() != null ? a.getOriginalGrade() : a.getScore();
+                justification = a.getJustification();
+            }
+        } else {
+            if (assessmentOpt.isPresent() && Boolean.TRUE.equals(assessmentOpt.get().getModifiedByTutor()) && assessmentOpt.get().getAdjustedGrade() != null) {
+                grade = assessmentOpt.get().getAdjustedGrade();
+                adjustedGrade = assessmentOpt.get().getAdjustedGrade();
                 isModifiedByTutor = true;
+                originalGrade = perfCalculatedGrade != null ? perfCalculatedGrade : assessmentOpt.get().getOriginalGrade();
+                justification = assessmentOpt.get().getJustification();
             } else if (perfCalculatedGrade != null) {
                 grade = perfCalculatedGrade;
-            } else {
-                grade = a.getScore();
+                originalGrade = perfCalculatedGrade;
+            } else if (assessmentOpt.isPresent()) {
+                grade = assessmentOpt.get().getScore();
+                originalGrade = assessmentOpt.get().getScore();
             }
-            originalGrade = a.getOriginalGrade() != null ? a.getOriginalGrade() : a.getScore();
-            justification = a.getJustification();
-        } else if (perfCalculatedGrade != null) {
-            grade = perfCalculatedGrade;
-            originalGrade = perfCalculatedGrade;
         }
 
         List<BehaviorRecord> records = behaviorRecordRepository.findBySessionIdAndStudentId(sessionId, studentId);

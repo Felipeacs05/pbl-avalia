@@ -177,6 +177,19 @@ export async function submitFeedback(payload: FeedbackPayload): Promise<Feedback
       } catch (err) {
         console.warn("Could not save feedback to backend API", err);
       }
+    } else if (payload.targetType === "CLASS" && payload.studentIds && payload.studentIds.length > 0) {
+      try {
+        await feedbackService.sendBatchFeedback(
+          payload.problemId,
+          payload.studentIds.map((sid) => ({
+            studentId: sid,
+            grade: 10,
+            text: payload.message.trim(),
+          }))
+        );
+      } catch (err) {
+        console.warn("Could not save batch feedback to backend API", err);
+      }
     }
   }
 
