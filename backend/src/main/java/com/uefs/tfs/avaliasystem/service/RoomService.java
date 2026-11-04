@@ -95,19 +95,37 @@ public class RoomService {
 
         if (entityManager != null) {
             try {
-                entityManager.createNativeQuery("DELETE FROM session_role_assignments WHERE session_id IN (SELECT ts.id FROM tutoring_sessions ts JOIN problems p ON ts.problem_id = p.id WHERE p.room_id = :roomId)").setParameter("roomId", roomId).executeUpdate();
-                entityManager.createNativeQuery("DELETE FROM attendance WHERE session_id IN (SELECT ts.id FROM tutoring_sessions ts JOIN problems p ON ts.problem_id = p.id WHERE p.room_id = :roomId)").setParameter("roomId", roomId).executeUpdate();
+                // 1. Filhos de sessões tutoriais (cargos, presenças, registros de comportamento e feedbacks)
+                entityManager.createNativeQuery("DELETE FROM session_role_assignment WHERE session_id IN (SELECT ts.id FROM tutoring_sessions ts JOIN problems p ON ts.problem_id = p.id WHERE p.room_id = :roomId)").setParameter("roomId", roomId).executeUpdate();
+                entityManager.createNativeQuery("DELETE FROM attendances WHERE session_id IN (SELECT ts.id FROM tutoring_sessions ts JOIN problems p ON ts.problem_id = p.id WHERE p.room_id = :roomId)").setParameter("roomId", roomId).executeUpdate();
                 entityManager.createNativeQuery("DELETE FROM behavior_record WHERE session_id IN (SELECT ts.id FROM tutoring_sessions ts JOIN problems p ON ts.problem_id = p.id WHERE p.room_id = :roomId)").setParameter("roomId", roomId).executeUpdate();
+                entityManager.createNativeQuery("DELETE FROM feedbacks WHERE session_id IN (SELECT ts.id FROM tutoring_sessions ts JOIN problems p ON ts.problem_id = p.id WHERE p.room_id = :roomId) OR problem_id IN (SELECT p.id FROM problems p WHERE p.room_id = :roomId)").setParameter("roomId", roomId).executeUpdate();
+
+                // 2. Sessões tutoriais
                 entityManager.createNativeQuery("DELETE FROM tutoring_sessions WHERE problem_id IN (SELECT p.id FROM problems p WHERE p.room_id = :roomId)").setParameter("roomId", roomId).executeUpdate();
+
+                // 3. Tags de comportamento da sala
+                entityManager.createNativeQuery("DELETE FROM behavior_tag WHERE room_id = :roomId").setParameter("roomId", roomId).executeUpdate();
+
+                // 4. Avaliações (autoavaliação e avaliação por pares)
                 entityManager.createNativeQuery("DELETE FROM assessments WHERE problem_id IN (SELECT p.id FROM problems p WHERE p.room_id = :roomId)").setParameter("roomId", roomId).executeUpdate();
-                entityManager.createNativeQuery("DELETE FROM feedbacks WHERE problem_id IN (SELECT p.id FROM problems p WHERE p.room_id = :roomId)").setParameter("roomId", roomId).executeUpdate();
+
+                // 5. Critérios e tabelas de desempenho vinculados à sala ou aos problemas da sala
+                entityManager.createNativeQuery("DELETE FROM criteria WHERE performance_table_id IN (SELECT pt.id FROM performance_tables pt WHERE pt.room_id = :roomId OR pt.problem_id IN (SELECT p.id FROM problems p WHERE p.room_id = :roomId))").setParameter("roomId", roomId).executeUpdate();
+                entityManager.createNativeQuery("DELETE FROM performance_tables WHERE room_id = :roomId OR problem_id IN (SELECT p.id FROM problems p WHERE p.room_id = :roomId)").setParameter("roomId", roomId).executeUpdate();
+
+                // 6. Problemas da sala
                 entityManager.createNativeQuery("DELETE FROM problems WHERE room_id = :roomId").setParameter("roomId", roomId).executeUpdate();
-                entityManager.createNativeQuery("DELETE FROM group_members WHERE group_id IN (SELECT g.id FROM groups g WHERE g.room_id = :roomId)").setParameter("roomId", roomId).executeUpdate();
+
+                // 7. Grupos e membros de grupos
+                entityManager.createNativeQuery("DELETE FROM group_member WHERE group_id IN (SELECT g.id FROM groups g WHERE g.room_id = :roomId)").setParameter("roomId", roomId).executeUpdate();
                 entityManager.createNativeQuery("DELETE FROM groups WHERE room_id = :roomId").setParameter("roomId", roomId).executeUpdate();
-                entityManager.createNativeQuery("DELETE FROM behavior_tags WHERE room_id = :roomId").setParameter("roomId", roomId).executeUpdate();
+
+                // 8. Desvincula e remove todos os alunos/membros (room_members) e times (teams)
                 entityManager.createNativeQuery("DELETE FROM room_members WHERE room_id = :roomId").setParameter("roomId", roomId).executeUpdate();
+                entityManager.createNativeQuery("DELETE FROM teams WHERE room_id = :roomId").setParameter("roomId", roomId).executeUpdate();
             } catch (Exception ignored) {
-                // Continua para tentar a exclusão padrão caso alguma tabela não exista no esquema de teste
+                // Mantém tolerância para ambientes parciais de testes unitários
             }
         }
 

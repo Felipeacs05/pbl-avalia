@@ -68,7 +68,7 @@ export default function ProblemDetailsPage() {
       .then((students) => {
         if (Array.isArray(students)) {
           setRealStudents(
-            students.map((s) => ({
+            students.filter((s: any) => s.role !== "TUTOR").map((s) => ({
               id: s.id,
               name: s.name,
               email: s.email,

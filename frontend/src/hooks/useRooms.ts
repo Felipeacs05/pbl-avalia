@@ -96,6 +96,12 @@ export function useRooms(role?: 'teacher' | 'student') {
       ...newRoom,
     };
     setRooms((prev) => [...prev, created]);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("pbl_rooms_sync", String(Date.now()));
+        window.dispatchEvent(new CustomEvent("rooms:updated"));
+      } catch {}
+    }
 
     // Com a API real, sincroniza a lista com o que o servidor gravou
     if (USE_REAL_API) {
@@ -111,9 +117,33 @@ export function useRooms(role?: 'teacher' | 'student') {
     setRooms((prev) => prev.map((r) => (r.id === roomId ? { ...r, name: newName } : r)));
   };
 
+  useEffect(() => {
+    if (typeof window === "undefined" || IS_TEST) return;
+
+    const handleSync = () => {
+      void refreshRooms();
+    };
+
+    window.addEventListener("storage", handleSync);
+    window.addEventListener("focus", handleSync);
+    window.addEventListener("rooms:updated", handleSync);
+
+    return () => {
+      window.removeEventListener("storage", handleSync);
+      window.removeEventListener("focus", handleSync);
+      window.removeEventListener("rooms:updated", handleSync);
+    };
+  }, [refreshRooms]);
+
   const deleteRoom = async (roomId: string) => {
     await roomService.deleteRoom(roomId);
     setRooms((prev) => prev.filter((r) => r.id !== roomId));
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("pbl_rooms_sync", String(Date.now()));
+        window.dispatchEvent(new CustomEvent("rooms:updated"));
+      } catch {}
+    }
   };
 
   return {

@@ -4,10 +4,47 @@
 import React from "react";
 
 export interface SessionQuickTagsCardProps {
-  tags: string[];
+  tags?:
+    | string[]
+    | { positive?: string[]; negative?: string[]; comments?: string[] }
+    | Record<string, unknown>
+    | null;
 }
 
 export function SessionQuickTagsCard({ tags }: SessionQuickTagsCardProps) {
+  const normalizedTags: string[] = React.useMemo(() => {
+    if (!tags) return [];
+    if (Array.isArray(tags)) {
+      return tags.filter(
+        (t): t is string => typeof t === "string" && t.trim().length > 0
+      );
+    }
+    if (typeof tags === "object") {
+      const list: string[] = [];
+      const obj = tags as Record<string, unknown>;
+      ["positive", "negative", "comments", "tags"].forEach((key) => {
+        const val = obj[key];
+        if (Array.isArray(val)) {
+          val.forEach((item) => {
+            if (typeof item === "string" && item.trim().length > 0) {
+              list.push(item);
+            }
+          });
+        }
+      });
+      if (list.length > 0) return list;
+
+      return Object.values(obj)
+        .flatMap((v) =>
+          Array.isArray(v) ? v : typeof v === "string" ? [v] : []
+        )
+        .filter(
+          (t): t is string => typeof t === "string" && t.trim().length > 0
+        );
+    }
+    return [];
+  }, [tags]);
+
   return (
     <section
       aria-label="Marcações rápidas de feedback da sessão"
@@ -20,12 +57,12 @@ export function SessionQuickTagsCard({ tags }: SessionQuickTagsCardProps) {
       </h2>
 
       <div className="flex flex-wrap gap-2.5 justify-center">
-        {tags.length === 0 ? (
+        {normalizedTags.length === 0 ? (
           <p className="text-sm font-medium text-white/80 py-4 text-center">
             Nenhuma marcação recebida nesta sessão.
           </p>
         ) : (
-          tags.map((tag, index) => {
+          normalizedTags.map((tag, index) => {
             const isLong = tag.length > 22;
             return (
               <div
