@@ -34,6 +34,7 @@ target/
 backend/.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+.env
 backend/.env
 
 # ==========================================
@@ -48,3 +49,7 @@ frontend/.env.development.local
 frontend/.env.test.local
 frontend/.env.production.local
 .eslintcache
+
+docs/local/
+ignore_tests/
+backend/ignore_tests/

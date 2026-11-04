@@ -7,6 +7,7 @@ import com.uefs.tfs.avaliasystem.dto.BehaviorRecordRequest;
 import com.uefs.tfs.avaliasystem.dto.BehaviorRecordResponse;
 import com.uefs.tfs.avaliasystem.dto.BehaviorTagResponse;
 import com.uefs.tfs.avaliasystem.service.BehaviorRecordService;
+import com.uefs.tfs.avaliasystem.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -40,6 +41,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestConfig
 @DisplayName("[US11] Controller de registro de comportamento")
 class BehaviorRecordControllerTest {
+
+    @MockitoBean
+    private UserRepository userRepository;
 
     @Autowired
     private MockMvc mockMvc;

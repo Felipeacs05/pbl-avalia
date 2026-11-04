@@ -9,6 +9,7 @@ import com.uefs.tfs.avaliasystem.dto.ClassRosterDTO;
 import com.uefs.tfs.avaliasystem.dto.PageResponse;
 import com.uefs.tfs.avaliasystem.security.RoomSecurity;
 import com.uefs.tfs.avaliasystem.service.ClassRosterService;
+import com.uefs.tfs.avaliasystem.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -47,6 +48,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(SecurityConfig.class)
 @TestConfig
 class ClassRosterControllerTest {
+
+    @MockitoBean
+    private UserRepository userRepository;
 
     private static final String URL = "/api/v1/rooms/{roomId}/roster";
 

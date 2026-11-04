@@ -86,7 +86,7 @@ public class UserServiceImpl implements UserService {
            throw new InvalidCredentialsException();
        }
        //agora sim começa o login
-       String token = jwtService.generateToken(user.getId());
+       String token = jwtService.generateToken(user.getId(), user.getTokenVersion());
        long expiresAt = System.currentTimeMillis() + jwtService.getExpirationTime();
 
        return new LoginResponse(token, expiresAt);
@@ -102,4 +102,3 @@ public class UserServiceImpl implements UserService {
      */
 
 }
-

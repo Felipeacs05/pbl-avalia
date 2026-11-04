@@ -36,10 +36,6 @@ public class Feedback {
     private String text;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tutor_id", nullable = false)
-    private User tutor;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "session_id") // opcional
     private TutoringSession session;
 

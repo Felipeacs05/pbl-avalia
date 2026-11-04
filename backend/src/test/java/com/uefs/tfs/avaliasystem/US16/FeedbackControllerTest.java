@@ -6,6 +6,7 @@ import com.uefs.tfs.avaliasystem.controller.FeedbackController;
 import com.uefs.tfs.avaliasystem.dto.FeedbackResponse;
 import com.uefs.tfs.avaliasystem.exception.ProblemNotFoundException;
 import com.uefs.tfs.avaliasystem.service.FeedbackService;
+import com.uefs.tfs.avaliasystem.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -40,6 +41,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(SecurityConfig.class)
 @TestConfig
 class FeedbackControllerTest {
+
+    @MockitoBean
+    private UserRepository userRepository;
 
     private static final String URL = "/api/v1/problems/{problemId}/feedbacks";
     private static final String BATCH_URL = "/api/v1/problems/{problemId}/feedbacks/batch";

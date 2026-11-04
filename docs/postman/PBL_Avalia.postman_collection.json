@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
     "name": "PBL Avalia - API Completa (Docker)",
-    "description": "Coleção completa para testar todos os endpoints da API PBL Avalia rodando via Docker.\n\n### Como usar:\n1. Suba o Docker com `docker compose up --build -d` (porta 8080).\n2. Execute as pastas na ordem numérica (01 -> 09).\n3. Os scripts na aba **Tests** das requisições já salvam automaticamente os Tokens JWT (`tutorToken`, `studentToken`, `student2Token`) e os IDs (`roomId`, `roomCode`, `groupId`, `problemId`, `tableId`, `criterion1Id`, `criterion2Id`) nas variáveis da coleção!",
+    "description": "Coleção completa para testar os endpoints da API PBL Avalia rodando via Docker.\n\n### Como usar:\n1. Suba o Docker com `docker compose up --build -d` (porta 8080).\n2. Execute as pastas de 01 a 09 na ordem indicada. A pasta 10 é bônus e a pasta 11 (US21) pode ser executada separadamente.\n3. Os scripts na aba **Tests** das requisições já salvam automaticamente os Tokens JWT (`tutorToken`, `studentToken`, `student2Token`) e os IDs (`roomId`, `roomCode`, `groupId`, `problemId`, `tableId`, `criterion1Id`, `criterion2Id`) nas variáveis da coleção!",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -94,6 +94,21 @@
     {
       "key": "assessmentId",
       "value": "",
+      "type": "string"
+    },
+    {
+      "key": "recoveryEmail",
+      "value": "tutor@uefs.br",
+      "type": "string"
+    },
+    {
+      "key": "passwordResetToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "passwordResetNewPassword",
+      "value": "NovaSenhaForte123!",
       "type": "string"
     }
   ],
@@ -1393,6 +1408,85 @@
           "response": []
         }
       ]
-    }
+    },
+    {
+      "name": "11. Recuperação de senha (US21)",
+          "item": [
+            {
+              "name": "11.1 Solicitar redefinição de senha",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('A API aceita a solicitação sem revelar se o e-mail existe', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "    pm.expect(pm.response.json().message).to.eql('Se o e-mail estiver cadastrado, você receberá as instruções para redefinir sua senha.');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{recoveryEmail}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/password/recover",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "password", "recover"]
+                },
+                "description": "Solicita o envio do link para o e-mail configurado em `{{recoveryEmail}}`. A resposta é igual exista ou não uma conta com esse e-mail."
+              },
+              "response": []
+            },
+            {
+              "name": "11.2 Redefinir senha com token recebido",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('A senha foi redefinida com sucesso', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "    pm.expect(pm.response.json().message).to.eql('Senha redefinida com sucesso.');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"{{passwordResetToken}}\",\n  \"newPassword\": \"{{passwordResetNewPassword}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/password/reset",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "password", "reset"]
+                },
+                "description": "Antes de executar, solicite a redefinição em 11.1, copie o valor do parâmetro `token` recebido no e-mail para `{{passwordResetToken}}` e então envie esta requisição. Após o sucesso, faça login novamente: os JWTs anteriores serão invalidados."
+              },
+              "response": []
+            }
+          ]
+        }
   ]
 }

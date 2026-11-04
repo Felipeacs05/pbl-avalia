@@ -11,6 +11,7 @@ import com.uefs.tfs.avaliasystem.dto.CriterionWeightRequest;
 import com.uefs.tfs.avaliasystem.dto.PerformanceTableResponse;
 import com.uefs.tfs.avaliasystem.exception.InvalidWeightSumException;
 import com.uefs.tfs.avaliasystem.service.PerformanceTableService;
+import com.uefs.tfs.avaliasystem.repository.UserRepository;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,6 +43,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestConfig
 @DisplayName("US08 - Testes de Controller dos pesos dos critérios")
 class CriteriaWeightControllerTest {
+
+    @MockitoBean
+    private UserRepository userRepository;
 
     @Autowired
     private MockMvc mockMvc;

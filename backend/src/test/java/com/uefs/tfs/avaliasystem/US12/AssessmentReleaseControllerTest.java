@@ -5,6 +5,7 @@ import com.uefs.tfs.avaliasystem.controller.AssessmentReleaseController;
 import com.uefs.tfs.avaliasystem.model.Problem;
 import com.uefs.tfs.avaliasystem.config.SecurityConfig;
 import com.uefs.tfs.avaliasystem.service.AssessmentReleaseService;
+import com.uefs.tfs.avaliasystem.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -36,6 +37,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(SecurityConfig.class)
 @TestConfig
 class AssessmentReleaseControllerTest {
+
+    @MockitoBean
+    private UserRepository userRepository;
 
     @Autowired
     private MockMvc mockMvc;
