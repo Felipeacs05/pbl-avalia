@@ -4,12 +4,13 @@ import com.uefs.tfs.avaliasystem.dto.LoginResponse;
 import com.uefs.tfs.avaliasystem.exception.InvalidCredentialsException;
 import com.uefs.tfs.avaliasystem.model.User;
 import com.uefs.tfs.avaliasystem.repository.UserRepository;
+import com.uefs.tfs.avaliasystem.service.JwtService;
 import com.uefs.tfs.avaliasystem.service.UserServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -40,10 +41,17 @@ class UserServiceLoginTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
-    @InjectMocks
+    @Mock
+    private JwtService jwtService;
+
     private UserServiceImpl userService;
 
     private static final String GENERIC_MESSAGE = "Credenciais inválidas";
+
+    @BeforeEach
+    void setUp() {
+        userService = new UserServiceImpl(userRepository, passwordEncoder, jwtService);
+    }
 
     @Nested
     @DisplayName("Testes de Privacidade e Falhas de Autenticação (CA2)")
