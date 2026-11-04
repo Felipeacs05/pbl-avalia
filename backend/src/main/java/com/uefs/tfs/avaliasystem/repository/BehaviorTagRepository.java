@@ -10,4 +10,6 @@ import java.util.UUID;
 @Repository
 public interface BehaviorTagRepository extends JpaRepository<BehaviorTag, UUID> {
     List<BehaviorTag> findAllByRoomIdOrderByNameAsc(UUID roomId);
+
+    void deleteByRoomId(UUID roomId);
 }

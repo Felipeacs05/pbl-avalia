@@ -27,4 +27,8 @@ public interface SessionRoleAssignmentRepository extends JpaRepository<SessionRo
             WHERE p.room.id = :roomId
             """)
     List<SessionRoleAssignment> findAllInRoom(@Param("roomId") UUID roomId);
+
+    void deleteBySessionProblemId(UUID problemId);
+
+    void deleteBySessionProblemRoomId(UUID roomId);
 }

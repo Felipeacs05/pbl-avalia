@@ -3,6 +3,8 @@ package com.uefs.tfs.avaliasystem.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,10 +33,12 @@ public class PerformanceTable {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Room room;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "problem_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Problem problem;
 
     @OneToMany(mappedBy = "performanceTable", cascade = CascadeType.ALL, orphanRemoval = true)

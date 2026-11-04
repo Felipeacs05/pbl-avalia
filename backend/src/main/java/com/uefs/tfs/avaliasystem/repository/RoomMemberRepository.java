@@ -71,5 +71,6 @@ public interface RoomMemberRepository extends JpaRepository<RoomMember, UUID> {
             """)
     List<User> findAvailableStudentsByRoomId(@Param("roomId") UUID roomId);
 
+    void deleteByRoomId(UUID roomId);
 
 }

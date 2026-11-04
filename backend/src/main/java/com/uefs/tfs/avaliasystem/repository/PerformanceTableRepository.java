@@ -13,6 +13,16 @@ import java.util.UUID;
 public interface PerformanceTableRepository extends JpaRepository<PerformanceTable, UUID> {
     List<PerformanceTable> findByRoomId(UUID roomId);
 
+    List<PerformanceTable> findByProblemId(UUID problemId);
+
+    List<PerformanceTable> findByProblemRoomId(UUID roomId);
+
+    void deleteByRoomId(UUID roomId);
+
+    void deleteByProblemId(UUID problemId);
+
+    void deleteByProblemRoomId(UUID roomId);
+
     @Query("""
             SELECT COUNT(pt) > 0
             FROM PerformanceTable pt

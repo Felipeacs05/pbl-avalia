@@ -20,4 +20,6 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, UUID> 
     boolean existsByGroupRoomIdAndUserId(UUID roomId, UUID userId);
 
     Optional<GroupMember> findByGroupRoomIdAndUserId(UUID roomId, UUID userId);
+
+    void deleteByGroupRoomId(UUID roomId);
 }

@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -28,6 +30,7 @@ public class BehaviorRecord {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "session_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private TutoringSession session;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -36,6 +39,7 @@ public class BehaviorRecord {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tag_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private BehaviorTag tag;
 
     @Column(name = "text", length = 500)

@@ -35,7 +35,7 @@ CREATE TABLE teams (
     name VARCHAR(255) NOT NULL,
     room_id UUID NOT NULL,
     CONSTRAINT pk_teams PRIMARY KEY (id),
-    CONSTRAINT fk_teams_room FOREIGN KEY (room_id) REFERENCES rooms (id)
+    CONSTRAINT fk_teams_room FOREIGN KEY (room_id) REFERENCES rooms (id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_teams_room_id ON teams (room_id); -- Permite localizar os times pela FK room_id sem percorrer toda a tabela de times.
@@ -51,9 +51,9 @@ CREATE TABLE room_members (
     unlinked_at TIMESTAMP WITH TIME ZONE,
     team_id UUID,
     CONSTRAINT pk_room_members PRIMARY KEY (id),
-    CONSTRAINT fk_room_members_room FOREIGN KEY (room_id) REFERENCES rooms (id),
+    CONSTRAINT fk_room_members_room FOREIGN KEY (room_id) REFERENCES rooms (id) ON DELETE CASCADE,
     CONSTRAINT fk_room_members_user FOREIGN KEY (user_id) REFERENCES users (id),
-    CONSTRAINT fk_room_members_team FOREIGN KEY (team_id) REFERENCES teams (id)
+    CONSTRAINT fk_room_members_team FOREIGN KEY (team_id) REFERENCES teams (id) ON DELETE SET NULL
 );
 
 CREATE INDEX idx_room_members_room_id ON room_members (room_id); -- Consultas de membros por sala filtram por room_id; o índice evita examinar vínculos de outras salas.
@@ -67,7 +67,7 @@ CREATE TABLE groups (
     name VARCHAR(255) NOT NULL,
     room_id UUID NOT NULL,
     CONSTRAINT pk_groups PRIMARY KEY (id),
-    CONSTRAINT fk_group_room FOREIGN KEY (room_id) REFERENCES rooms (id)
+    CONSTRAINT fk_group_room FOREIGN KEY (room_id) REFERENCES rooms (id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_groups_room_id ON groups (room_id); -- GroupRepository.findByRoomId filtra por room_id; o índice evita percorrer grupos de outras salas.
@@ -79,7 +79,7 @@ CREATE TABLE group_member (
     user_id UUID NOT NULL,
     CONSTRAINT pk_group_member PRIMARY KEY (id),
     CONSTRAINT uk_group_member_group_user UNIQUE (group_id, user_id),
-    CONSTRAINT fk_group_member_group FOREIGN KEY (group_id) REFERENCES groups (id),
+    CONSTRAINT fk_group_member_group FOREIGN KEY (group_id) REFERENCES groups (id) ON DELETE CASCADE,
     CONSTRAINT fk_group_member_user FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
@@ -95,7 +95,7 @@ CREATE TABLE problems (
     peer_assessment_released BOOLEAN NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE,
     CONSTRAINT pk_problems PRIMARY KEY (id),
-    CONSTRAINT fk_problems_room FOREIGN KEY (room_id) REFERENCES rooms (id)
+    CONSTRAINT fk_problems_room FOREIGN KEY (room_id) REFERENCES rooms (id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_problems_room_id ON problems (room_id); -- ProblemRepository filtra por room_id para listar os problemas da sala sem examinar problemas de outras salas.
@@ -105,7 +105,7 @@ CREATE TABLE tutoring_sessions (
     id UUID NOT NULL,
     problem_id UUID NOT NULL,
     CONSTRAINT pk_tutoring_sessions PRIMARY KEY (id),
-    CONSTRAINT fk_tutoring_sessions_problem FOREIGN KEY (problem_id) REFERENCES problems (id)
+    CONSTRAINT fk_tutoring_sessions_problem FOREIGN KEY (problem_id) REFERENCES problems (id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_tutoring_sessions_problem_id ON tutoring_sessions (problem_id); -- Permite localizar as sessões pela FK problem_id sem percorrer sessões ligadas a outros problemas.
@@ -119,7 +119,7 @@ CREATE TABLE attendances (
     recorded_at TIMESTAMP WITH TIME ZONE NOT NULL,
     CONSTRAINT pk_attendances PRIMARY KEY (id),
     CONSTRAINT uk_attendance_session_student UNIQUE (session_id, student_id),
-    CONSTRAINT fk_attendances_session FOREIGN KEY (session_id) REFERENCES tutoring_sessions (id),
+    CONSTRAINT fk_attendances_session FOREIGN KEY (session_id) REFERENCES tutoring_sessions (id) ON DELETE CASCADE,
     CONSTRAINT fk_attendances_student FOREIGN KEY (student_id) REFERENCES users (id)
 );
 
@@ -135,7 +135,7 @@ CREATE TABLE session_role_assignment (
     CONSTRAINT pk_session_role_assignment PRIMARY KEY (id),
     CONSTRAINT uk_session_role UNIQUE (session_id, role),
     CONSTRAINT uk_session_student UNIQUE (session_id, student_id),
-    CONSTRAINT fk_session_role_assignment_session FOREIGN KEY (session_id) REFERENCES tutoring_sessions (id),
+    CONSTRAINT fk_session_role_assignment_session FOREIGN KEY (session_id) REFERENCES tutoring_sessions (id) ON DELETE CASCADE,
     CONSTRAINT fk_session_role_assignment_student FOREIGN KEY (student_id) REFERENCES users (id)
 );
 
@@ -155,7 +155,7 @@ CREATE TABLE assessments (
     justification VARCHAR(1000),
     modified_by_tutor BOOLEAN DEFAULT FALSE NOT NULL,
     CONSTRAINT pk_assessments PRIMARY KEY (id),
-    CONSTRAINT fk_assessments_problem FOREIGN KEY (problem_id) REFERENCES problems (id),
+    CONSTRAINT fk_assessments_problem FOREIGN KEY (problem_id) REFERENCES problems (id) ON DELETE CASCADE,
     CONSTRAINT fk_assessments_evaluator FOREIGN KEY (evaluator_id) REFERENCES users (id),
     CONSTRAINT fk_assessments_target FOREIGN KEY (target_id) REFERENCES users (id)
 );
@@ -173,7 +173,7 @@ CREATE TABLE feedbacks (
     feedback_text VARCHAR(2000) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE,
     CONSTRAINT pk_feedbacks PRIMARY KEY (id),
-    CONSTRAINT fk_feedbacks_problem FOREIGN KEY (problem_id) REFERENCES problems (id),
+    CONSTRAINT fk_feedbacks_problem FOREIGN KEY (problem_id) REFERENCES problems (id) ON DELETE CASCADE,
     CONSTRAINT fk_feedbacks_student FOREIGN KEY (student_id) REFERENCES users (id)
 );
 
@@ -186,7 +186,7 @@ CREATE TABLE behavior_tag (
     room_id UUID NOT NULL,
     name VARCHAR(255) NOT NULL,
     CONSTRAINT pk_behavior_tag PRIMARY KEY (id),
-    CONSTRAINT fk_behavior_tag_room FOREIGN KEY (room_id) REFERENCES rooms (id)
+    CONSTRAINT fk_behavior_tag_room FOREIGN KEY (room_id) REFERENCES rooms (id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_behavior_tag_room_id ON behavior_tag (room_id); -- BehaviorTagRepository filtra por room_id e ordena pelo nome; o índice reduz as tags candidatas da sala.
@@ -203,9 +203,9 @@ CREATE TABLE behavior_record (
     CONSTRAINT ck_has_tag_or_text CHECK (
         tag_id IS NOT NULL OR (text IS NOT NULL AND BTRIM(text) <> '')
     ),
-    CONSTRAINT fk_behavior_record_session FOREIGN KEY (session_id) REFERENCES tutoring_sessions (id),
+    CONSTRAINT fk_behavior_record_session FOREIGN KEY (session_id) REFERENCES tutoring_sessions (id) ON DELETE CASCADE,
     CONSTRAINT fk_behavior_record_student FOREIGN KEY (student_id) REFERENCES users (id),
-    CONSTRAINT fk_behavior_record_tag FOREIGN KEY (tag_id) REFERENCES behavior_tag (id)
+    CONSTRAINT fk_behavior_record_tag FOREIGN KEY (tag_id) REFERENCES behavior_tag (id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_behavior_record_session_id ON behavior_record (session_id); -- Permite filtrar registros pela sessão sem percorrer registros de outras sessões.
@@ -223,8 +223,8 @@ CREATE TABLE performance_tables (
         (room_id IS NOT NULL AND problem_id IS NULL)
         OR (room_id IS NULL AND problem_id IS NOT NULL)
     ),
-    CONSTRAINT fk_performance_tables_room FOREIGN KEY (room_id) REFERENCES rooms (id),
-    CONSTRAINT fk_performance_tables_problem FOREIGN KEY (problem_id) REFERENCES problems (id)
+    CONSTRAINT fk_performance_tables_room FOREIGN KEY (room_id) REFERENCES rooms (id) ON DELETE CASCADE,
+    CONSTRAINT fk_performance_tables_problem FOREIGN KEY (problem_id) REFERENCES problems (id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_performance_tables_room_id ON performance_tables (room_id); -- As consultas por tabela de desempenho da sala filtram room_id; o índice atende esse lado do proprietário opcional.
@@ -238,7 +238,7 @@ CREATE TABLE criteria (
     weight DOUBLE PRECISION NOT NULL,
     performance_table_id UUID NOT NULL,
     CONSTRAINT pk_criteria PRIMARY KEY (id),
-    CONSTRAINT fk_criteria_performance_table FOREIGN KEY (performance_table_id) REFERENCES performance_tables (id)
+    CONSTRAINT fk_criteria_performance_table FOREIGN KEY (performance_table_id) REFERENCES performance_tables (id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_criteria_performance_table_id ON criteria (performance_table_id); -- CriterionRepository.findByPerformanceTableId filtra pela tabela; o índice evita percorrer critérios de outras tabelas.

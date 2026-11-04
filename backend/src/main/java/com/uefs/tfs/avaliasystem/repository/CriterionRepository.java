@@ -10,4 +10,10 @@ import java.util.UUID;
 @Repository
 public interface CriterionRepository extends JpaRepository<Criterion, UUID> {
     List<Criterion> findByPerformanceTableId(UUID performanceTableId);
+
+    void deleteByPerformanceTableProblemId(UUID problemId);
+
+    void deleteByPerformanceTableProblemRoomId(UUID roomId);
+
+    void deleteByPerformanceTableRoomId(UUID roomId);
 }

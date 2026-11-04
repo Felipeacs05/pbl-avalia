@@ -12,4 +12,5 @@ public interface ProblemRepository extends JpaRepository<Problem, UUID> {
 
     List<Problem> findAllByRoomIdOrderByCreatedAtAsc(UUID roomId);
 
+    void deleteByRoomId(UUID roomId);
 }
