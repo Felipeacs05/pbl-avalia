@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -21,6 +23,7 @@ public class Assessment {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "problem_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Problem problem;
 
     @ManyToOne(fetch = FetchType.LAZY)

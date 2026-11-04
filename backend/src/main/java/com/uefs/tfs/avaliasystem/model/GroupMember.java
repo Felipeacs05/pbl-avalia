@@ -3,6 +3,8 @@ package com.uefs.tfs.avaliasystem.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.UUID;
 
@@ -28,6 +30,7 @@ public class GroupMember {
             nullable = false,
             foreignKey = @ForeignKey(name = "fk_group_member_group")
     )
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Group group;
 
     @ManyToOne(optional = false)

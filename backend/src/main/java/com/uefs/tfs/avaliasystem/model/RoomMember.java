@@ -3,6 +3,8 @@ package com.uefs.tfs.avaliasystem.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -19,6 +21,7 @@ public class RoomMember {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "room_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Room room;
 
     @ManyToOne(optional = false)
@@ -36,6 +39,7 @@ public class RoomMember {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_id")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private Team team;
 
     public String getName() {

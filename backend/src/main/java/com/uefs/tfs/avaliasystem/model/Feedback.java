@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -23,6 +25,7 @@ public class Feedback {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "problem_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Problem problem;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -37,6 +40,7 @@ public class Feedback {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "session_id") // opcional
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private TutoringSession session;
 
 

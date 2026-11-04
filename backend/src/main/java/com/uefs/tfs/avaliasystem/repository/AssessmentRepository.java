@@ -9,4 +9,8 @@ import java.util.List;
 public interface AssessmentRepository extends JpaRepository<Assessment, UUID> {
     Optional<Assessment> findByProblemIdAndEvaluatorIdAndTargetId(UUID problemId, UUID evaluatorId, UUID targetId);
     List<Assessment> findByProblemIdAndEvaluatorId(UUID problemId, UUID evaluatorId);
+
+    void deleteByProblemId(UUID problemId);
+
+    void deleteByProblemRoomId(UUID roomId);
 }

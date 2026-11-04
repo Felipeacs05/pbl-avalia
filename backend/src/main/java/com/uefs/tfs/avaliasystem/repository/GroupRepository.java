@@ -14,4 +14,6 @@ public interface GroupRepository extends JpaRepository<Group, UUID> {
     List<Group> findByRoomId(UUID roomId);
 
     Optional<Group> findByIdAndRoomId(UUID groupId, UUID roomId);
+
+    void deleteByRoomId(UUID roomId);
 }

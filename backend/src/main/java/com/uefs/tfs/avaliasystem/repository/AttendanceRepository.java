@@ -9,4 +9,8 @@ import java.util.UUID;
 public interface AttendanceRepository extends JpaRepository<Attendance, UUID> {
 
     Optional<Attendance> findBySessionIdAndStudentId(UUID sessionId, UUID studentId);
+
+    void deleteBySessionProblemId(UUID problemId);
+
+    void deleteBySessionProblemRoomId(UUID roomId);
 }

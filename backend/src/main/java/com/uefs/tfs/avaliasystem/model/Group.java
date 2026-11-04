@@ -3,6 +3,8 @@ package com.uefs.tfs.avaliasystem.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,9 +31,9 @@ public class Group {
             nullable = false,
             foreignKey = @ForeignKey(name = "fk_group_room")
     )
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Room room;
 
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<GroupMember> members = new ArrayList<>();
 }
-

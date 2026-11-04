@@ -8,4 +8,10 @@ import java.util.UUID;
 
 @Repository
 public interface BehaviorRecordRepository extends JpaRepository<BehaviorRecord, UUID> {
+
+    void deleteBySessionProblemId(UUID problemId);
+
+    void deleteBySessionProblemRoomId(UUID roomId);
+
+    void deleteByTagRoomId(UUID roomId);
 }

@@ -20,4 +20,8 @@ public interface FeedbackRepository extends JpaRepository<Feedback, UUID> {
     Page<Feedback> findByStudentIdAndProblemRoomTutorIdOrderByCreatedAtDesc(UUID studentId, UUID tutorId, Pageable pageable);
 
     boolean existsByStudentIdAndProblemRoomTutorId(UUID studentId, UUID tutorId);
+
+    void deleteByProblemId(UUID problemId);
+
+    void deleteByProblemRoomId(UUID roomId);
 }
