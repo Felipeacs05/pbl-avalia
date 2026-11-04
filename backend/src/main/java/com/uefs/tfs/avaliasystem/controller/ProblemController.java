@@ -23,7 +23,7 @@ public class ProblemController {
         this.problemService = problemService;
     }
 
-    @PostMapping("/rooms/{roomId}/problems")
+    @PostMapping({"/rooms/{roomId}/problems", "/disciplines/{roomId}/problems"})
     public ResponseEntity<ProblemResponse> createProblem(
             @PathVariable UUID roomId,
             @Valid @RequestBody ProblemRequest request,
@@ -52,7 +52,7 @@ public class ProblemController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/rooms/{roomId}/problems")
+    @GetMapping({"/rooms/{roomId}/problems", "/disciplines/{roomId}/problems"})
     public ResponseEntity<List<ProblemResponse>> listProblems(@PathVariable UUID roomId) {
         List<ProblemResponse> response = problemService.listProblems(roomId);
         return ResponseEntity.ok(response);
@@ -64,16 +64,36 @@ public class ProblemController {
     }
 
     @GetMapping("/problems/{id}/evaluation-status")
-    public ResponseEntity<Map<String, Boolean>> getEvaluationStatus(@PathVariable UUID id) {
-        ProblemResponse problem = problemService.getProblemById(id);
-        boolean selfOpen = Boolean.TRUE.equals(problem.getSelfAssessmentReleased());
-        boolean peerOpen = Boolean.TRUE.equals(problem.getPeerAssessmentReleased());
-        return ResponseEntity.ok(Map.of(
-                "selfEvaluationOpen", selfOpen,
-                "peerEvaluationOpen", peerOpen,
-                "selfAssessmentReleased", selfOpen,
-                "peerAssessmentReleased", peerOpen
-        ));
+    public ResponseEntity<Map<String, Object>> getEvaluationStatus(@PathVariable UUID id) {
+        return ResponseEntity.ok(problemService.getEvaluationStatusMap(id));
+    }
+
+    @PostMapping("/problems/{id}/evaluations/release")
+    public ResponseEntity<Map<String, Object>> releaseEvaluation(
+            @PathVariable UUID id,
+            @RequestBody(required = false) Map<String, Object> body,
+            Principal principal) {
+        UUID userId = UUID.fromString(principal.getName());
+        String type = body != null && body.get("type") != null ? String.valueOf(body.get("type")) : null;
+        if ("null".equals(type)) {
+            type = null;
+        }
+        boolean keepOthers = body != null && Boolean.TRUE.equals(body.get("keepOthers"));
+        return ResponseEntity.ok(problemService.releaseEvaluation(id, type, keepOthers, userId));
+    }
+
+    @GetMapping("/sessions/{sessionId}/self-evaluations")
+    public ResponseEntity<List<Map<String, Object>>> getSessionSelfEvaluations(@PathVariable UUID sessionId) {
+        return ResponseEntity.ok(problemService.getSessionSelfEvaluations(sessionId));
+    }
+
+    @GetMapping("/sessions/{sessionId}/my-summary")
+    public ResponseEntity<Map<String, Object>> getStudentSessionSummary(
+            @PathVariable UUID sessionId,
+            @RequestParam(required = false) UUID problemId,
+            Principal principal) {
+        UUID studentId = UUID.fromString(principal.getName());
+        return ResponseEntity.ok(problemService.getStudentSessionSummary(sessionId, problemId, studentId));
     }
 
     @PostMapping("/problems/{id}/sessions")
@@ -88,5 +108,31 @@ public class ProblemController {
     @GetMapping("/problems/{id}/sessions")
     public ResponseEntity<List<Map<String, Object>>> listSessions(@PathVariable UUID id) {
         return ResponseEntity.ok(problemService.listSessions(id));
+    }
+
+    @GetMapping("/sessions/{sessionId}")
+    public ResponseEntity<Map<String, Object>> getSessionRoster(@PathVariable UUID sessionId) {
+        return ResponseEntity.ok(problemService.getSessionRoster(sessionId));
+    }
+
+    @GetMapping("/sessions/{sessionId}/grades/status")
+    public ResponseEntity<Map<String, Object>> getSessionGradesStatus(@PathVariable UUID sessionId) {
+        return ResponseEntity.ok(problemService.getSessionGradesStatus(sessionId));
+    }
+
+    @PostMapping("/sessions/{sessionId}/grades/publish")
+    public ResponseEntity<Map<String, Object>> publishSessionGrades(
+            @PathVariable UUID sessionId,
+            @RequestBody(required = false) Map<String, List<String>> body) {
+        List<String> studentIds = body != null ? body.get("studentIds") : List.of();
+        return ResponseEntity.ok(problemService.publishSessionGrades(sessionId, studentIds));
+    }
+
+    @PostMapping("/sessions/{sessionId}/grades/unpublish")
+    public ResponseEntity<Map<String, Object>> unpublishSessionGrades(
+            @PathVariable UUID sessionId,
+            @RequestBody(required = false) Map<String, List<String>> body) {
+        List<String> studentIds = body != null ? body.get("studentIds") : List.of();
+        return ResponseEntity.ok(problemService.unpublishSessionGrades(sessionId, studentIds));
     }
 }

@@ -1,12 +1,25 @@
 // src/types/evaluation.ts
 
 export type EvaluationType = "self_evaluation" | "peer_evaluation" | null;
+export type ReleasableEvaluationType = Exclude<EvaluationType, null>;
 
 export interface EvaluationStatus {
   activeType: EvaluationType;
+  // Todas as avaliações liberadas (as duas podem estar abertas ao mesmo tempo); sem ela, vale o activeType
+  activeTypes?: ReleasableEvaluationType[];
   isReleased: boolean;
   problemId?: string;
   releasedAt?: string;
+}
+
+// Tipos liberados no status, aceitando quem só envia o activeType
+export function getReleasedTypes(status: EvaluationStatus): ReleasableEvaluationType[] {
+  if (status.activeTypes) return status.activeTypes;
+  return status.activeType ? [status.activeType] : [];
+}
+
+export function isEvaluationTypeReleased(status: EvaluationStatus, type: ReleasableEvaluationType): boolean {
+  return getReleasedTypes(status).includes(type);
 }
 
 export interface EvaluationOptionConfig {

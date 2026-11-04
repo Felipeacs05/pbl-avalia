@@ -7,10 +7,10 @@ import { useCopyLink } from "../../hooks/useCopyLink";
 import { RoomList } from "../../components/features/rooms/RoomList";
 import { BottomTabBar } from "../../components/features/navigation/BottomTabBar";
 import { CreateRoomModal } from "../../components/features/rooms/CreateRoomModal";
-import { EditRoomModal } from "../../components/features/rooms/EditRoomModal"; // ← ADICIONAR IMPORT
+import { EditRoomModal } from "../../components/features/rooms/EditRoomModal";
 import { Toast } from "../../components/ui/Toast";
-import { ConfirmModal } from "../../components/ui/ConfirmModal"; 
-import type { Room } from "../../types/room"; // ← ADICIONAR IMPORT
+import { ConfirmModal } from "../../components/ui/ConfirmModal";
+import type { Room } from "../../types/room";
 
 export default function Home() {
   const router = useRouter();
@@ -18,9 +18,9 @@ export default function Home() {
   const { copyLink, toast: copyToast, clearToast } = useCopyLink();
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // ← ADICIONAR
-  const [editingRoom, setEditingRoom] = useState<Room | null>(null); // ← ADICIONAR
-  const [roomToDelete, setRoomToDelete] = useState<Room | null>(null); // sala aguardando confirmação
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingRoom, setEditingRoom] = useState<Room | null>(null);
+  const [roomToDelete, setRoomToDelete] = useState<Room | null>(null);
   const [localToast, setLocalToast] = useState<{
     message: string;
     type: "success" | "error";
@@ -49,7 +49,6 @@ export default function Home() {
     }
   };
 
-  // ← ADICIONAR ESTAS FUNÇÕES
   const handleEdit = (room: Room) => {
     setEditingRoom(room);
     setIsEditModalOpen(true);
@@ -87,7 +86,6 @@ export default function Home() {
       });
     }
   };
-  // ← FIM DAS FUNÇÕES NOVAS
 
   return (
     <main className="w-full min-h-screen bg-[#F5F5F5] font-sans relative flex flex-col">
@@ -96,7 +94,10 @@ export default function Home() {
           <Toast
             message={activeToast.message}
             type={activeToast.type}
-            onClose={() => { setLocalToast(null); clearToast(); }}
+            onClose={() => {
+              setLocalToast(null);
+              clearToast();
+            }}
           />
         </div>
       )}
@@ -114,9 +115,9 @@ export default function Home() {
           <RoomList
             rooms={rooms}
             onEnter={handleEnter}
-            onEdit={handleEdit} // ← MUDAR (era handleEdit(room.name), agora passa room)
+            onEdit={handleEdit}
             onShare={(room) => handleShare(room.code)}
-            onDelete={handleDelete}
+            onDelete={(room) => setRoomToDelete(room)}
           />
         )}
       </div>
@@ -135,7 +136,6 @@ export default function Home() {
         />
       )}
 
-      {/* ← ADICIONAR MODAL DE EDIÇÃO */}
       {isEditModalOpen && editingRoom && (
         <EditRoomModal
           initialName={editingRoom.name}
@@ -144,7 +144,6 @@ export default function Home() {
         />
       )}
 
-      {/* confirmação antes de excluir a sala */}
       {roomToDelete && (
         <ConfirmModal
           title="Excluir sala"
@@ -157,7 +156,7 @@ export default function Home() {
           confirmLabel="Excluir"
           variant="danger"
           onConfirm={async () => {
-            await handleDelete(roomToDelete); // handleDelete já mostra o toast de sucesso ou de erro
+            await handleDelete(roomToDelete);
             setRoomToDelete(null);
           }}
           onClose={() => setRoomToDelete(null)}

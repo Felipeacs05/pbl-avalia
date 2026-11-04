@@ -16,6 +16,22 @@ import {
 } from "./mappers";
 
 const BASE_URL = "/api/v1/problems";
+const FORBIDDEN_PROBLEM_MSG =
+  "Apenas o tutor responsável pela sala pode gerenciar problemas.";
+
+function withAuthInit(init: RequestInit): RequestInit {
+  const authHeaders = getAuthHeaders({});
+  if (Object.keys(authHeaders).length === 0) {
+    return init;
+  }
+  return {
+    ...init,
+    headers: {
+      ...(init.headers as Record<string, string> | undefined),
+      ...authHeaders,
+    },
+  };
+}
 
 export const problemService = {
   async fetchProblems(roomId: string): Promise<Problem[]> {
@@ -27,10 +43,13 @@ export const problemService = {
       }));
       return new Promise((resolve) => setTimeout(() => resolve(details), 300));
     }
-    const response = await fetch(`/api/v1/rooms/${roomId}/problems`, {
-      method: "GET",
-      headers: getAuthHeaders({ "Content-Type": "application/json" }),
-    });
+    const response = await fetch(
+      `/api/v1/rooms/${roomId}/problems`,
+      withAuthInit({
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      })
+    );
     if (!response.ok) throw new Error("Falha ao carregar problemas da sala.");
     const data = (await response.json()) as Record<string, unknown>[];
     return Array.isArray(data) ? data.map((item) => mapProblemFromApi(item)) : [];
@@ -45,19 +64,23 @@ export const problemService = {
         }, 400)
       );
     }
-    const response = await fetch(`${BASE_URL}/${problemId}`, {
-      method: "GET",
-      headers: getAuthHeaders({ "Content-Type": "application/json" }),
-    });
+    const response = await fetch(
+      `${BASE_URL}/${problemId}`,
+      withAuthInit({ method: "GET" })
+    );
     if (!response.ok) return null;
     const rawProblem = (await response.json()) as Record<string, unknown>;
 
+    if ("sessions" in rawProblem && Array.isArray(rawProblem.sessions)) {
+      return rawProblem as unknown as ProblemDetails;
+    }
+
     let sessionsRaw: unknown[] | undefined;
     try {
-      const sessionsRes = await fetch(`${BASE_URL}/${problemId}/sessions`, {
-        method: "GET",
-        headers: getAuthHeaders({ "Content-Type": "application/json" }),
-      });
+      const sessionsRes = await fetch(
+        `${BASE_URL}/${problemId}/sessions`,
+        withAuthInit({ method: "GET" })
+      );
       if (sessionsRes.ok) {
         const parsed = await sessionsRes.json();
         if (Array.isArray(parsed)) {
@@ -77,7 +100,9 @@ export const problemService = {
   ): Promise<Problem> {
     const title = typeof input === "string" ? input : input.title;
     const description =
-      typeof input === "object" && input.description ? input.description : "";
+      typeof input === "object" && input.description !== undefined
+        ? input.description
+        : "";
 
     if (!USE_REAL_API) {
       return new Promise((resolve) =>
@@ -98,19 +123,25 @@ export const problemService = {
       );
     }
 
-    const payload =
-      typeof input === "object" && description
-        ? { title, description }
-        : { title };
+    // Tela de disciplinas envia { title, description } na rota da disciplina;
+    // a tela de problemas da sala envia só o título na rota da sala. O backend aceita as duas.
+    const payload = typeof input === "object" ? { title, description } : { title };
+    const route =
+      typeof input === "object"
+        ? `/api/v1/disciplines/${roomIdOrDisciplineId}/problems`
+        : `/api/v1/rooms/${roomIdOrDisciplineId}/problems`;
 
     const response = await fetch(
-      `/api/v1/rooms/${roomIdOrDisciplineId}/problems`,
-      {
+      route,
+      withAuthInit({
         method: "POST",
-        headers: getAuthHeaders({ "Content-Type": "application/json" }),
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-      }
+      })
     );
+    if (response.status === 403) {
+      throw { status: 403, message: FORBIDDEN_PROBLEM_MSG };
+    }
     if (!response.ok) throw new Error("Falha ao criar o problema.");
     const raw = (await response.json()) as Record<string, unknown>;
     return mapProblemFromApi(raw);
@@ -119,30 +150,35 @@ export const problemService = {
   async updateProblem(
     problemId: string,
     input: string | { title: string; description?: string }
-  ): Promise<Problem> {
+  ): Promise<void> {
     const title = typeof input === "string" ? input : input.title;
     const description =
-      typeof input === "object" && input.description ? input.description : "";
+      typeof input === "object" && input.description !== undefined
+        ? input.description
+        : "";
 
     if (!USE_REAL_API) {
       return new Promise((resolve) =>
         setTimeout(() => {
           updateProblemInMock(problemId, { title, description });
-          resolve({ id: problemId, title, description });
+          resolve();
         }, 400)
       );
     }
 
-    const payload =
-      typeof input === "object" && description
-        ? { title, description }
-        : { title };
+    const payload = typeof input === "object" ? { title, description } : { title };
 
-    const response = await fetch(`${BASE_URL}/${problemId}`, {
-      method: "PUT",
-      headers: getAuthHeaders({ "Content-Type": "application/json" }),
-      body: JSON.stringify(payload),
-    });
+    const response = await fetch(
+      `${BASE_URL}/${problemId}`,
+      withAuthInit({
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+    );
+    if (response.status === 403) {
+      throw { status: 403, message: FORBIDDEN_PROBLEM_MSG };
+    }
     if (!response.ok) {
       const error = new Error("Falha ao editar o problema.") as Error & {
         status?: number;
@@ -150,8 +186,6 @@ export const problemService = {
       error.status = response.status;
       throw error;
     }
-    const raw = (await response.json()) as Record<string, unknown>;
-    return mapProblemFromApi(raw);
   },
 
   async deleteProblem(problemId: string): Promise<void> {
@@ -163,13 +197,13 @@ export const problemService = {
         }, 400)
       );
     }
-    const headers = getAuthHeaders({});
-    const init: RequestInit =
-      Object.keys(headers).length > 0
-        ? { method: "DELETE", headers }
-        : { method: "DELETE" };
-
-    const response = await fetch(`${BASE_URL}/${problemId}`, init);
+    const response = await fetch(
+      `${BASE_URL}/${problemId}`,
+      withAuthInit({ method: "DELETE" })
+    );
+    if (response.status === 403) {
+      throw { status: 403, message: FORBIDDEN_PROBLEM_MSG };
+    }
     if (!response.ok) throw new Error("Falha ao excluir o problema.");
   },
 
@@ -185,10 +219,13 @@ export const problemService = {
         }, 600)
       );
     }
-    const response = await fetch(`${BASE_URL}/${problemId}/sessions`, {
-      method: "POST",
-      headers: getAuthHeaders({ "Content-Type": "application/json" }),
-    });
+    const response = await fetch(
+      `${BASE_URL}/${problemId}/sessions`,
+      withAuthInit({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      })
+    );
     if (!response.ok) {
       throw new Error("Falha ao iniciar sessão tutorial.");
     }
@@ -204,10 +241,10 @@ export const problemService = {
     }
     const response = await fetch(
       `${BASE_URL}/${problemId}/self-assessment-release`,
-      {
+      withAuthInit({
         method: "PATCH",
-        headers: getAuthHeaders({ "Content-Type": "application/json" }),
-      }
+        headers: { "Content-Type": "application/json" },
+      })
     );
     if (!response.ok) {
       throw new Error("Falha ao alterar liberação da autoavaliação.");
@@ -220,10 +257,10 @@ export const problemService = {
     }
     const response = await fetch(
       `${BASE_URL}/${problemId}/peer-assessment-release`,
-      {
+      withAuthInit({
         method: "PATCH",
-        headers: getAuthHeaders({ "Content-Type": "application/json" }),
-      }
+        headers: { "Content-Type": "application/json" },
+      })
     );
     if (!response.ok) {
       throw new Error("Falha ao alterar liberação da avaliação entre pares.");

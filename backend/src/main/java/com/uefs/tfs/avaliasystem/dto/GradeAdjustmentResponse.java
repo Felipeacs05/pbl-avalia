@@ -1,7 +1,6 @@
 package com.uefs.tfs.avaliasystem.dto;
 
 import com.uefs.tfs.avaliasystem.model.Assessment;
-
 import java.util.UUID;
 
 public record GradeAdjustmentResponse(

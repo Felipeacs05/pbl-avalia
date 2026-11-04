@@ -40,6 +40,25 @@ export function getAuthHeaders(
 }
 
 /**
+ * Decodifica o campo `sub` (UUID do usuário logado) do JWT salvo no `localStorage`.
+ */
+export function getCurrentUserIdFromToken(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const token = window.localStorage?.getItem("token");
+    if (!token) return null;
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const json = window.atob(base64);
+    const payload = JSON.parse(json) as { sub?: string };
+    return typeof payload.sub === "string" && payload.sub.trim() ? payload.sub.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Normaliza erros vindos do Axios, Fetch ou objetos `{ status, message }`
  * para o formato padronizado do frontend.
  */

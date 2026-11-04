@@ -1,46 +1,22 @@
 // src/app/student-rooms/[id]/problems/[problemId]/page.tsx
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ProblemDetailsHeader } from "../../../../../components/features/problem-details/ProblemDetailsHeader";
 import { BarChart3, UserCheck, Users } from "lucide-react";
-import { useStudentsRoom } from "../../../../../hooks/useStudentsRoom";
+import { StudentSelfEvaluationModal } from "../../../../../components/features/evaluations/StudentSelfEvaluationModal";
+import { StudentPeerEvaluationModal } from "../../../../../components/features/evaluations/StudentPeerEvaluationModal";
+import { Toast } from "../../../../../components/ui/Toast";
 import { useProblemDetails } from "../../../../../hooks/useProblemDetails";
-import { USE_REAL_API } from "../../../../../services/apiMode";
+import { useRooms } from "../../../../../hooks/useRooms";
+import { useStudentsRoom } from "../../../../../hooks/useStudentsRoom";
 
-interface StudentSessionItem {
-  id: string;
-  dateLabel: string;
-  statusLabel: string;
-  gradient: string;
-}
-
+// Cores alternadas dos cards de sessão
 const SESSION_GRADIENTS = [
   "from-[#3B4899] to-[#4354A0]",
   "from-[#2D3A7C] to-[#4354A0]",
   "from-[#1E285E] to-[#34438E]",
-];
-
-const STUDENT_SESSIONS: StudentSessionItem[] = [
-  {
-    id: "session_hoje",
-    dateLabel: "Hoje",
-    statusLabel: "Avaliação por pares disponivel",
-    gradient: SESSION_GRADIENTS[0],
-  },
-  {
-    id: "session_01",
-    dateLabel: "08/04",
-    statusLabel: "Sessão Finalizada",
-    gradient: SESSION_GRADIENTS[1],
-  },
-  {
-    id: "session_02",
-    dateLabel: "03/04",
-    statusLabel: "Sessão Finalizada",
-    gradient: SESSION_GRADIENTS[2],
-  },
 ];
 
 export default function StudentProblemSessionsPage() {
@@ -50,34 +26,31 @@ export default function StudentProblemSessionsPage() {
   const problemId =
     typeof params?.problemId === "string" ? params.problemId : "prob_01";
 
-  const { rooms } = useStudentsRoom();
-  const { problem } = useProblemDetails(problemId);
+  // Mesmo problema da tela do professor: título, descrição e sessões vêm dele
+  const { problem, isLoading } = useProblemDetails(problemId);
+  const { rooms: tutorRooms } = useRooms();
+  const { rooms: studentRooms } = useStudentsRoom();
+  const room =
+    studentRooms.find((r) => r.id === roomId) ??
+    tutorRooms.find((r) => r.id === roomId);
 
-  const currentRoom = rooms.find((r) => r.id === roomId);
-
-  const disciplineTag = currentRoom
-    ? `${currentRoom.code} - ${currentRoom.semester ?? "2026.2"}`
+  const disciplineTag = room
+    ? `${room.code} - ${room.semester ?? "2026.2"}`
     : problem
       ? `${problem.disciplineCode} - ${problem.semester}`
-      : "EXA613 - 2026.2";
+      : "...";
+  const problemTitle = problem?.title ?? (isLoading ? "Carregando problema..." : "Problema não encontrado");
+  const problemSubtitle = problem?.description ?? "";
+  const sessions = (problem?.sessions ?? []).map((session, index) => ({
+    id: session.id,
+    dateLabel: session.displayDate,
+    statusLabel: session.statusLabel,
+    gradient: SESSION_GRADIENTS[index % SESSION_GRADIENTS.length],
+  }));
 
-  const problemTitle =
-    problem?.title ?? (problemId === "prob_02" ? "Problema 2" : "Problema 1");
-  const problemSubtitle =
-    problem?.description ??
-    (problemId === "prob_02"
-      ? "Confecção do MVP — Engenharia de Software"
-      : "Prototipação do projeto e do PRD — Engenharia de Software");
-
-  const sessionsToDisplay: StudentSessionItem[] =
-    USE_REAL_API && problem
-      ? problem.sessions.map((s, idx) => ({
-          id: s.id,
-          dateLabel: s.displayDate || "Hoje",
-          statusLabel: s.statusLabel || "Sessão em Andamento",
-          gradient: SESSION_GRADIENTS[idx % SESSION_GRADIENTS.length],
-        }))
-      : STUDENT_SESSIONS;
+  // Autoavaliação e avaliação por pares abrem como modal, sem trocar de tela
+  const [activeModal, setActiveModal] = useState<"self" | "peer" | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const handleOpenSession = (sessionId: string) => {
     router.push(
@@ -107,9 +80,28 @@ export default function StudentProblemSessionsPage() {
               {problemTitle}
             </h1>
             <div className="w-full h-px bg-gray-200 mb-3" />
-            <p className="text-sm text-gray-500 leading-relaxed">
+            <p className="text-sm text-gray-500 leading-relaxed mb-4">
               {problemSubtitle}
             </p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setActiveModal("self")}
+                className="w-full bg-[#757DC3] hover:bg-[#636BAE] active:scale-[0.98] text-white py-3 px-4 rounded-xl font-semibold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <UserCheck size={17} />
+                <span>Autoavaliação</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveModal("peer")}
+                className="w-full bg-[#4354A0] hover:bg-[#364485] active:scale-[0.98] text-white py-3 px-4 rounded-xl font-semibold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Users size={17} />
+                <span>Avaliação por pares</span>
+              </button>
+            </div>
           </div>
 
           {/* Sessões realizadas */}
@@ -118,7 +110,10 @@ export default function StudentProblemSessionsPage() {
               Sessões realizadas
             </h2>
 
-            {sessionsToDisplay.map((session) => (
+            {sessions.length === 0 && !isLoading && (
+              <p className="text-sm text-gray-400">Nenhuma sessão realizada ainda.</p>
+            )}
+            {sessions.map((session) => (
               <button
                 key={session.id}
                 type="button"
@@ -160,7 +155,7 @@ export default function StudentProblemSessionsPage() {
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => router.push("/selfevaluation")}
+                onClick={() => setActiveModal("self")}
                 className="w-full bg-[#757DC3] hover:bg-[#636BAE] active:scale-[0.98] text-white py-3 px-4 rounded-xl font-semibold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <UserCheck size={17} />
@@ -169,7 +164,7 @@ export default function StudentProblemSessionsPage() {
 
               <button
                 type="button"
-                onClick={() => router.push("/peerevaluation")}
+                onClick={() => setActiveModal("peer")}
                 className="w-full bg-[#4354A0] hover:bg-[#364485] active:scale-[0.98] text-white py-3 px-4 rounded-xl font-semibold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Users size={17} />
@@ -185,7 +180,10 @@ export default function StudentProblemSessionsPage() {
             Sessões realizadas
           </h2>
 
-          {sessionsToDisplay.map((session) => (
+          {sessions.length === 0 && !isLoading && (
+            <p className="text-sm text-gray-400">Nenhuma sessão realizada ainda.</p>
+          )}
+          {sessions.map((session) => (
             <button
               key={session.id}
               type="button"
@@ -209,6 +207,25 @@ export default function StudentProblemSessionsPage() {
           ))}
         </div>
       </div>
+
+      {toastMessage && <Toast message={toastMessage} type="success" onClose={() => setToastMessage(null)} />}
+
+      {activeModal === "self" && (
+        <StudentSelfEvaluationModal
+          roomId={roomId}
+          problemId={problemId}
+          onClose={() => setActiveModal(null)}
+          onSubmitted={setToastMessage}
+        />
+      )}
+      {activeModal === "peer" && (
+        <StudentPeerEvaluationModal
+          roomId={roomId}
+          problemId={problemId}
+          onClose={() => setActiveModal(null)}
+          onSubmitted={setToastMessage}
+        />
+      )}
     </main>
   );
 }

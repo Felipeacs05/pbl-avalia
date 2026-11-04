@@ -1,7 +1,6 @@
 package com.uefs.tfs.avaliasystem.service;
 
 import com.uefs.tfs.avaliasystem.model.Problem;
-import com.uefs.tfs.avaliasystem.model.Room;
 import com.uefs.tfs.avaliasystem.repository.ProblemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;

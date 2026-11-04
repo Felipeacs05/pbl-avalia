@@ -13,6 +13,10 @@ const REQUIRED_ENV = [
   "E2E_STUDENT_NAME",
   "E2E_OTHER_STUDENT_ID",
   "E2E_OTHER_STUDENT_NAME",
+  "E2E_REGISTER_USER_NAME",
+  "E2E_REGISTER_EMAIL",
+  "E2E_REGISTER_PASSWORD",
+  "E2E_DISCIPLINE_ID",
 ] as const;
 
 async function seed(backendURL: string): Promise<Record<string, string>> {
@@ -38,6 +42,11 @@ export default async function globalSetup() {
     const backendURL = process.env.BACKEND_URL ?? "http://localhost:8081";
     Object.assign(process.env, await seed(backendURL));
   }
+
+  // Preenchimento de variáveis de cadastro (US01) com fallback caso não venham do seed ou de .env.e2e
+  process.env.E2E_REGISTER_USER_NAME ??= "Usuário Teste QA";
+  process.env.E2E_REGISTER_EMAIL ??= `usuario.qa.${Date.now()}@uefs.br`;
+  process.env.E2E_REGISTER_PASSWORD ??= "SenhaForte@2026";
 
   const missing = REQUIRED_ENV.filter((name) => !process.env[name]);
   if (missing.length > 0) {

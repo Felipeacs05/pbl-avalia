@@ -44,7 +44,7 @@ public class RoomController {
     }
 
     // Retorna apenas as salas criadas pelo professor logado
-    @GetMapping("/tutor")
+    @GetMapping({"", "/tutor"})
     @ResponseStatus(HttpStatus.OK)
     public List<RoomResponse> listRoomsAsTutor(Principal principal) {
         return roomService.listRoomsAsTutor(userId(principal));

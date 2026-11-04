@@ -68,7 +68,7 @@ function StudentContent() {
     <main className="w-full min-h-screen bg-[#F8F9FA] font-sans relative flex flex-col">
       <div className="flex-1 px-5 pt-12 pb-36 overflow-y-auto">
         <h1 className="text-2xl font-bold text-center text-[#182860] mb-8 tracking-tight">
-          Avalia - As Suas Turmas
+          Avalia - Suas Salas
         </h1>
 
         {isLoading ? (

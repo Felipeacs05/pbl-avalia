@@ -5,29 +5,31 @@ import { LoginCredentials } from '@/types/login';
 import { AuthResponse } from '@/types/auth';
 import { USE_REAL_API } from './apiMode';
 
-//src/services/authService.ts
+// false = backend funcionando true = chamada simulada
+const USE_MOCKS = !USE_REAL_API;
 
 export const authService = {
-  async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    if (!USE_REAL_API) {
+  async login(credentials: LoginCredentials, useMock: boolean = USE_MOCKS): Promise<AuthResponse> {
+    if (useMock) {
       return new Promise((resolve, reject) => {
         setTimeout(() => {
           if (credentials.password === '123456') {
             resolve(authMockSuccess);
           } else {
+            // PRD: Mensagem genérica "Credenciais inválidas." sem revelar se o e-mail existe
             reject({
               response: {
                 data: {
-                  message: 'E-mail ou senha incorretos.',
+                  message: 'Credenciais inválidas.',
                 },
               },
             });
           }
-        }, 1000); // 1 seg para simular a internet 
+        }, 1000);
       });
     }
 
-    // usar quando o backend tiver pronto
+    // Chamada real para a API
     const response = await api.post<AuthResponse>('/auth/login', credentials);
     return response.data;
   },

@@ -1,0 +1,1398 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+    "name": "PBL Avalia - API Completa (Docker)",
+    "description": "Coleção completa para testar todos os endpoints da API PBL Avalia rodando via Docker.\n\n### Como usar:\n1. Suba o Docker com `docker compose up --build -d` (porta 8080).\n2. Execute as pastas na ordem numérica (01 -> 09).\n3. Os scripts na aba **Tests** das requisições já salvam automaticamente os Tokens JWT (`tutorToken`, `studentToken`, `student2Token`) e os IDs (`roomId`, `roomCode`, `groupId`, `problemId`, `tableId`, `criterion1Id`, `criterion2Id`) nas variáveis da coleção!",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "e2eBaseUrl",
+      "value": "http://localhost:8081",
+      "type": "string"
+    },
+    {
+      "key": "tutorToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "studentToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "student2Token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tutorId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "studentId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "student2Id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "roomId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "roomCode",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "groupId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "problemId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tableId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "criterion1Id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "criterion2Id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "criterion3Id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "sessionId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "assessmentId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01. Autenticação (US01 & US02)",
+      "item": [
+        {
+          "name": "1.1 Cadastrar Tutor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const res = pm.response.json();",
+                  "    pm.collectionVariables.set('tutorId', res.id);",
+                  "    console.log('tutorId salvo:', res.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "data",
+                  "value": "{\"name\": \"Prof. Carlos Tutor\", \"email\": \"tutor@uefs.br\", \"password\": \"SenhaForte123!\"}",
+                  "contentType": "application/json",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "register"]
+            },
+            "description": "Cadastra o usuário que atuará como Tutor. O campo `data` já está configurado com Content-Type `application/json`."
+          },
+          "response": []
+        },
+        {
+          "name": "1.2 Cadastrar Aluno 1 (Ana)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const res = pm.response.json();",
+                  "    pm.collectionVariables.set('studentId', res.id);",
+                  "    console.log('studentId salvo:', res.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "data",
+                  "value": "{\"name\": \"Ana Aluna\", \"email\": \"aluno1@uefs.br\", \"password\": \"SenhaForte123!\"}",
+                  "contentType": "application/json",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "register"]
+            },
+            "description": "Cadastra o primeiro aluno e salva automaticamente o `studentId`."
+          },
+          "response": []
+        },
+        {
+          "name": "1.3 Cadastrar Aluno 2 (Bruno)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const res = pm.response.json();",
+                  "    pm.collectionVariables.set('student2Id', res.id);",
+                  "    console.log('student2Id salvo:', res.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "data",
+                  "value": "{\"name\": \"Bruno Aluno\", \"email\": \"aluno2@uefs.br\", \"password\": \"SenhaForte123!\"}",
+                  "contentType": "application/json",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "register"]
+            },
+            "description": "Cadastra o segundo aluno e salva automaticamente o `student2Id`."
+          },
+          "response": []
+        },
+        {
+          "name": "1.4 Login Tutor (Salva tutorToken)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const res = pm.response.json();",
+                  "    pm.collectionVariables.set('tutorToken', res.token);",
+                  "    console.log('tutorToken salvo com sucesso!');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"tutor@uefs.br\",\n  \"password\": \"SenhaForte123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "description": "Autentica o Tutor e salva o JWT na variável `{{tutorToken}}`."
+          },
+          "response": []
+        },
+        {
+          "name": "1.5 Login Aluno 1 (Salva studentToken)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const res = pm.response.json();",
+                  "    pm.collectionVariables.set('studentToken', res.token);",
+                  "    console.log('studentToken salvo com sucesso!');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"aluno1@uefs.br\",\n  \"password\": \"SenhaForte123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "description": "Autentica o Aluno 1 e salva o JWT na variável `{{studentToken}}`."
+          },
+          "response": []
+        },
+        {
+          "name": "1.6 Login Aluno 2 (Salva student2Token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const res = pm.response.json();",
+                  "    pm.collectionVariables.set('student2Token', res.token);",
+                  "    console.log('student2Token salvo com sucesso!');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"aluno2@uefs.br\",\n  \"password\": \"SenhaForte123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "description": "Autentica o Aluno 2 e salva o JWT na variável `{{student2Token}}`."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02. Salas e Dashboard (US02, US03 & US04)",
+      "item": [
+        {
+          "name": "2.1 Criar Sala (Tutor)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const res = pm.response.json();",
+                  "    pm.collectionVariables.set('roomId', res.id);",
+                  "    pm.collectionVariables.set('roomCode', res.code);",
+                  "    console.log('roomId:', res.id, 'roomCode:', res.code);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tutorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"MI - Engenharia de Software 2026.2\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/rooms",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "rooms"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2.2 Aluno 1 Entra na Sala via JSON",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accessCode\": \"{{roomCode}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/rooms/join",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "rooms", "join"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2.3 Aluno 2 Entra na Sala via Link/URL",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{student2Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/rooms/join/{{roomCode}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "rooms", "join", "{{roomCode}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2.4 Listar Salas do Usuário",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tutorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/rooms",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "rooms"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2.5 Consultar Dashboard (roomsAsTutor / roomsAsStudent)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tutorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/me/rooms",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "me", "rooms"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2.6 Listar Membros da Sala",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tutorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/rooms/{{roomId}}/members",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "rooms", "{{roomId}}", "members"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2.7 Editar Nome da Sala (Tutor)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tutorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"MI - Engenharia de Software (Turma P01)\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/rooms/{{roomId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "rooms", "{{roomId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03. Carômetro da Turma (US18)",
+      "item": [
+        {
+          "name": "3.1 Consultar Carômetro Paginado (Tutor)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tutorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/rooms/{{roomId}}/roster?page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "rooms", "{{roomId}}", "roster"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04. Gestão de Grupos (US06)",
+      "item": [
+        {
+          "name": "4.1 Listar Alunos Disponíveis sem Grupo (Tutor)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tutorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/rooms/{{roomId}}/groups/available-students",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "rooms", "{{roomId}}", "groups", "available-students"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4.2 Criar Grupo com Aluno 1 (Tutor)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const res = pm.response.json();",
+                  "    pm.collectionVariables.set('groupId', res.id);",
+                  "    console.log('groupId salvo:', res.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tutorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Grupo Alpha\",\n  \"memberIds\": [\n    \"{{studentId}}\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/rooms/{{roomId}}/groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "rooms", "{{roomId}}", "groups"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4.3 Adicionar Aluno 2 ao Grupo (Tutor)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tutorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{student2Id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/rooms/{{roomId}}/groups/{{groupId}}/members",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "rooms", "{{roomId}}", "groups", "{{groupId}}", "members"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4.4 Listar Grupos da Sala",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tutorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/rooms/{{roomId}}/groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "rooms", "{{roomId}}", "groups"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4.5 Consultar Meu Grupo (Aluno 1)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/rooms/{{roomId}}/groups/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "rooms", "{{roomId}}", "groups", "me"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4.6 Renomear Grupo (Tutor)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tutorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Grupo Alpha - Atualizado\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/rooms/{{roomId}}/groups/{{groupId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "rooms", "{{roomId}}", "groups", "{{groupId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05. Problemas (US05)",
+      "item": [
+        {
+          "name": "5.1 Criar Problema na Sala (Tutor)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const res = pm.response.json();",
+                  "    pm.collectionVariables.set('problemId', res.id);",
+                  "    console.log('problemId salvo:', res.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tutorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Problema 01 - Arquitetura de Microsserviços\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/rooms/{{roomId}}/problems",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "rooms", "{{roomId}}", "problems"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5.2 Listar Problemas da Sala",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tutorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/rooms/{{roomId}}/problems",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "rooms", "{{roomId}}", "problems"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5.3 Atualizar Problema (Tutor)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tutorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Problema 01 - Arquitetura Limpa e Hexagonal\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/problems/{{problemId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "problems", "{{problemId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "06. Tabelas de Desempenho e Critérios (US07)",
+      "item": [
+        {
+          "name": "6.1 Criar Tabela de Desempenho (Tutor)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const res = pm.response.json();",
+                  "    pm.collectionVariables.set('tableId', res.performanceTableId);",
+                  "    if (res.criteriaList && res.criteriaList.length >= 2) {",
+                  "        pm.collectionVariables.set('criterion1Id', res.criteriaList[0].criterionId);",
+                  "        pm.collectionVariables.set('criterion2Id', res.criteriaList[1].criterionId);",
+                  "    }",
+                  "    console.log('tableId salvo:', res.performanceTableId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tutorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomId\": \"{{roomId}}\",\n  \"tableName\": \"Tabela de Avaliação Tutorial\",\n  \"criteriaList\": [\n    {\n      \"criteriaName\": \"Embasamento Teórico\",\n      \"criteriaDescription\": \"Domínio dos conceitos estudados\",\n      \"criteriaWeight\": 0.6\n    },\n    {\n      \"criteriaName\": \"Participação na Discussão\",\n      \"criteriaDescription\": \"Contribuição ativa durante a sessão\",\n      \"criteriaWeight\": 0.4\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/performance-tables",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "performance-tables"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6.2 Consultar Tabela de Desempenho por ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tutorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/performance-tables/{{tableId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "performance-tables", "{{tableId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6.3 Adicionar Critério à Tabela (Tutor)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const res = pm.response.json();",
+                  "    pm.collectionVariables.set('criterion3Id', res.criterionId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tutorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"criteriaName\": \"Trabalho em Equipe\",\n  \"criteriaDescription\": \"Colaboração com os pares\",\n  \"criteriaWeight\": 0.2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/performance-tables/{{tableId}}/criteria",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "performance-tables", "{{tableId}}", "criteria"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6.4 Atualizar Pesos dos Critérios (Tutor)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tutorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"weights\": [\n    {\n      \"criterionId\": \"{{criterion1Id}}\",\n      \"criteriaWeight\": 0.5\n    },\n    {\n      \"criterionId\": \"{{criterion2Id}}\",\n      \"criteriaWeight\": 0.5\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/performance-tables/{{tableId}}/criteria/weights",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "performance-tables", "{{tableId}}", "criteria", "weights"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "07. Sessões: Chamada e Papéis (US08 & US10)",
+      "item": [
+        {
+          "name": "7.1 Registrar Presença de Aluno na Sessão (Tutor)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tutorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PRESENT\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sessions/{{sessionId}}/attendances/{{studentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "sessions", "{{sessionId}}", "attendances", "{{studentId}}"]
+            },
+            "description": "Status aceitos: PRESENT, ABSENT, LATE, JUSTIFIED_ABSENCE."
+          },
+          "response": []
+        },
+        {
+          "name": "7.2 Atribuir Papel COORDINATOR na Sessão (Tutor)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tutorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"extraGrade\": 1.0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sessions/{{sessionId}}/roles/COORDINATOR",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "sessions", "{{sessionId}}", "roles", "COORDINATOR"]
+            },
+            "description": "Papéis aceitos na URL: COORDINATOR, BOARD_SECRETARY, TABLE_SECRETARY."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "08. Avaliações e Moderação de Nota (US12, US13, US14 & US15)",
+      "item": [
+        {
+          "name": "8.1 Liberar/Bloquear Autoavaliação (Tutor)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tutorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/problems/{{problemId}}/self-assessment-release",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "problems", "{{problemId}}", "self-assessment-release"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "8.2 Liberar/Bloquear Avaliação por Pares (Tutor)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tutorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/problems/{{problemId}}/peer-assessment-release",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "problems", "{{problemId}}", "peer-assessment-release"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "8.3 Enviar Autoavaliação (Aluno 1)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"score\": 8.5,\n  \"comment\": \"Estudei todas as referências e participei ativamente da abertura e fechamento do problema.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/problems/{{problemId}}/self-assessment",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "problems", "{{problemId}}", "self-assessment"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "8.4 Enviar Avaliação por Pares (Aluno 1 -> Aluno 2)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"targetId\": \"{{student2Id}}\",\n    \"score\": 9.0,\n    \"comment\": \"Bruno trouxe ótimos diagramas e colaborou muito com o grupo.\"\n  }\n]"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/problems/{{problemId}}/peer-assessments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "problems", "{{problemId}}", "peer-assessments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "8.5 Ajustar Nota de Avaliação com Justificativa (Tutor)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tutorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"adjustedGrade\": 9.2,\n  \"justification\": \"O aluno demonstrou excelente domínio prático além do relatado na autoavaliação.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/assessments/{{assessmentId}}/grade-adjustment",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "assessments", "{{assessmentId}}", "grade-adjustment"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "09. Feedbacks (US16 & US17)",
+      "item": [
+        {
+          "name": "9.1 Enviar Feedback Individual (Tutor -> Aluno 1)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tutorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"grade\": 9.5,\n  \"text\": \"Excelente condução como coordenadora na sessão de fechamento.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/problems/{{problemId}}/feedbacks",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "problems", "{{problemId}}", "feedbacks"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "9.2 Enviar Feedbacks em Lote / Batch (Tutor)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tutorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"feedbacks\": [\n    {\n      \"studentId\": \"{{studentId}}\",\n      \"grade\": 9.0,\n      \"text\": \"Ótima síntese teórica no fechamento.\"\n    },\n    {\n      \"studentId\": \"{{student2Id}}\",\n      \"grade\": 8.5,\n      \"text\": \"Boa participação, pode aprofundar mais nas referências.\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/problems/{{problemId}}/feedbacks/batch",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "problems", "{{problemId}}", "feedbacks", "batch"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "9.3 Consultar Meus Feedbacks (Aluno 1)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/students/{{studentId}}/feedbacks?page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "students", "{{studentId}}", "feedbacks"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "10. Bônus: Modo E2E Seed (Porta 8081)",
+      "item": [
+        {
+          "name": "10.1 Gerar Seed Completo E2E (Popula Variáveis)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const res = pm.response.json();",
+                  "    pm.collectionVariables.set('tutorId', res.E2E_TUTOR_ID);",
+                  "    pm.collectionVariables.set('studentId', res.E2E_STUDENT_ID);",
+                  "    pm.collectionVariables.set('student2Id', res.E2E_OTHER_STUDENT_ID);",
+                  "    pm.collectionVariables.set('roomId', res.E2E_ROOM_ID);",
+                  "    pm.collectionVariables.set('problemId', res.E2E_PROBLEM_ID);",
+                  "    pm.collectionVariables.set('sessionId', res.E2E_SESSION_ID);",
+                  "    pm.collectionVariables.set('tableId', res.E2E_PERFORMANCE_TABLE_ID);",
+                  "    pm.collectionVariables.set('assessmentId', res.E2E_ASSESSMENT_ID);",
+                  "    console.log('Seed E2E carregado nas variáveis da coleção!');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{e2eBaseUrl}}/api/e2e/seed",
+              "host": ["{{e2eBaseUrl}}"],
+              "path": ["api", "e2e", "seed"]
+            },
+            "description": "Funciona apenas quando o container é iniciado via `docker compose -f docker-compose.e2e.yml up --build -d` (porta 8081). Preenche todas as variáveis da coleção automaticamente!"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

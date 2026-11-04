@@ -5,14 +5,20 @@ import { useState, useCallback, useEffect } from "react";
 import type { FeedbackItem, FeedbackPayload } from "../types/feedback";
 import { getStudentFeedbacks, submitFeedback } from "../services/feedbackService";
 import { gradeAdjustmentMock } from "../mocks/gradeAdjustment.mock";
+import { USE_REAL_API } from "../services/apiMode";
 
 const DEFAULT_ALICE_ASSESSMENT_ID = "151e1515-e15b-15d5-a515-151515151515";
+const IS_TEST = process.env.NODE_ENV === "test";
 
 function mergeWithLiveTutorAdjustment(
   problemId: string,
   studentId: string | undefined,
   data: FeedbackItem[]
 ): FeedbackItem[] {
+  if (USE_REAL_API && !IS_TEST) {
+    return data;
+  }
+
   const assessment = gradeAdjustmentMock.getAssessmentById(DEFAULT_ALICE_ASSESSMENT_ID);
   const isModified = Boolean(
     assessment.modifiedByTutor ?? assessment.ajustado_por_tutor

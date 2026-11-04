@@ -4,7 +4,7 @@ import {
   CRITERIA_INVALID_CHARACTERS_MESSAGE,
   PERFORMANCE_TABLES_ROUTE,
   CRITERIA_ROUTE,
-  makePerformanceTable,
+
 } from "../fixtures";
 
 /**

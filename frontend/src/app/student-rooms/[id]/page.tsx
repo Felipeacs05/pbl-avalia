@@ -5,70 +5,39 @@ import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ProblemDetailsHeader } from "../../../components/features/problem-details/ProblemDetailsHeader";
 import { ChevronRight, LogOut } from "lucide-react";
+import { useRooms } from "../../../hooks/useRooms";
 import { useStudentsRoom } from "../../../hooks/useStudentsRoom";
-import { useProblems } from "../../../hooks/useProblems";
-import { USE_REAL_API } from "../../../services/apiMode";
+import { useDisciplines } from "../../../hooks/useDiscipline";
 
-interface StudentProblemItem {
-  id: string;
-  title: string;
-  subtitle: string;
-  gradient: string;
-}
-
-const GRADIENTS = [
-  "from-[#3B4899] to-[#4354A0]",
-  "from-[#25316D] to-[#34438E]",
-];
-
-const STUDENT_PROBLEMS: StudentProblemItem[] = [
-  {
-    id: "prob_01",
-    title: "Problema 1",
-    subtitle: "Prototipação do projeto e do PRD",
-    gradient: GRADIENTS[0],
-  },
-  {
-    id: "prob_02",
-    title: "Problema 2",
-    subtitle: "Confecção do MVP",
-    gradient: GRADIENTS[1],
-  },
-];
+// Cores alternadas dos cards de problema
+const PROBLEM_GRADIENTS = ["from-[#3B4899] to-[#4354A0]", "from-[#25316D] to-[#34438E]"];
 
 export default function StudentRoomDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const roomId = typeof params?.id === "string" ? params.id : "1";
 
-  const { rooms, leaveRoom } = useStudentsRoom();
-  const { problems: apiProblems, isLoading: isLoadingProblems } = useProblems(roomId);
+  // Mesmos dados da tela do professor ou das salas do estudante
+  const { rooms: tutorRooms } = useRooms();
+  const { rooms: studentRooms, leaveRoom } = useStudentsRoom();
+  const { disciplines, isLoading } = useDisciplines(roomId);
 
-  const currentRoom = rooms.find((r) => r.id === roomId);
+  const room =
+    studentRooms.find((r) => r.id === roomId) ??
+    tutorRooms.find((r) => r.id === roomId);
 
-  const disciplineTag = currentRoom
-    ? `${currentRoom.code} - ${currentRoom.semester ?? "2026.2"}`
-    : USE_REAL_API
-      ? "Sala Tutorial"
-      : "EXA613 - 2026.2";
+  const disciplineFromHook = disciplines[0];
+  const disciplineTag = room
+    ? `${room.code} - ${room.semester ?? "2026.2"}`
+    : disciplineFromHook
+      ? `${disciplineFromHook.code} - ${disciplineFromHook.semester}`
+      : "...";
 
-  const roomTitle = currentRoom?.name ?? (USE_REAL_API ? "Sala Tutorial PBL" : "Engenharia De Software");
-  const roomDescription = currentRoom?.tutor
-    ? `Tutor(a) responsável: ${currentRoom.tutor}`
-    : USE_REAL_API
-      ? "Ambiente de Aprendizagem Baseada em Problemas (PBL)"
-      : "Criação e prototipação de um software em nível de equipe;";
-
-  const problemsToDisplay: StudentProblemItem[] = USE_REAL_API
-    ? apiProblems.map((p, idx) => ({
-        id: p.id,
-        title: p.title,
-        subtitle:
-          (p as { description?: string }).description ||
-          "Visualizar sessões e avaliações do problema",
-        gradient: GRADIENTS[idx % GRADIENTS.length],
-      }))
-    : STUDENT_PROBLEMS;
+  const roomTitle = room?.name ?? disciplineFromHook?.name ?? "Sala";
+  const problems = disciplines.flatMap((discipline) =>
+    discipline.problems.map((problem) => ({ ...problem, disciplineName: discipline.name }))
+  );
+  const emptyMessage = isLoading ? "Carregando problemas..." : "Nenhum problema cadastrado nesta sala.";
 
   const handleOpenProblem = (problemId: string) => {
     router.push(`/student-rooms/${roomId}/problems/${problemId}`);
@@ -107,7 +76,7 @@ export default function StudentRoomDetailsPage() {
             </h1>
             <div className="w-full h-px bg-gray-200 mb-3" />
             <p className="text-sm text-gray-500 leading-relaxed">
-              {roomDescription}
+              {disciplines.map((d) => d.name).join(" · ") || "Disciplinas da sala"}
             </p>
           </div>
 
@@ -117,36 +86,29 @@ export default function StudentRoomDetailsPage() {
               Problemas
             </h2>
 
-            {USE_REAL_API && isLoadingProblems ? (
-              <p className="text-sm text-gray-400">Carregando problemas...</p>
-            ) : problemsToDisplay.length === 0 ? (
-              <p className="text-sm text-gray-500">
-                Nenhum problema cadastrado nesta sala até o momento.
-              </p>
-            ) : (
-              problemsToDisplay.map((problem) => (
-                <button
-                  key={problem.id}
-                  type="button"
-                  onClick={() => handleOpenProblem(problem.id)}
-                  className={`w-full text-left relative bg-gradient-to-br ${problem.gradient} text-white rounded-2xl p-5 shadow-md overflow-hidden transition-all hover:shadow-lg active:scale-[0.98] cursor-pointer group`}
-                >
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -translate-y-8 translate-x-8 group-hover:bg-white/10 transition-colors" />
-                  <p className="text-2xl font-bold tracking-tight text-center mb-3 drop-shadow-sm">
-                    {problem.title}
-                  </p>
-                  <div className="w-full h-px bg-white/20 mb-3" />
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-white/90 font-medium leading-snug flex-1 mr-2">
-                      {problem.subtitle}
-                    </span>
-                    <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0 group-hover:bg-white/20 transition-colors">
-                      <ChevronRight size={18} className="text-white/80" />
-                    </div>
+            {problems.length === 0 && <p className="text-sm text-gray-400">{emptyMessage}</p>}
+            {problems.map((problem, index) => (
+              <button
+                key={problem.id}
+                type="button"
+                onClick={() => handleOpenProblem(problem.id)}
+                className={`w-full text-left relative bg-gradient-to-br ${PROBLEM_GRADIENTS[index % PROBLEM_GRADIENTS.length]} text-white rounded-2xl p-5 shadow-md overflow-hidden transition-all hover:shadow-lg active:scale-[0.98] cursor-pointer group`}
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -translate-y-8 translate-x-8 group-hover:bg-white/10 transition-colors" />
+                <p className="text-2xl font-bold tracking-tight text-center mb-3 drop-shadow-sm">
+                  {problem.title}
+                </p>
+                <div className="w-full h-px bg-white/20 mb-3" />
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-white/90 font-medium leading-snug flex-1 mr-2">
+                    {problem.description} — {problem.disciplineName}
+                  </span>
+                  <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0 group-hover:bg-white/20 transition-colors">
+                    <ChevronRight size={18} className="text-white/80" />
                   </div>
-                </button>
-              ))
-            )}
+                </div>
+              </button>
+            ))}
           </div>
         </div>
 
@@ -173,7 +135,7 @@ export default function StudentRoomDetailsPage() {
             </h1>
             <div className="w-full h-px bg-gray-200 mb-3" />
             <p className="text-sm text-gray-500 leading-relaxed">
-              {roomDescription}
+              {disciplines.map((d) => d.name).join(" · ") || "Disciplinas da sala"}
             </p>
           </div>
 
@@ -193,36 +155,29 @@ export default function StudentRoomDetailsPage() {
             Problemas
           </h2>
 
-          {USE_REAL_API && isLoadingProblems ? (
-            <p className="text-sm text-gray-400">Carregando problemas...</p>
-          ) : problemsToDisplay.length === 0 ? (
-            <p className="text-sm text-gray-500">
-              Nenhum problema cadastrado nesta sala até o momento.
-            </p>
-          ) : (
-            problemsToDisplay.map((problem) => (
-              <button
-                key={problem.id}
-                type="button"
-                onClick={() => handleOpenProblem(problem.id)}
-                className={`w-full text-left relative bg-gradient-to-br ${problem.gradient} text-white rounded-2xl p-5 shadow-md overflow-hidden transition-all hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] cursor-pointer group`}
-              >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -translate-y-8 translate-x-8 group-hover:bg-white/10 transition-colors" />
-                <p className="text-3xl font-bold tracking-tight text-center mb-3 drop-shadow-sm">
-                  {problem.title}
-                </p>
-                <div className="w-full h-px bg-white/20 mb-3" />
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-white/90 font-medium leading-snug flex-1 mr-2">
-                    {problem.subtitle}
-                  </span>
-                  <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center shrink-0 group-hover:bg-white/20 transition-colors">
-                    <ChevronRight size={18} className="text-white/80" />
-                  </div>
+          {problems.length === 0 && <p className="text-sm text-gray-400">{emptyMessage}</p>}
+          {problems.map((problem, index) => (
+            <button
+              key={problem.id}
+              type="button"
+              onClick={() => handleOpenProblem(problem.id)}
+              className={`w-full text-left relative bg-gradient-to-br ${PROBLEM_GRADIENTS[index % PROBLEM_GRADIENTS.length]} text-white rounded-2xl p-5 shadow-md overflow-hidden transition-all hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] cursor-pointer group`}
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -translate-y-8 translate-x-8 group-hover:bg-white/10 transition-colors" />
+              <p className="text-3xl font-bold tracking-tight text-center mb-3 drop-shadow-sm">
+                {problem.title}
+              </p>
+              <div className="w-full h-px bg-white/20 mb-3" />
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-white/90 font-medium leading-snug flex-1 mr-2">
+                  {problem.description} — {problem.disciplineName}
+                </span>
+                <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center shrink-0 group-hover:bg-white/20 transition-colors">
+                  <ChevronRight size={18} className="text-white/80" />
                 </div>
-              </button>
-            ))
-          )}
+              </div>
+            </button>
+          ))}
         </div>
       </div>
     </main>

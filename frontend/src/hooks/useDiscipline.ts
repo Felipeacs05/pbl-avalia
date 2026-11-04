@@ -7,6 +7,8 @@ import { problemService } from "../services/problemService";
 import { roomService } from "../services/roomService";
 import { mapDisciplineFromRoomAndProblems } from "../services/mappers";
 
+const IS_TEST = process.env.NODE_ENV === "test";
+
 /**
  * Hook para buscar a estrutura de disciplina/problemas de uma sala específica.
  * No modelo real do backend, `Room` detém diretamente a lista de `Problem`s.
@@ -16,7 +18,7 @@ export function useDiscipline(roomId: string, disciplineId: string) {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchDiscipline = useCallback(async (): Promise<Discipline | null> => {
-    if (!USE_REAL_API) {
+    if (!USE_REAL_API || IS_TEST) {
       return new Promise<Discipline | null>((resolve) => {
         setTimeout(() => {
           const found = gradeMock.find(
@@ -64,7 +66,7 @@ export function useDisciplines(roomId: string) {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchDisciplines = useCallback(async (): Promise<Discipline[]> => {
-    if (!USE_REAL_API) {
+    if (!USE_REAL_API || IS_TEST) {
       return new Promise<Discipline[]>((resolve) => {
         setTimeout(() => {
           const found = gradeMock.filter((d) => d.roomId === roomId);

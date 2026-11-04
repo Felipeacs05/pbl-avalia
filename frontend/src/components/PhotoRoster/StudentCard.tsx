@@ -2,7 +2,6 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
 import { Delete } from "lucide-react";
 import { getInitials } from "../ui/Avatar"; 
 import type { Student } from "../../types/student";
@@ -21,6 +20,9 @@ export function StudentCard({ student, onAction }: StudentCardProps) {
       <div className="flex items-center gap-3.5 flex-1 min-w-0">
         <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-white/30 bg-[#2D3A74] flex items-center justify-center">
           {student.avatarUrl && !imageError ? (
+            // Avatar de URL externa arbitrária (upload/serviço de fotos): o next/image exigiria cadastrar
+            // cada domínio em images.remotePatterns, e um thumb de 48px não afeta o LCP (mesmo padrão do ui/Avatar).
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={student.avatarUrl}
               alt={student.name}

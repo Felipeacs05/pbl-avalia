@@ -39,6 +39,7 @@ class BehaviorRecordRepositoryTest {
 
     private User tutor;
     private User student;
+    private Room room;
     private TutoringSession session;
     private BehaviorTag lateTag;
 
@@ -47,28 +48,28 @@ class BehaviorRecordRepositoryTest {
     void setUp() {
         tutor = persistUser("Tutor Comportamento");
         student = persistUser("Aluno Comportamento");
-        session = persistSession(persistRoom("Sala do Comportamento"));
-        lateTag = persistTag("Atraso US11");
+        room = persistRoom("Sala do Comportamento");
+        session = persistSession(room);
+        lateTag = persistTag(room, "Atraso US11");
     }
 
     // --- TAGS PREDEFINIDAS ---
 
     @Test
     @DisplayName("Deve listar as tags predefinidas em ordem alfabética")
-    void findAllByOrderByNameAsc_ReturnsTagsSortedByName() {
+    void findAllByRoomIdOrderByNameAsc_ReturnsRoomTagsSortedByName() {
         // Inseridas fora de ordem de propósito: a ordem precisa vir do banco
-        persistTag("Celular fora de contexto US11");
-        persistTag("Boa argumentação US11");
+        persistTag(room, "Celular fora de contexto US11");
+        persistTag(room, "Boa argumentação US11");
+        persistTag(persistRoom("Outra Sala"), "Tag de outra sala US11");
         entityManager.clear();
 
-        List<String> names = behaviorTagRepository.findAllByOrderByNameAsc().stream()
-                .map(BehaviorTag::getName)
-                .toList();
+        List<BehaviorTag> tags = behaviorTagRepository.findAllByRoomIdOrderByNameAsc(room.getId());
 
-        // Tags semeadas pela implementação podem estar na lista: confere só a ordem relativa das criadas aqui
         assertEquals(
                 List.of("Atraso US11", "Boa argumentação US11", "Celular fora de contexto US11"),
-                names.stream().filter(n -> n.endsWith(" US11")).toList());
+                tags.stream().map(BehaviorTag::getName).toList());
+        assertTrue(tags.stream().allMatch(tag -> room.getId().equals(tag.getRoom().getId())));
     }
 
     // --- GRAVAÇÃO ---
@@ -153,8 +154,9 @@ class BehaviorRecordRepositoryTest {
         return entityManager.persistFlushFind(newSession);
     }
 
-    private BehaviorTag persistTag(String name) {
+    private BehaviorTag persistTag(Room room, String name) {
         BehaviorTag tag = new BehaviorTag();
+        tag.setRoom(room);
         tag.setName(name);
         return entityManager.persistFlushFind(tag);
     }

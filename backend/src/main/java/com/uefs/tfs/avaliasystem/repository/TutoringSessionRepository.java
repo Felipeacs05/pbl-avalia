@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface TutoringSessionRepository extends JpaRepository<TutoringSession, UUID> {
     List<TutoringSession> findByProblemId(UUID problemId);
+    boolean existsByIdAndProblemRoomTutorId(UUID sessionId, UUID tutorId);
 }

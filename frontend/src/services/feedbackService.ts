@@ -12,12 +12,14 @@ import {
   addStoredFeedback,
   loadStoredFeedbacks,
 } from "../mocks/feedback.mock";
-import { getAuthHeaders } from "./mappers";
+import { USE_REAL_API } from "./apiMode";
+import { getAuthHeaders, getCurrentUserIdFromToken } from "./mappers";
 
 const DEFAULT_TEXT_REQUIRED_MSG = "O texto do feedback não pode ser vazio";
 const SEND_FORBIDDEN_MSG = "Apenas o tutor responsável pela sala pode enviar feedbacks.";
 const STUDENT_VIEW_FORBIDDEN_MSG = "Você só pode ver os seus próprios feedbacks.";
 const GATEWAY_TIMEOUT_MSG = "O envio demorou demais e não foi concluído. Tente novamente.";
+const IS_TEST = process.env.NODE_ENV === "test";
 
 interface ErrorResponsePayload {
   status?: number;
@@ -131,6 +133,44 @@ export async function getStudentFeedbacks(
   problemId: string,
   studentId?: string
 ): Promise<FeedbackItem[]> {
+  if (USE_REAL_API && !IS_TEST) {
+    const resolvedStudentId =
+      studentId && studentId !== "stu_alice"
+        ? studentId
+        : getCurrentUserIdFromToken();
+    if (!resolvedStudentId) {
+      return [];
+    }
+    try {
+      const items = await feedbackService.fetchStudentFeedbacks(resolvedStudentId);
+      return items
+        .filter((f) => !problemId || f.problemId === problemId)
+        .map((f) => {
+          let dateLabel = f.problemTitle || "Feedback do Tutor";
+          if (f.sentAt) {
+            const d = new Date(f.sentAt);
+            if (!Number.isNaN(d.getTime())) {
+              const dd = String(d.getDate()).padStart(2, "0");
+              const mm = String(d.getMonth() + 1).padStart(2, "0");
+              dateLabel = `${dd}/${mm} - ${f.problemTitle || "Problema"}`;
+            }
+          }
+          return {
+            id: f.id,
+            problemId: f.problemId,
+            targetType: "INDIVIDUAL" as const,
+            studentId: resolvedStudentId,
+            tutorName: f.tutorName,
+            message: f.text,
+            dateLabel,
+            newGrade: f.grade,
+          };
+        });
+    } catch {
+      return [];
+    }
+  }
+
   await new Promise((resolve) => setTimeout(resolve, 150));
   const all = loadStoredFeedbacks();
   return all.filter(

@@ -1,93 +1,91 @@
-// src/hooks/useRooms.ts
 import { useState, useEffect, useCallback } from "react";
-import type { Room } from "../types/room";
-import type { StudentRoom } from "../types/studentRoom";
+import { Room } from "../types/room";
 import { roomService } from "../services/roomService";
-import { studentRoomService } from "../services/studentRoomService";
-import { USE_REAL_API } from "@/services/apiMode";
+import { USE_REAL_API } from "../services/apiMode";
+
+function toErrorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : "Erro ao carregar as salas.";
+}
 
 export function useRooms() {
-  const [roomsAsTutor, setRoomsAsTutor] = useState<Room[]>([]);
-  const [roomsAsStudent, setRoomsAsStudent] = useState<StudentRoom[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchRoomsData = useCallback(async () => {
+  // Carga inicial: todos os setState acontecem nos callbacks da Promise
+  // (nunca de forma síncrona no corpo do effect — regra react-hooks/set-state-in-effect).
+  useEffect(() => {
+    let isActive = true;
+
+    roomService
+      .fetchRooms()
+      .then((data) => {
+        if (isActive && Array.isArray(data)) setRooms(data);
+      })
+      .catch((err: unknown) => {
+        if (isActive) setError(toErrorMessage(err));
+      })
+      .finally(() => {
+        if (isActive) setIsLoading(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  // Recarga manual (chamada por eventos, fora de effects)
+  const refreshRooms = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
     try {
-      const tutorRooms = await roomService.fetchRooms();
-
-      let studentRooms: StudentRoom[] = [];
-      try {
-        studentRooms = await studentRoomService.fetchStudentRooms();
-      } catch (e) {
-        console.warn("Aviso: Não foi possível carregar as salas de estudante", e);
-      }
-
-      setRoomsAsTutor(tutorRooms);
-      setRoomsAsStudent(studentRooms);
-    } catch (error) {
-      console.error("Erro ao carregar salas:", error);
+      const data = await roomService.fetchRooms();
+      if (Array.isArray(data)) setRooms(data);
+    } catch (err) {
+      setError(toErrorMessage(err));
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    let mounted = true;
-    async function init() {
-      await fetchRoomsData();
-      if (mounted) setIsLoading(false);
-    }
-    init();
-    return () => {
-      mounted = false;
-    };
-  }, [fetchRoomsData]);
-
   const createRoom = async (name: string) => {
-    const generated = await roomService.createRoom(name);
+    const newRoom = await roomService.createRoom(name);
+    const created: Room = {
+      id: newRoom?.id || `room-${newRoom?.code || Date.now()}`,
+      name: newRoom?.name || name,
+      code: newRoom?.code || "",
+      joinLink: newRoom?.joinLink || `app/join/${newRoom?.code || ""}`,
+      semester: newRoom?.semester || "2026.2",
+      ...newRoom,
+    };
+    setRooms((prev) => [...prev, created]);
+
+    // Com a API real, sincroniza a lista com o que o servidor gravou
     if (USE_REAL_API) {
-      await fetchRoomsData();
-    } else {
-      setRoomsAsTutor((prev) => [
-        ...prev,
-        {
-          id: generated.id ?? String(Date.now()),
-          name,
-          code: generated.code,
-          joinLink: generated.joinLink,
-          semester: "2026.2",
-          tutor: "Marlus Rios",
-        },
-      ]);
+      const data = await roomService.fetchRooms();
+      if (Array.isArray(data)) setRooms(data);
     }
   };
 
-  const updateRoom = async (id: string, name: string) => {
-    await roomService.updateRoom(id, name);
-    if (USE_REAL_API) {
-      await fetchRoomsData();
-    } else {
-      setRoomsAsTutor((prev) =>
-        prev.map((room) => (room.id === id ? { ...room, name } : room))
-      );
-    }
+  const updateRoom = async (roomId: string, newName: string) => {
+    await roomService.updateRoom(roomId, newName);
+    setRooms((prev) => prev.map((r) => (r.id === roomId ? { ...r, name: newName } : r)));
   };
 
-  const deleteRoom = async (id: string) => {
-    await roomService.deleteRoom(id);
-    if (USE_REAL_API) {
-      await fetchRoomsData();
-    } else {
-      setRoomsAsTutor((prev) => prev.filter((room) => room.id !== id));
-    }
+  const deleteRoom = async (roomId: string) => {
+    await roomService.deleteRoom(roomId);
+    setRooms((prev) => prev.filter((r) => r.id !== roomId));
   };
 
   return {
-    rooms: roomsAsTutor,
-    roomsAsTutor,
-    roomsAsStudent,
+    rooms,
+    roomsAsTutor: rooms,
+    roomsAsStudent: [] as Room[],
     isLoading,
+    error,
     createRoom,
     updateRoom,
     deleteRoom,
-    refreshRooms: fetchRoomsData,
+    refreshRooms,
   };
 }

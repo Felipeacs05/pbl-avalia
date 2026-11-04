@@ -7,7 +7,8 @@ import type {
   SessionStudentSummary,
 } from "../types/feedback";
 
-const FEEDBACK_STORAGE_KEY = "avalia_pbl_us16_feedbacks_v1";
+const OLD_FEEDBACK_STORAGE_KEY = "avalia_pbl_us16_feedbacks_v1";
+const FEEDBACK_STORAGE_KEY = "avalia_pbl_us16_feedbacks_v2";
 
 export const MOCK_FEEDBACK_STUDENTS: FeedbackStudentOption[] = [
   { id: "stu_alice", name: "Alice Ferreira" },
@@ -90,6 +91,7 @@ let memoryFeedbacks: FeedbackItem[] = MOCK_STUDENT_FEEDBACKS.map((item) => ({ ..
 export function loadStoredFeedbacks(): FeedbackItem[] {
   if (typeof window !== "undefined") {
     try {
+      window.localStorage.removeItem(OLD_FEEDBACK_STORAGE_KEY);
       const raw = window.localStorage.getItem(FEEDBACK_STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as FeedbackItem[];

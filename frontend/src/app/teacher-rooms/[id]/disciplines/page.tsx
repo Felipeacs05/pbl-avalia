@@ -9,8 +9,10 @@ import { DisciplineHeader } from "../../../../components/features/disciplines/Di
 import { ProblemCard } from "../../../../components/features/disciplines/ProblemCard";
 import { DisciplineTabBar } from "../../../../components/features/disciplines/DisciplineTabBar";
 import { PhotoRosterList } from "../../../../components/PhotoRoster/PhotoRosterList";
-import { ArrowLeft, Share2, BookOpen } from "lucide-react";
+import { ArrowLeft, Share2, BookOpen, Table2 } from "lucide-react";
 import { CreateProblemModal } from "../../../../components/features/disciplines/CreateProblemModal";
+import { ReportExportPanel } from "../../../../components/features/reports/ReportExportPanel";
+import { ReportExportModal } from "../../../../components/features/reports/ReportExportModal";
 import { problemService } from "../../../../services/problemService";
 import { ConfirmModal } from "../../../../components/ui/ConfirmModal";
 import { Toast } from "../../../../components/ui/Toast";
@@ -64,6 +66,7 @@ function DisciplinesContent() {
 
   // Botões do card: extrair e excluir abrem o modal de confirmação primeiro; editar vai direto
   const [pendingAction, setPendingAction] = useState<ProblemAction | null>(null);
+  const [extractingProblem, setExtractingProblem] = useState<Problem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const clearToast = useCallback(() => setToastMessage(null), []); // função estável: o Toast reinicia o timer se ela mudar
 
@@ -73,8 +76,7 @@ function DisciplinesContent() {
 
     if (type === "extract") {
       setPendingAction(null);
-      // TODO: trocar pela extração real do arquivo quando o back-end existir
-      alert("Tela de extração");
+      setExtractingProblem(problem);
     } else {
       await problemService.deleteProblem(problem.id); // se falhar, o modal mostra o erro e continua aberto
       await refetch();
@@ -157,50 +159,65 @@ function DisciplinesContent() {
           </div>
         ) : (
           /* ===== MATÉRIA (PROBLEMAS) VIEW ===== */
-          isLoading ? (
-            <div className="mt-20 text-center">
-              <div className="w-8 h-8 border-3 border-[#4354A0] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-              <p className="text-sm text-gray-400 animate-pulse">
-                Carregando disciplina...
-              </p>
-            </div>
-          ) : !discipline ? (
-            <div className="mt-20 text-center">
-              <BookOpen size={48} className="mx-auto text-gray-300 mb-3" />
-              <p className="text-sm text-gray-500">
-                Nenhuma disciplina cadastrada nesta sala.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-6 w-full animate-in fade-in duration-200">
-              {/* Discipline header */}
-              <DisciplineHeader
-                name={discipline.name}
-                description={discipline.description}
-                onMessageClass={() => {
-                  /* TODO: open message modal */
-                }}
-              />
-
-              {/* Problem list */}
-              <div className="space-y-4 w-full">
-                {discipline.problems.map((problem) => (
-                  <ProblemCard
-                    key={problem.id}
-                    problem={problem}
-                    onClick={() => {
-                      router.push(
-                        `/teacher-rooms/${roomId}/problems/${problem.id}`
-                      );
-                    }}
-                    onViewStats={() => setPendingAction({ type: "extract", problem })}
-                    onEdit={() => setEditingProblem(problem)}
-                    onDelete={() => setPendingAction({ type: "delete", problem })}
-                  />
-                ))}
+          <div className="space-y-6 w-full animate-in fade-in duration-200">
+            {isLoading ? (
+              <div className="mt-20 text-center">
+                <div className="w-8 h-8 border-3 border-[#4354A0] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                <p className="text-sm text-gray-400 animate-pulse">
+                  Carregando disciplina...
+                </p>
               </div>
-            </div>
-          )
+            ) : !discipline ? (
+              <div className="mt-10 text-center">
+                <BookOpen size={48} className="mx-auto text-gray-300 mb-3" />
+                <p className="text-sm text-gray-500">
+                  Nenhuma disciplina cadastrada nesta sala.
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Discipline header */}
+                <DisciplineHeader
+                  name={discipline.name}
+                  description={discipline.description}
+                  onMessageClass={() => {
+                    /* TODO: open message modal */
+                  }}
+                />
+
+                {/* Problem list */}
+                <div className="space-y-4 w-full">
+                  {discipline.problems.map((problem) => (
+                    <ProblemCard
+                      key={problem.id}
+                      problem={problem}
+                      onClick={() => {
+                        router.push(
+                          `/teacher-rooms/${roomId}/problems/${problem.id}`
+                        );
+                      }}
+                      onViewStats={() => setPendingAction({ type: "extract", problem })}
+                      onEdit={() => setEditingProblem(problem)}
+                      onDelete={() => setPendingAction({ type: "delete", problem })}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Relatório final da turma na tela, com as notas por problema (US20) */}
+            <button
+              type="button"
+              onClick={() => router.push(`/teacher-rooms/${roomId}/reports/final`)}
+              className="w-full py-3.5 rounded-2xl font-semibold text-sm shadow-sm transition-all flex items-center justify-center gap-2 bg-[#4354A0] hover:bg-[#364485] text-white active:scale-[0.98] cursor-pointer"
+            >
+              <Table2 size={18} aria-hidden="true" />
+              <span>Ver Relatório Final da Turma</span>
+            </button>
+
+            {/* Painel de Exportação do Relatório Final da Turma (US19) */}
+            <ReportExportPanel scope={{ type: "class", roomId }} />
+          </div>
         )}
       </div>
 
@@ -227,6 +244,17 @@ function DisciplinesContent() {
         />
       )}
       {toastMessage && <Toast message={toastMessage} type="success" onClose={clearToast} />}
+
+      {extractingProblem && (
+        <ReportExportModal
+          scope={{
+            type: "problem",
+            roomId,
+            problemId: extractingProblem.id,
+          }}
+          onClose={() => setExtractingProblem(null)}
+        />
+      )}
 
       {editingProblem && (
         <CreateProblemModal

@@ -6,10 +6,18 @@ import type {
   StudentSelfEvaluationReview,
   SubmittedSelfAssessment,
 } from "../types/gradeAdjustment";
+import type { SessionQuickTags } from "../types/feedback";
 import { gradeAdjustmentMock } from "../mocks/gradeAdjustment.mock";
+import { USE_REAL_API } from "./apiMode";
 import { getAuthHeaders } from "./mappers";
 
 const FORBIDDEN_PT_BR = "Apenas o tutor responsável pela sala pode ajustar notas.";
+const IS_TEST = process.env.NODE_ENV === "test";
+
+export interface StudentSessionSummaryResponse {
+  assessment: SubmittedSelfAssessment & { hasAssessment?: boolean };
+  quickTags: SessionQuickTags;
+}
 
 export const gradeAdjustmentService = {
   /**
@@ -35,7 +43,7 @@ export const gradeAdjustmentService = {
         }
       );
     } catch {
-      if (process.env.NODE_ENV !== "test") {
+      if (!USE_REAL_API && !IS_TEST) {
         return gradeAdjustmentMock.adjustGrade(assessmentId, input);
       }
       throw { status: 500, message: "Erro de conexão ao salvar o ajuste de nota." };
@@ -50,7 +58,7 @@ export const gradeAdjustmentService = {
 
     if (!response.ok) {
       const contentType = response.headers.get("content-type") ?? "";
-      if (process.env.NODE_ENV !== "test" && contentType.includes("text/html")) {
+      if (!USE_REAL_API && !IS_TEST && contentType.includes("text/html")) {
         return gradeAdjustmentMock.adjustGrade(assessmentId, input);
       }
 
@@ -105,20 +113,92 @@ export const gradeAdjustmentService = {
         };
       }
     } catch {
-      // Fallback para o mock local
+      // Fallback para o mock local em ambiente de teste
     }
     return gradeAdjustmentMock.getAssessmentById(assessmentId);
   },
 
   /**
-   * Lista todas as autoavaliações (enviadas e pendentes) dos alunos de uma sessão passada.
+   * Lista todas as autoavaliações (enviadas e pendentes) dos alunos de uma sessão.
    */
   async getSessionSelfEvaluations(
     sessionId: string
   ): Promise<StudentSelfEvaluationReview[]> {
-    if (process.env.NODE_ENV !== "test") {
-      await new Promise((resolve) => setTimeout(resolve, 250));
+    if (!USE_REAL_API || IS_TEST) {
+      return gradeAdjustmentMock.getReviewsBySession(sessionId);
     }
-    return gradeAdjustmentMock.getReviewsBySession(sessionId);
+
+    try {
+      const response = await fetch(`/api/v1/sessions/${sessionId}/self-evaluations`, {
+        method: "GET",
+        headers: getAuthHeaders(),
+      });
+      if (!response.ok) {
+        return [];
+      }
+      const data = await response.json();
+      return Array.isArray(data) ? (data as StudentSelfEvaluationReview[]) : [];
+    } catch {
+      return [];
+    }
+  },
+
+  /**
+   * Busca o resumo da sessão do estudante logado (autoavaliação real + tags comportamentais reais).
+   */
+  async getStudentSessionSummary(
+    sessionId: string,
+    problemId: string
+  ): Promise<StudentSessionSummaryResponse> {
+    const emptySummary: StudentSessionSummaryResponse = {
+      assessment: {
+        hasAssessment: false,
+        id: "",
+        studentId: "",
+        studentName: "Estudante",
+        score: 0,
+        comment: "",
+        modifiedByTutor: false,
+        ajustado_por_tutor: false,
+        originalGrade: null,
+        nota_original: null,
+        adjustedGrade: null,
+        justification: null,
+      },
+      quickTags: {
+        positive: [],
+        negative: [],
+        comments: [],
+      },
+    };
+
+    if (!USE_REAL_API || IS_TEST) {
+      return emptySummary;
+    }
+
+    try {
+      const query = problemId ? `?problemId=${encodeURIComponent(problemId)}` : "";
+      const response = await fetch(`/api/v1/sessions/${sessionId}/my-summary${query}`, {
+        method: "GET",
+        headers: getAuthHeaders(),
+      });
+      if (!response.ok) {
+        return emptySummary;
+      }
+      const raw = (await response.json()) as Partial<StudentSessionSummaryResponse>;
+      return {
+        assessment: {
+          ...emptySummary.assessment,
+          ...(raw.assessment ?? {}),
+        },
+        quickTags: {
+          positive: Array.isArray(raw.quickTags?.positive) ? raw.quickTags.positive : [],
+          negative: Array.isArray(raw.quickTags?.negative) ? raw.quickTags.negative : [],
+          comments: Array.isArray(raw.quickTags?.comments) ? raw.quickTags.comments : [],
+        },
+      };
+    } catch {
+      return emptySummary;
+    }
   },
 };

@@ -19,29 +19,33 @@ interface AvatarProps {
   src?: string;
   /** Texto alternativo. Deixe vazio quando o nome já aparece ao lado da foto. */
   alt?: string;
-  /** Iniciais fornecidas diretamente pelo backend (ex.: ClassRosterDTO.initials). */
-  initials?: string;
   /** Classes de tamanho do Tailwind. */
   sizeClassName?: string;
   /** Foto desfocada e em tons de cinza (ex.: item inativo). */
   dimmed?: boolean;
   /** Nome da pessoa: sem foto, mostra as iniciais. */
   name?: string;
+  /** Iniciais prontas (ex.: "CR", "MS"). */
+  initials?: string;
   /** Carregamento preguiçoso da imagem. */
   lazy?: boolean;
+  loading?: "lazy" | "eager";
 }
 
 export function Avatar({
   src,
   alt = "",
-  initials,
   sizeClassName = "w-12 h-12",
   dimmed = false,
   name,
+  initials,
   lazy = false,
+  loading,
 }: AvatarProps) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const showImage = Boolean(src) && failedSrc !== src;
+  const displayInitials = initials ?? (name ? getInitials(name) : null);
+  const imgLoading = loading ?? (lazy ? "lazy" : undefined);
 
   return (
     <div
@@ -52,19 +56,15 @@ export function Avatar({
         <img
           src={src}
           alt={alt}
-          loading={lazy ? "lazy" : undefined}
+          loading={imgLoading}
           className={`w-full h-full object-cover transition-[filter] ${
             dimmed ? "blur-[2px] grayscale" : ""
           }`}
           onError={() => setFailedSrc(src ?? null)}
         />
-      ) : initials ? (
+      ) : displayInitials ? (
         <span className="text-white/90 text-sm font-bold select-none" aria-hidden="true">
-          {initials}
-        </span>
-      ) : name ? (
-        <span className="text-white/90 text-sm font-bold select-none" aria-hidden="true">
-          {getInitials(name)}
+          {displayInitials}
         </span>
       ) : (
         <User className="text-white/80" size={22} aria-hidden="true" />
