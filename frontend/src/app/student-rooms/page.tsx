@@ -7,12 +7,18 @@ import { StudentRoomCard } from "../../components/features/rooms-student/Student
 import { useRouter, useSearchParams } from "next/navigation";
 import { EnterRoomModal } from "../../components/features/rooms-student/EnterRoomModal";
 import { attemptEnterRoom } from "../../mocks/roomCode.mock";
+import { IS_TEST, USE_REAL_API } from "../../services/apiMode";
+import { authFetch, getLoggedUserProfile } from "../../services/authFetch";
 
 type HttpError = { response?: { status?: number; headers?: Record<string, string> } };
 
 function StudentContent() {
-  const { rooms, isLoading } = useRooms();
+  const { rooms, isLoading, refreshRooms } = useRooms('student');
   const router = useRouter();
+
+  const currentUser = getLoggedUserProfile();
+  const userName = currentUser?.name || "Marlus Rios";
+  const userEmail = currentUser?.email || "marlus@uefs.br";
 
   const handleEnter = (roomId: number | string) => {
     router.push(`/student-rooms/${roomId}`);
@@ -27,13 +33,41 @@ function StudentContent() {
   const handleConfirmCode = async (code: string) => {
     setBlockMessage(null);
     try {
-      if (await attemptEnterRoom(code)) {
-        setIsModalOpen(false);
-        router.push("/student-rooms/1");
+      if (IS_TEST || !USE_REAL_API) {
+        if (await attemptEnterRoom(code)) {
+          setIsModalOpen(false);
+          router.push("/student-rooms/1");
+        } else {
+          setAttemptedCode(code);
+          setIsModalOpen(false);
+          setIsErrorModalOpen(true);
+        }
       } else {
-        setAttemptedCode(code);
-        setIsModalOpen(false);
-        setIsErrorModalOpen(true);
+        const response = await authFetch("/api/v1/rooms/join", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ accessCode: code.trim().toUpperCase() }),
+        });
+
+        if (response.ok) {
+          const joinedRoom = await response.json();
+          await refreshRooms();
+          setIsModalOpen(false);
+          router.push(`/student-rooms/${joinedRoom.id}`);
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          if (response.status === 429) {
+            setBlockMessage(
+              "Você fez muitas tentativas com códigos inválidos, então seu acesso foi bloqueado temporariamente por segurança. Tente novamente em cerca de 15 min."
+            );
+          } else if (response.status === 400 && errorData.message?.includes("Tutor não pode")) {
+            alert("Tutor não pode ingressar como aluno na própria sala.");
+            return;
+          }
+          setAttemptedCode(code);
+          setIsModalOpen(false);
+          setIsErrorModalOpen(true);
+        }
       }
     } catch (error) {
       const response = (error as HttpError).response;
@@ -82,8 +116,8 @@ function StudentContent() {
 
       {isModalOpen && (
         <EnterRoomModal
-          name="Marlus Rios"
-          email="marlus@uefs.br"
+          name={userName}
+          email={userEmail}
           initialCode={codeFromUrl}
           onClose={() => setIsModalOpen(false)}
           onEnter={handleConfirmCode}

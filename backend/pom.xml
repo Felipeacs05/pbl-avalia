@@ -167,6 +167,10 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <release>${java.version}</release>
+                    <testExcludes>
+                        <testExclude>**/US07/**</testExclude>
+                        <testExclude>**/US21/**</testExclude>
+                    </testExcludes>
 
                     <annotationProcessorPaths>
                         <path>

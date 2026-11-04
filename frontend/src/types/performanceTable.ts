@@ -31,6 +31,7 @@ export interface StudentEvaluationData {
   criteria: StudentEvaluationCriteria;
   tags: string[];
   message: string;
+  calculatedGrade?: number;
   updatedAt?: string;
 }
 

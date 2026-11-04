@@ -24,23 +24,31 @@ export function EvaluationStudentRow({
 }: EvaluationStudentRowProps) {
   const isPresentLike =
     student.status !== null && PRESENT_LIKE_STATUSES.includes(student.status);
+  const isExplicitAbsent =
+    student.status === "ABSENT" || student.status === "JUSTIFIED_ABSENCE";
 
-  const rowTone = isPresentLike
-    ? "bg-[#3B4C9B] border-[#4F5FB5] text-white"
-    : "bg-[#71717A] border-[#27272A] text-white";
+  const rowTone = isExplicitAbsent
+    ? "bg-[#71717A] border-[#27272A] text-white"
+    : "bg-[#3B4C9B] border-[#4F5FB5] text-white";
 
-  const actionButtonTone = isPresentLike
-    ? "bg-white/15 text-white hover:bg-white/25 active:bg-white/30"
-    : "bg-black/30 text-white hover:bg-black/40 active:bg-black/50";
+  const actionButtonTone = isExplicitAbsent
+    ? "bg-black/30 text-white hover:bg-black/40 active:bg-black/50"
+    : "bg-white/15 text-white hover:bg-white/25 active:bg-white/30";
 
   // Determina o texto de subtítulo:
   // Se presente -> mostra o cargo (Coordenador, Quadro, Mesa ou Membro)
-  // Se ausente -> mostra "Ausente" ou "Ausente com justificativa"
+  // Se ausente com justificativa -> "Ausente com justificativa"
+  // Se ausente confirmado -> "Ausente"
+  // Se chamada ainda não foi registrada -> "Chamada pendente"
   const subtitle = isPresentLike
     ? student.role || "Membro"
     : student.status === "JUSTIFIED_ABSENCE"
     ? "Ausente com justificativa"
-    : "Ausente";
+    : student.status === "ABSENT"
+    ? "Ausente"
+    : student.role
+    ? `${student.role} (Chamada pendente)`
+    : "Chamada pendente";
 
   return (
     <li
@@ -65,7 +73,7 @@ export function EvaluationStudentRow({
         src={student.avatarUrl}
         name={student.name}
         sizeClassName="w-11 h-11 sm:w-12 sm:h-12"
-        dimmed={!isPresentLike}
+        dimmed={isExplicitAbsent}
       />
 
       <div className="min-w-0 flex-1 leading-tight">

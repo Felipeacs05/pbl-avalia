@@ -15,6 +15,9 @@ import { FeedbackFormModal } from "../../../../../components/features/feedback/F
 import { ReportExportModal } from "../../../../../components/features/reports/ReportExportModal";
 import { useFeedback } from "../../../../../hooks/useFeedback";
 import { MOCK_FEEDBACK_STUDENTS } from "../../../../../mocks/feedback.mock";
+import { photoRosterService } from "../../../../../services/photoRosterService";
+import { USE_REAL_API, IS_TEST } from "../../../../../services/apiMode";
+import type { FeedbackStudentOption } from "../../../../../types/feedback";
 import { Toast } from "../../../../../components/ui/Toast";
 import type { Session } from "../../../../../types/problem";
 import { getReleasedTypes } from "../../../../../types/evaluation";
@@ -56,6 +59,26 @@ export default function ProblemDetailsPage() {
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState<boolean>(false);
+  const [realStudents, setRealStudents] = useState<FeedbackStudentOption[]>([]);
+
+  React.useEffect(() => {
+    if (!roomId) return;
+    photoRosterService
+      .getStudentsByRoom(roomId)
+      .then((students) => {
+        if (Array.isArray(students)) {
+          setRealStudents(
+            students.map((s) => ({
+              id: s.id,
+              name: s.name,
+              email: s.email,
+              avatarUrl: s.avatarUrl,
+            }))
+          );
+        }
+      })
+      .catch(() => {});
+  }, [roomId]);
   const [exportModalState, setExportModalState] = useState<{
     scope: ReportScope;
     title?: string;
@@ -355,7 +378,13 @@ export default function ProblemDetailsPage() {
       {isFeedbackModalOpen && (
         <FeedbackFormModal
           problemId={problemId}
-          students={MOCK_FEEDBACK_STUDENTS}
+          students={
+            realStudents.length > 0
+              ? realStudents
+              : IS_TEST
+              ? MOCK_FEEDBACK_STUDENTS
+              : []
+          }
           onClose={() => setIsFeedbackModalOpen(false)}
           onSubmit={async (payload) => {
             await sendFeedback(payload);

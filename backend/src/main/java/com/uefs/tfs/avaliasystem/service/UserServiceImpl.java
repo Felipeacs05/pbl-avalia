@@ -3,6 +3,7 @@ package com.uefs.tfs.avaliasystem.service;
 import com.uefs.tfs.avaliasystem.dto.RegisterUserRequest;
 import com.uefs.tfs.avaliasystem.dto.DashboardResponse;
 import com.uefs.tfs.avaliasystem.dto.LoginResponse;
+import com.uefs.tfs.avaliasystem.dto.UserResponse;
 import com.uefs.tfs.avaliasystem.exception.InvalidCredentialsException;
 import com.uefs.tfs.avaliasystem.exception.InvalidRegisterException;
 import com.uefs.tfs.avaliasystem.model.User;
@@ -63,9 +64,10 @@ public class UserServiceImpl implements UserService {
             profilePictureUrl = "url-da-foto/fotosPerfil/foto.png";
         }
 
+        String normalizedEmail = request.getEmail() != null ? request.getEmail().trim().toLowerCase() : null;
         String encodedPassword = passwordEncoder.encode(request.getPassword());
 
-        User user = new User(request.getName(), request.getEmail(), encodedPassword, profilePictureUrl);
+        User user = new User(request.getName(), normalizedEmail, encodedPassword, profilePictureUrl);
         return userRepository.save(user);
     }
 
@@ -78,18 +80,20 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public LoginResponse login(String email, String password) {
-        //verifica o email
-       User user = userRepository.findByEmail(email).
-               orElseThrow(InvalidCredentialsException::new);
+       String cleanEmail = email != null ? email.trim() : "";
+       // Tenta busca direta (compatível com mocks/testes existentes) e depois case-insensitive
+       User user = userRepository.findByEmail(cleanEmail)
+               .or(() -> userRepository.findByEmailIgnoreCase(cleanEmail))
+               .orElseThrow(InvalidCredentialsException::new);
         //verifica a senha
        if(!passwordEncoder.matches(password, user.getPassword())) {
            throw new InvalidCredentialsException();
        }
        //agora sim começa o login
-       String token = jwtService.generateToken(user.getId());
+       String token = jwtService.generateToken(user.getId(), user.getName(), user.getEmail());
        long expiresAt = System.currentTimeMillis() + jwtService.getExpirationTime();
 
-       return new LoginResponse(token, expiresAt);
+       return new LoginResponse(token, expiresAt, UserResponse.fromUser(user));
     }
 
     /**

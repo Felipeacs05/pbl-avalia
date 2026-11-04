@@ -20,21 +20,27 @@ export function SessionQuickTagsCard({ tags }: SessionQuickTagsCardProps) {
       </h2>
 
       <div className="flex flex-wrap gap-2.5 justify-center">
-        {tags.map((tag, index) => {
-          const isLong = tag.length > 22;
-          return (
-            <div
-              key={`${tag}-${index}`}
-              className={`${
-                isLong
-                  ? "w-full rounded-2xl px-4 py-3 text-left"
-                  : "rounded-full px-5 py-2 text-center"
-              } bg-[#8D9BD9]/90 border border-white/25 text-white font-semibold text-sm sm:text-base leading-snug shadow-xs`}
-            >
-              {tag}
-            </div>
-          );
-        })}
+        {tags.length === 0 ? (
+          <p className="text-sm font-medium text-white/80 py-4 text-center">
+            Nenhuma marcação recebida nesta sessão.
+          </p>
+        ) : (
+          tags.map((tag, index) => {
+            const isLong = tag.length > 22;
+            return (
+              <div
+                key={`${tag}-${index}`}
+                className={`${
+                  isLong
+                    ? "w-full rounded-2xl px-4 py-3 text-left"
+                    : "rounded-full px-5 py-2 text-center"
+                } bg-[#8D9BD9]/90 border border-white/25 text-white font-semibold text-sm sm:text-base leading-snug shadow-xs`}
+              >
+                {tag}
+              </div>
+            );
+          })
+        )}
       </div>
     </section>
   );

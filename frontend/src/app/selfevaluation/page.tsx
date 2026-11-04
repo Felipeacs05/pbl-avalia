@@ -14,6 +14,10 @@ import { useMyGroup } from "../../hooks/useMyGroup";
 import { SelfEvaluationModal } from "../../components/features/evaluations/SelfEvaluationModal";
 import { SelfAssessmentGrade } from "../../components/features/grade-adjustment/SelfAssessmentGrade";
 import { Toast } from "../../components/ui/Toast";
+import { USE_REAL_API } from "../../services/apiMode";
+import { evaluationService } from "../../services/evaluationService";
+
+const IS_TEST = process.env.NODE_ENV === "test";
 import {
   selfEvaluationMock,
   SELF_EVALUATION_MOCK_PROBLEM_ID,

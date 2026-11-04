@@ -33,15 +33,21 @@ public class JwtService {
         this.expiration = Duration.ofMillis(expirationTime);
     }
 
-    public String generateToken(UUID id) {
+    public String generateToken(UUID id, String name, String email) {
         Instant issuedAt = Instant.now();
         Instant expiresAt = issuedAt.plus(expiration);
 
-        JwtClaimsSet claims = JwtClaimsSet.builder()
+        JwtClaimsSet.Builder builder = JwtClaimsSet.builder()
                 .subject(id.toString())
                 .issuedAt(issuedAt)
-                .expiresAt(expiresAt)
-                .build();
+                .expiresAt(expiresAt);
+
+        if (name != null) {
+            builder.claim("name", name);
+        }
+        if (email != null) {
+            builder.claim("email", email);
+        }
 
         JwsHeader header = JwsHeader
                 .with(MacAlgorithm.HS256)
@@ -49,10 +55,14 @@ public class JwtService {
                 .build();
 
         Jwt jwt = jwtEncoder.encode(
-                JwtEncoderParameters.from(header, claims)
+                JwtEncoderParameters.from(header, builder.build())
         );
 
         return jwt.getTokenValue();
+    }
+
+    public String generateToken(UUID id) {
+        return generateToken(id, null, null);
     }
 
     public UUID extractUserId(String token) {

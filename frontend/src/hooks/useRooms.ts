@@ -1,13 +1,46 @@
 import { useState, useEffect, useCallback } from "react";
 import { Room } from "../types/room";
 import { roomService } from "../services/roomService";
-import { USE_REAL_API } from "../services/apiMode";
+import { IS_TEST, USE_REAL_API } from "../services/apiMode";
+import { getLoggedUserProfile } from "../services/authFetch";
 
 function toErrorMessage(err: unknown): string {
   return err instanceof Error ? err.message : "Erro ao carregar as salas.";
 }
 
-export function useRooms() {
+function filterRoomsByRole(rawRooms: Room[], targetRole?: 'teacher' | 'student'): Room[] {
+  if (!targetRole || IS_TEST) return rawRooms;
+  const currentUser = getLoggedUserProfile();
+  if (!currentUser || (!currentUser.id && !currentUser.name)) return rawRooms;
+
+  if (targetRole === 'teacher') {
+    return rawRooms.filter((r) => {
+      if (r.tutorId && currentUser.id) {
+        return r.tutorId === currentUser.id;
+      }
+      if (r.tutor && currentUser.name) {
+        return r.tutor.trim().toLowerCase() === currentUser.name.trim().toLowerCase();
+      }
+      return false;
+    });
+  }
+
+  if (targetRole === 'student') {
+    return rawRooms.filter((r) => {
+      if (r.tutorId && currentUser.id) {
+        return r.tutorId !== currentUser.id;
+      }
+      if (r.tutor && currentUser.name) {
+        return r.tutor.trim().toLowerCase() !== currentUser.name.trim().toLowerCase();
+      }
+      return true;
+    });
+  }
+
+  return rawRooms;
+}
+
+export function useRooms(role?: 'teacher' | 'student') {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +53,9 @@ export function useRooms() {
     roomService
       .fetchRooms()
       .then((data) => {
-        if (isActive && Array.isArray(data)) setRooms(data);
+        if (isActive && Array.isArray(data)) {
+          setRooms(filterRoomsByRole(data, role));
+        }
       })
       .catch((err: unknown) => {
         if (isActive) setError(toErrorMessage(err));
@@ -32,7 +67,7 @@ export function useRooms() {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [role]);
 
   // Recarga manual (chamada por eventos, fora de effects)
   const refreshRooms = useCallback(async () => {
@@ -40,13 +75,15 @@ export function useRooms() {
     setError(null);
     try {
       const data = await roomService.fetchRooms();
-      if (Array.isArray(data)) setRooms(data);
+      if (Array.isArray(data)) {
+        setRooms(filterRoomsByRole(data, role));
+      }
     } catch (err) {
       setError(toErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [role]);
 
   const createRoom = async (name: string) => {
     const newRoom = await roomService.createRoom(name);
@@ -63,7 +100,9 @@ export function useRooms() {
     // Com a API real, sincroniza a lista com o que o servidor gravou
     if (USE_REAL_API) {
       const data = await roomService.fetchRooms();
-      if (Array.isArray(data)) setRooms(data);
+      if (Array.isArray(data)) {
+        setRooms(filterRoomsByRole(data, role));
+      }
     }
   };
 

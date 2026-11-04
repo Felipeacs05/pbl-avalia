@@ -34,7 +34,6 @@ export function StudentPerformanceTableView({
 
   // Localiza o aluno correspondente ao ID
   const currentStudent = roster?.students.find((s) => s.id === studentId);
-  // antes caía no nome fixo "Luana Angélica"
   const studentName = currentStudent?.name || "Aluno";
   const studentTags = currentStudent?.tags || [];
 
@@ -69,14 +68,26 @@ export function StudentPerformanceTableView({
     }
   };
 
-  const handleSave = async () => {
-    await saveEvaluation();
-  };
-
   const scores = evaluation?.criteria ?? {};
 
+  const handleSave = async () => {
+    let totalWeightedScore = 0;
+    let totalWeights = 0;
+    weightedCriteria.forEach((c) => {
+      const score = scores[c.id] ?? 100;
+      totalWeightedScore += score * (c.weight / 100);
+      totalWeights += c.weight;
+    });
+    const calculatedGrade =
+      totalWeights > 0 ? Number(((totalWeightedScore / totalWeights) * 10).toFixed(1)) : 10.0;
+    await saveEvaluation(calculatedGrade);
+  };
+
   // sem tags de exemplo: mostra só as marcações reais da sessão
-  const tags = evaluation?.tags ?? [];
+  const tags =
+    evaluation?.tags && evaluation.tags.length > 0
+      ? evaluation.tags
+      : (currentStudent?.tags || []);
 
   const message = evaluation?.message || "";
 
@@ -172,7 +183,6 @@ export function StudentPerformanceTableView({
                 Marcações Recebidas pelo aluno durante a sessão
               </h2>
               <div className="w-full bg-white rounded-2xl border border-gray-200/90 p-4 min-h-[90px] flex flex-wrap gap-2 content-start shadow-xs">
-                {/* aviso quando o aluno não recebeu marcações */}
                 {tags.length === 0 && (
                   <p className="text-xs italic text-gray-400">Nenhuma marcação recebida nesta sessão.</p>
                 )}
