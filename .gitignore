@@ -29,7 +29,7 @@ Thumbs.db
 # ==========================================
 # Backend (Java / Maven)
 # ==========================================
-backend/target/
+./backend/target/
 target/
 backend/.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
