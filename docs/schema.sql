@@ -1,3 +1,4 @@
+```sql
 -- Schema relacional do Avalia-system para PostgreSQL.
 -- Este arquivo representa as entidades JPA atuais. IDs UUID são gerados pelo Hibernate,
 -- exceto password_reset_token.id, que usa a identidade gerada pelo PostgreSQL.
@@ -52,8 +53,8 @@ CREATE TABLE room_members (
     team_id UUID,
     CONSTRAINT pk_room_members PRIMARY KEY (id),
     CONSTRAINT fk_room_members_room FOREIGN KEY (room_id) REFERENCES rooms (id) ON DELETE CASCADE,
-    CONSTRAINT fk_room_members_user FOREIGN KEY (user_id) REFERENCES users (id),
-    CONSTRAINT fk_room_members_team FOREIGN KEY (team_id) REFERENCES teams (id)
+    CONSTRAINT fk_room_members_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_room_members_team FOREIGN KEY (team_id) REFERENCES teams (id) ON DELETE SET NULL
 );
 
 CREATE INDEX idx_room_members_room_id ON room_members (room_id); -- Consultas de membros por sala filtram por room_id; o índice evita examinar vínculos de outras salas.
@@ -90,7 +91,9 @@ CREATE TABLE problems (
     id UUID NOT NULL,
     room_id UUID NOT NULL,
     title VARCHAR(255) NOT NULL,
+    description TEXT,
     order_index INTEGER NOT NULL,
+    weight DOUBLE PRECISION DEFAULT 1.0 NOT NULL,
     self_assessment_released BOOLEAN NOT NULL,
     peer_assessment_released BOOLEAN NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE,
@@ -164,20 +167,23 @@ CREATE INDEX idx_assessments_problem_id ON assessments (problem_id); -- Assessme
 CREATE INDEX idx_assessments_evaluator_id ON assessments (evaluator_id); -- As consultas que combinam problema e avaliador podem usar este índice para localizar as avaliações do autor.
 CREATE INDEX idx_assessments_target_id ON assessments (target_id); -- Permite filtrar avaliações pelo usuário avaliado sem percorrer toda a tabela.
 
--- Feedback é vinculado ao problema e ao aluno que o recebe.
+-- Feedback é vinculado ao problema e ao aluno que o recebe; a sessão e a nota são opcionais.
 CREATE TABLE feedbacks (
     id UUID NOT NULL,
     problem_id UUID NOT NULL,
     student_id UUID NOT NULL,
-    grade DOUBLE PRECISION NOT NULL,
+    grade DOUBLE PRECISION,
     feedback_text VARCHAR(2000) NOT NULL,
+    session_id UUID,
     created_at TIMESTAMP WITH TIME ZONE,
     CONSTRAINT pk_feedbacks PRIMARY KEY (id),
     CONSTRAINT fk_feedbacks_problem FOREIGN KEY (problem_id) REFERENCES problems (id),
-    CONSTRAINT fk_feedbacks_student FOREIGN KEY (student_id) REFERENCES users (id)
+    CONSTRAINT fk_feedbacks_student FOREIGN KEY (student_id) REFERENCES users (id),
+    CONSTRAINT fk_feedbacks_session FOREIGN KEY (session_id) REFERENCES tutoring_sessions (id)
 );
 
 CREATE INDEX idx_feedbacks_problem_id ON feedbacks (problem_id); -- FeedbackRepository.findByProblemId filtra por problem_id; o índice evita examinar feedbacks de outros problemas.
+CREATE INDEX idx_feedbacks_session_id ON feedbacks (session_id); -- Permite localizar feedbacks pela sessão de origem sem percorrer toda a tabela.
 CREATE INDEX idx_feedbacks_student_id ON feedbacks (student_id); -- As consultas de feedback paginado começam por student_id; o índice encontra os registros do aluno antes da ordenação.
 
 -- Tags de comportamento são configuradas por sala e podem ser reutilizadas nos registros.
@@ -256,3 +262,4 @@ CREATE TABLE password_reset_token (
 );
 
 CREATE INDEX idx_password_reset_token_user_id_id ON password_reset_token (user_id, id DESC); -- Corresponde ao filtro por usuário e à ordenação decrescente por ID, permitindo obter o token mais recente sem ordenar todos os tokens.
+```
