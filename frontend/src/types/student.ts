@@ -6,4 +6,5 @@ export interface Student {
   avatarUrl: string;
   email?: string;
   registrationNumber?: string;
+  role?: string;
 }

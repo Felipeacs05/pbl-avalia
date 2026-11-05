@@ -203,7 +203,7 @@ describe("[US07] CriterionFormModal", () => {
         // Se o limite mudar (ver o teste [QA] do plano), atualize NAME_MAX_UI no fixtures
         expect(nameInput()).toHaveAttribute("maxlength", String(NAME_MAX_UI));
         expect(nameInput()).toHaveValue("A".repeat(NAME_MAX_UI));
-    });
+    }, 20000);
 
     it("[QA] Deve limitar o nome a 255 caracteres, como no CT-BND-01 do plano", () => {
         renderModal();

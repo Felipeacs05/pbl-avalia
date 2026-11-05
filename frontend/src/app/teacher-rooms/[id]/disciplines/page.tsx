@@ -187,20 +187,31 @@ function DisciplinesContent() {
 
                 {/* Problem list */}
                 <div className="space-y-4 w-full">
-                  {discipline.problems.map((problem) => (
-                    <ProblemCard
-                      key={problem.id}
-                      problem={problem}
-                      onClick={() => {
-                        router.push(
-                          `/teacher-rooms/${roomId}/problems/${problem.id}`
-                        );
-                      }}
-                      onViewStats={() => setPendingAction({ type: "extract", problem })}
-                      onEdit={() => setEditingProblem(problem)}
-                      onDelete={() => setPendingAction({ type: "delete", problem })}
-                    />
-                  ))}
+                  {discipline.problems.length === 0 ? (
+                    <div className="bg-white rounded-2xl border border-dashed border-gray-300 p-8 text-center">
+                      <BookOpen size={36} className="mx-auto text-gray-400 mb-2" />
+                      <p className="text-sm font-semibold text-gray-700">Nenhum problema criado ainda.</p>
+                      <p className="text-xs text-gray-400 mt-1">Toque no botão &quot;+ Novo Problema&quot; abaixo para cadastrar seu primeiro problema PBL.</p>
+                    </div>
+                  ) : (
+                    <ol className="space-y-4 w-full list-none p-0 m-0">
+                      {discipline.problems.map((problem) => (
+                        <li key={problem.id}>
+                          <ProblemCard
+                            problem={problem}
+                            onClick={() => {
+                              router.push(
+                                `/teacher-rooms/${roomId}/problems/${problem.id}`
+                              );
+                            }}
+                            onViewStats={() => setPendingAction({ type: "extract", problem })}
+                            onEdit={() => setEditingProblem(problem)}
+                            onDelete={() => setPendingAction({ type: "delete", problem })}
+                          />
+                        </li>
+                      ))}
+                    </ol>
+                  )}
                 </div>
               </>
             )}

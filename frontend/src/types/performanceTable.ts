@@ -24,6 +24,18 @@ export interface PerformanceTable {
 // Nota (0 a 100) por critério do Pré-set, indexada pelo id do critério
 export type StudentEvaluationCriteria = Record<string, number>;
 
+export interface PeerEvaluationItem {
+  evaluatorName: string;
+  score: number;
+  comments?: string;
+}
+
+export interface SelfEvaluationItem {
+  score: number;
+  comments?: string;
+  submitted?: boolean;
+}
+
 export interface StudentEvaluationData {
   sessionId: string;
   studentId: string;
@@ -31,6 +43,9 @@ export interface StudentEvaluationData {
   criteria: StudentEvaluationCriteria;
   tags: string[];
   message: string;
+  calculatedGrade?: number;
+  selfEvaluation?: SelfEvaluationItem | null;
+  peerEvaluations?: PeerEvaluationItem[];
   updatedAt?: string;
 }
 

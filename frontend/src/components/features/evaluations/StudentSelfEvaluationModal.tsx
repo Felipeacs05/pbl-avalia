@@ -6,8 +6,9 @@ import { useEvaluationManager } from "../../../hooks/useEvaluationManager";
 import { useMyGroup } from "../../../hooks/useMyGroup";
 import { useCriteriaPreset } from "../../../hooks/useCriteriaPreset";
 import { isEvaluationTypeReleased } from "../../../types/evaluation";
-import { selfEvaluationMock } from "../../../mocks/selfEvaluation.mock";
+import { evaluationService } from "../../../services/evaluationService";
 import { authMockSuccess } from "../../../mocks/auth.mock";
+import { getLoggedUserProfile } from "../../../services/authFetch";
 import { SelfEvaluationModal } from "./SelfEvaluationModal";
 
 interface StudentSelfEvaluationModalProps {
@@ -31,9 +32,9 @@ export function StudentSelfEvaluationModal({
   const { criteria, isLoading: isLoadingPreset } = useCriteriaPreset(problemId);
   const isEnabledInPreset = criteria.find((c) => c.id === "crit_autoavaliacao")?.enabled ?? true;
 
-  // trocar pelo id do usuário logado quando o login guardar o usuário
-  const currentStudentId = authMockSuccess.user?.id;
-  const peers = group?.members.filter((member) => member.id !== currentStudentId) ?? [];
+  const loggedUser = getLoggedUserProfile();
+  const currentStudentId = loggedUser?.id || (typeof window !== "undefined" && localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")!).id : null) || authMockSuccess.user?.id;
+  const peers = group?.members.filter((member) => member.id !== currentStudentId && member.id !== loggedUser?.name) ?? [];
 
   // Espera o status e o grupo: sem isso o aluno veria "encerrado" ou uma lista vazia por um instante
   if (isLoadingStatus || isLoadingGroup || isLoadingPreset) return null;
@@ -46,7 +47,7 @@ export function StudentSelfEvaluationModal({
       peers={peers}
       onSubmit={async (data) => {
         // trocar pelo endpoint real quando o back-end existir
-        await selfEvaluationMock.submit(problemId, data);
+        await evaluationService.submitSelfEvaluation(problemId, data);
         onSubmitted?.("Autoavaliação enviada com sucesso!");
       }}
     />

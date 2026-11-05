@@ -206,18 +206,21 @@ describe("[US14] PeerEvaluationModal", () => {
         expect(participation).toHaveValue(0);
     });
 
-    it("[QA] Deve manter o envio bloqueado enquanto algum colega estiver sem comentário (plano US14: comentário obrigatório)", async () => {
+    it("[QA] Deve permitir o envio mesmo se os colegas estiverem sem comentário (comentário opcional)", async () => {
         const { user, peers, sendButton } = renderModal({ peers: makePeers(2) });
 
+        // Preenche apenas as notas (sem digitar nenhum comentário)
         await fillAll(user, peers);
 
-        // Divergência conhecida: o plano exige nota + comentário de texto para cada colega; hoje o comentário é opcional
-        expect(sendButton()).toBeDisabled();
+        // Como o comentário é opcional, o botão já deve estar liberado
+        expect(sendButton()).toBeEnabled();
 
+        // Testamos também se digitar o comentário mantém tudo funcionando
         for (const peer of peers) {
             await openCard(user, peer.name);
             await user.type(within(cardOf(peer.name)).getByLabelText(/comentário sobre/i), "Boa participação");
         }
+
         expect(sendButton()).toBeEnabled();
     });
 

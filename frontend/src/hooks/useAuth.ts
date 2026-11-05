@@ -16,13 +16,26 @@ export function useAuth() {
     setIsLoading(true);
 
     try {
-      const data = await authService.login(credentials);
+      const normalizedCredentials: LoginCredentials = {
+        ...credentials,
+        email: credentials.email ? credentials.email.trim().toLowerCase() : credentials.email,
+      };
+      const data = await authService.login(normalizedCredentials);
 
-      if (typeof window !== 'undefined') {
+      if (typeof window !== 'undefined' && data?.token) {
         localStorage.setItem('token', data.token);
+        if (data.user) {
+          localStorage.setItem('user', JSON.stringify(data.user));
+        }
       }
 
-      router.push('/teacher-rooms');
+      const pendingCode = typeof window !== 'undefined' ? localStorage.getItem('pendingJoinCode') : null;
+      if (pendingCode) {
+        localStorage.removeItem('pendingJoinCode');
+        router.push(`/app/join/${pendingCode}`);
+      } else {
+        router.push('/teacher-rooms');
+      }
     } catch (err: unknown) {
       // Trata o tipo unknown de forma segura sem usar 'any'
       let message = 'Erro ao realizar login. Verifique seus dados de acesso.';
@@ -45,6 +58,7 @@ export function useAuth() {
   function logout() {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
       router.push('/');
     }
   }

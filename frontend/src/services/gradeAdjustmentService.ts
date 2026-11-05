@@ -7,6 +7,8 @@ import type {
   SubmittedSelfAssessment,
 } from "../types/gradeAdjustment";
 import { gradeAdjustmentMock } from "../mocks/gradeAdjustment.mock";
+import { USE_REAL_API } from "./apiMode";
+import { authFetch } from "./authFetch";
 
 const FORBIDDEN_PT_BR = "Apenas o tutor responsável pela sala pode ajustar notas.";
 
@@ -20,7 +22,7 @@ export const gradeAdjustmentService = {
   ): Promise<GradeAdjustment> {
     let response: Response;
     try {
-      response = await fetch(
+      response = await authFetch(
         `/api/v1/assessments/${assessmentId}/grade-adjustment`,
         {
           method: "PATCH",
@@ -59,13 +61,12 @@ export const gradeAdjustmentService = {
           message?: string;
           errors?: Record<string, string>;
         };
-        if (body.errors?.justification) {
-          errorMessage = body.errors.justification;
-        } else if (body.message) {
-          errorMessage = body.message;
-        }
+        errorMessage =
+          (body.errors ? Object.values(body.errors)[0] : undefined) ??
+          body.message ??
+          errorMessage;
       } catch {
-        // Mantém mensagem padrão
+        // Falha no parse do corpo do erro
       }
 
       throw {
@@ -74,8 +75,7 @@ export const gradeAdjustmentService = {
       };
     }
 
-    const data = (await response.json()) as GradeAdjustment;
-    return data;
+    return (await response.json()) as GradeAdjustment;
   },
 
   /**
@@ -83,7 +83,7 @@ export const gradeAdjustmentService = {
    */
   async getAssessment(assessmentId: string): Promise<SubmittedSelfAssessment> {
     try {
-      const response = await fetch(`/api/v1/assessments/${assessmentId}`, {
+      const response = await authFetch(`/api/v1/assessments/${assessmentId}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });
@@ -115,6 +115,16 @@ export const gradeAdjustmentService = {
   async getSessionSelfEvaluations(
     sessionId: string
   ): Promise<StudentSelfEvaluationReview[]> {
+    if (USE_REAL_API) {
+      try {
+        const response = await authFetch(`/api/v1/sessions/${sessionId}/self-evaluations`);
+        if (response.ok) {
+          return await response.json();
+        }
+      } catch (err) {
+        console.error("Failed to fetch session self-evaluations from API", err);
+      }
+    }
     if (process.env.NODE_ENV !== "test") {
       await new Promise((resolve) => setTimeout(resolve, 250));
     }

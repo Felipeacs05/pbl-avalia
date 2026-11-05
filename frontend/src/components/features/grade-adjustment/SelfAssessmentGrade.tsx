@@ -2,10 +2,11 @@
 "use client";
 
 import React from "react";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Clock } from "lucide-react";
 
 export interface SelfAssessmentGradeProps {
-  score: number;
+  score: number | null;
+  isGradeReleased?: boolean;
   modifiedByTutor?: boolean;
   ajustado_por_tutor?: boolean;
   originalGrade?: number | null;
@@ -23,13 +24,15 @@ export function formatPtBrGrade(value: number): string {
 
 export function SelfAssessmentGrade({
   score,
+  isGradeReleased = true,
   modifiedByTutor,
   ajustado_por_tutor,
   justification,
   className = "",
 }: SelfAssessmentGradeProps) {
   const isModified = Boolean(modifiedByTutor ?? ajustado_por_tutor);
-  const formattedScore = formatPtBrGrade(score);
+  const hasPublishedGrade = isGradeReleased && score !== null && !isNaN(score);
+  const formattedScore = hasPublishedGrade ? formatPtBrGrade(score) : "—";
 
   return (
     <div
@@ -41,7 +44,12 @@ export function SelfAssessmentGrade({
           SUA NOTA DA SESSÃO
         </p>
 
-        {isModified ? (
+        {!hasPublishedGrade ? (
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500">
+            <Clock size={13} className="text-gray-400 shrink-0" aria-hidden="true" />
+            <span>Nota pendente de publicação</span>
+          </span>
+        ) : isModified ? (
           <span
             role="img"
             aria-label="Nota Modificada pelo Tutor"
@@ -56,7 +64,7 @@ export function SelfAssessmentGrade({
             <span>Nota Modificada pelo Tutor</span>
           </span>
         ) : (
-          <span className="text-xs font-medium text-gray-400">
+          <span className="text-xs font-medium text-emerald-600 font-semibold">
             Nota liberada
           </span>
         )}

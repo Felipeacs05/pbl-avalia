@@ -3,6 +3,7 @@
 import type { ClassReport } from "../types/report";
 import { buildClassReportMock } from "../mocks/report.mock";
 import { USE_REAL_API } from "./apiMode";
+import { authFetch } from "./authFetch";
 
 const FORBIDDEN_MESSAGE = "Apenas o tutor responsável pela sala pode emitir o relatório final.";
 const DEFAULT_ERROR_MESSAGE = "Não foi possível carregar o relatório final.";
@@ -17,7 +18,7 @@ export const reportService = {
 
     let response: Response;
     try {
-      response = await fetch(`/api/v1/rooms/${roomId}/reports/final`, {
+      response = await authFetch(`/api/v1/rooms/${roomId}/reports/final`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });

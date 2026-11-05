@@ -45,15 +45,31 @@ public class RoomController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<RoomResponse> listRooms(Principal principal) {
-        return roomService.listRooms(userId(principal));
+    public List<RoomResponse> listRooms(
+            @RequestParam(required = false) String role,
+            Principal principal
+    ) {
+        return roomService.listRooms(userId(principal), role);
     }
 
-    @GetMapping("/{roomId}/members")
+    @GetMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public RoomResponse getRoom(@PathVariable UUID id) {
+        return roomService.getRoom(id);
+    }
+
+    @GetMapping({"/{roomId}/members", "/{roomId}/students"})
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("@roomSecurity.isRoomMemberOrOwner(#roomId, authentication)")
     public List<RoomMemberResponse> listRoomMembers(@PathVariable UUID roomId) {
         return roomService.listRoomMembers(roomId);
+    }
+
+    @DeleteMapping({"/{roomId}/members/{studentId}", "/{roomId}/students/{studentId}"})
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("@roomSecurity.isOwner(#roomId, authentication)")
+    public void removeStudentFromRoom(@PathVariable UUID roomId, @PathVariable UUID studentId, Principal principal) {
+        roomService.removeStudentFromRoom(roomId, studentId, userId(principal));
     }
 
     @PostMapping("/join")

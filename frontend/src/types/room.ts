@@ -5,5 +5,6 @@ export interface Room {
   joinLink: string;
   semester?: string;
   tutor?: string;
+  tutorId?: string;
   tutorPhoto?: string;
 }

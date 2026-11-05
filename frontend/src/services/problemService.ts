@@ -3,10 +3,20 @@ import type { ProblemDetails } from "../types/problem";
 import { problemDetailsMock, createProblemInMock, createSessionInMock, updateProblemInMock, deleteProblemInMock } from "../mocks/problem.mock"; 
 import type { Problem } from "../types/discipline"; 
 import { USE_REAL_API } from "./apiMode";
+import { authFetch } from "./authFetch";
 
 const BASE_URL = "/api/v1/problems";
 
 export const problemService = {
+  async fetchProblems(roomId: string): Promise<Problem[]> {
+    if (!USE_REAL_API) {
+      return [];
+    }
+    const response = await authFetch(`/api/v1/rooms/${roomId}/problems`);
+    if (!response.ok) return [];
+    return response.json();
+  },
+
   async fetchProblemDetails(problemId: string): Promise<ProblemDetails | null> {
     if (!USE_REAL_API) {
       return new Promise((resolve) =>
@@ -16,7 +26,7 @@ export const problemService = {
         }, 400)
       );
     }
-    const response = await fetch(`${BASE_URL}/${problemId}`, {
+    const response = await authFetch(`${BASE_URL}/${problemId}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
@@ -24,7 +34,6 @@ export const problemService = {
     return response.json();
   },
 
-  
   // Cria um problema na disciplina e devolve o problema criado (com o id gerado)
   async createProblem(
     disciplineId: string,
@@ -41,12 +50,17 @@ export const problemService = {
         }, 500)
       );
     }
-    const response = await fetch(`/api/v1/disciplines/${disciplineId}/problems`, {
+    const response = await authFetch(`/api/v1/disciplines/${disciplineId}/problems`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),
     });
-    if (!response.ok) throw new Error("Falha ao criar o problema.");
+    if (!response.ok) {
+      if (response.status === 403) {
+        throw { status: 403, message: "Apenas o tutor responsável pela sala pode gerenciar problemas." };
+      }
+      throw new Error("Falha ao criar o problema.");
+    }
     return response.json();
   },
 
@@ -60,12 +74,17 @@ export const problemService = {
         }, 400)
       );
     }
-    const response = await fetch(`${BASE_URL}/${problemId}`, {
+    const response = await authFetch(`${BASE_URL}/${problemId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),
     });
-    if (!response.ok) throw new Error("Falha ao editar o problema.");
+    if (!response.ok) {
+      if (response.status === 403) {
+        throw { status: 403, message: "Apenas o tutor responsável pela sala pode gerenciar problemas." };
+      }
+      throw new Error("Falha ao editar o problema.");
+    }
   },
 
   async deleteProblem(problemId: string): Promise<void> {
@@ -77,8 +96,13 @@ export const problemService = {
         }, 400)
       );
     }
-    const response = await fetch(`${BASE_URL}/${problemId}`, { method: "DELETE" });
-    if (!response.ok) throw new Error("Falha ao excluir o problema.");
+    const response = await authFetch(`${BASE_URL}/${problemId}`, { method: "DELETE" });
+    if (!response.ok) {
+      if (response.status === 403) {
+        throw { status: 403, message: "Apenas o tutor responsável pela sala pode gerenciar problemas." };
+      }
+      throw new Error("Falha ao excluir o problema.");
+    }
   },
 
   async startSession(problemId: string): Promise<{ sessionId: string }> {
@@ -94,7 +118,7 @@ export const problemService = {
         }, 600)
       );
     }
-    const response = await fetch(`${BASE_URL}/${problemId}/sessions`, {
+    const response = await authFetch(`${BASE_URL}/${problemId}/sessions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
     });
@@ -105,7 +129,7 @@ export const problemService = {
     if (!USE_REAL_API) {
       return new Promise((resolve) => setTimeout(() => resolve(), 500));
     }
-    await fetch(`${BASE_URL}/${problemId}/self-evaluation/release`, {
+    await authFetch(`${BASE_URL}/${problemId}/self-evaluation/release`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
     });

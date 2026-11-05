@@ -1,7 +1,9 @@
 // src/services/evaluationService.ts
-import type { EvaluationStatus, EvaluationType } from "../types/evaluation";
+import type { EvaluationStatus, EvaluationType, SelfEvaluationSubmission } from "../types/evaluation";
 import { evaluationMock } from "../mocks/evaluationMock";
+import { selfEvaluationMock } from "../mocks/selfEvaluation.mock";
 import { USE_REAL_API } from "./apiMode";
+import { authFetch } from "./authFetch";
 
 const BASE_URL = "/api/v1/problems";
 
@@ -31,7 +33,7 @@ export const evaluationService = {
 
     let response: Response;
     try {
-      response = await fetch(`${BASE_URL}/${problemId}/evaluation-status`, {
+      response = await authFetch(`${BASE_URL}/${problemId}/evaluation-status`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });
@@ -65,7 +67,7 @@ export const evaluationService = {
 
     let response: Response;
     try {
-      response = await fetch(`${BASE_URL}/${problemId}/evaluations/release`, {
+      response = await authFetch(`${BASE_URL}/${problemId}/evaluations/release`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         // ATENÇÃO (combinar com o back-end): ao liberar a autoavaliação e a avaliação entre pares juntas,
@@ -80,5 +82,60 @@ export const evaluationService = {
     // Sem fallback para o mock: o tutor precisa saber que a liberação não foi gravada
     if (!response.ok) throw await toApiError(response, RELEASE_ERROR_MESSAGE);
     return await response.json();
+  },
+
+  /**
+   * Submete a autoavaliação do aluno e as avaliações por pares se houver.
+   */
+  async submitSelfEvaluation(
+    problemId: string,
+    data: SelfEvaluationSubmission
+  ): Promise<void> {
+    if (!USE_REAL_API) {
+      await selfEvaluationMock.submit(problemId, data);
+      return;
+    }
+
+    const content = Number(data.scores?.content ?? 0);
+    const participation = Number(data.scores?.participation ?? 0);
+    const behavior = Number(data.scores?.behavior ?? 0);
+    const avgScore = (content + participation + behavior) / 3;
+    const finalScore = Math.min(10, Math.max(0, Math.round(avgScore * 10) / 10));
+    const comment = data.justification?.trim() || "Autoavaliação submetida pelo aluno.";
+
+    // 1. Enviar autoavaliação
+    const response = await authFetch(`${BASE_URL}/${problemId}/self-assessment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ score: finalScore, comment }),
+    });
+
+    if (!response.ok) {
+      const errBody = await response.json().catch(() => null);
+      throw {
+        status: response.status,
+        response: { status: response.status },
+        message: errBody?.message || "Não foi possível enviar a autoavaliação.",
+      };
+    }
+
+    // 2. Se houver colegas avaliados e peer assessment estiver liberada, enviar
+    if (data.peers && data.peers.length > 0) {
+      const peerRequests = data.peers.map((peer) => ({
+        targetId: peer.studentId,
+        score: Math.min(10, Math.max(0, Number(peer.score ?? 0))),
+        comment: peer.comment?.trim() || "Avaliação de pares",
+      }));
+
+      try {
+        await authFetch(`${BASE_URL}/${problemId}/peer-assessments`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(peerRequests),
+        });
+      } catch (peerErr) {
+        console.warn("Peer assessment submit warning:", peerErr);
+      }
+    }
   },
 };

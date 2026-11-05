@@ -1,3 +1,5 @@
+import { roomsMock } from "./rooms.mock";
+
 // Lista de códigos de acesso válidos simulados (gerados aleatoriamente)
 export const VALID_CODES_MOCK: string[] = [
   "SALA1", 
@@ -9,7 +11,10 @@ export const VALID_CODES_MOCK: string[] = [
 //Função utilitária para validar se o código digitado existe no sistema simulado.
 export function validateRoomCode(code: string): boolean {
   const normalizedCode = code.trim().toUpperCase();
-  return VALID_CODES_MOCK.includes(normalizedCode);
+  return (
+    VALID_CODES_MOCK.includes(normalizedCode) ||
+    roomsMock.some((r) => r.code?.toUpperCase() === normalizedCode)
+  );
 }
 
 // Ainda não existe endpoint no back-end, então a validação de código é feita 

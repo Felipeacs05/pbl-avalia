@@ -2,6 +2,7 @@
 import type { StudentEvaluationData } from "../types/performanceTable";
 import { studentEvaluationMock } from "../mocks/studentEvaluation.mock";
 import { IS_TEST, USE_REAL_API } from "./apiMode";
+import { authFetch } from "./authFetch";
 
 const BASE_URL = "/api/v1/sessions";
 
@@ -26,7 +27,7 @@ export const studentEvaluationService = {
     }
 
     try {
-      const response = await fetch(
+      const response = await authFetch(
         `${BASE_URL}/${sessionId}/evaluations/${studentId}`,
         {
           method: "GET",
@@ -60,7 +61,7 @@ export const studentEvaluationService = {
     }
 
     try {
-      const response = await fetch(
+      const response = await authFetch(
         `${BASE_URL}/${data.sessionId}/evaluations/${data.studentId}`,
         {
           method: "PUT",

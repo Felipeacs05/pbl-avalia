@@ -1,11 +1,12 @@
 import type { Room } from "../types/room";
 import { roomsMock } from "../mocks/rooms.mock";
 import { USE_REAL_API } from "./apiMode";
+import { authFetch } from "./authFetch";
 
 export const roomService = {
   fetchRooms: async (): Promise<Room[]> => {
     if (!USE_REAL_API) return [...roomsMock];
-    const response = await fetch("/api/v1/rooms", { method: "GET" });
+    const response = await authFetch("/api/v1/rooms", { method: "GET" });
     if (!response.ok) throw new Error("Failed to fetch rooms");
     return response.json();
   },
@@ -23,7 +24,7 @@ export const roomService = {
       roomsMock.push(newRoom);
       return newRoom;
     }
-    const response = await fetch("/api/v1/rooms", {
+    const response = await authFetch("/api/v1/rooms", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name }),
@@ -40,7 +41,7 @@ export const roomService = {
       if (room) room.name = name;
       return;
     }
-    const response = await fetch(`/api/v1/rooms/${roomId}`, {
+    const response = await authFetch(`/api/v1/rooms/${roomId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name }),
@@ -56,11 +57,24 @@ export const roomService = {
       if (index > -1) roomsMock.splice(index, 1);
       return;
     }
-    const response = await fetch(`/api/v1/rooms/${roomId}`, {
+    const response = await authFetch(`/api/v1/rooms/${roomId}`, {
       method: "DELETE",
     });
     if (!response.ok) {
-      throw new Error("Falha ao deletar a sala.");
+      throw new Error("Falha ao excluir a sala.");
     }
+  },
+
+  joinRoom: async (accessCode: string): Promise<Room> => {
+    const response = await authFetch("/api/v1/rooms/join", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ accessCode: accessCode.trim().toUpperCase() }),
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw { response: { status: response.status, data: errorData } };
+    }
+    return response.json();
   },
 };

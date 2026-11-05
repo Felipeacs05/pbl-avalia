@@ -7,6 +7,7 @@ import type {
 import type { SessionRoster } from "../types/session";
 import { sessionMock } from "../mocks/session.mock";
 import { USE_REAL_API } from "./apiMode";
+import { authFetch } from "./authFetch";
 
 const BASE_URL = "/api/v1/sessions";
 
@@ -54,7 +55,7 @@ export const attendanceService = {
   async fetchSessionRoster(sessionId: string): Promise<SessionRoster> {
     if (!USE_REAL_API) return sessionMock.fetchRoster(sessionId);
 
-    const response = await fetch(`${BASE_URL}/${sessionId}`, {
+    const response = await authFetch(`${BASE_URL}/${sessionId}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
@@ -76,7 +77,7 @@ export const attendanceService = {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), ATTENDANCE_TIMEOUT_MS);
     try {
-      const response = await fetch(`${BASE_URL}/${sessionId}/attendances/${studentId}`, {
+      const response = await authFetch(`${BASE_URL}/${sessionId}/attendances/${studentId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
@@ -100,6 +101,12 @@ export const attendanceService = {
   updateTags(sessionId: string, studentId: string, tags: string[]): void {
     if (!USE_REAL_API) {
       sessionMock.updateStudentTags(sessionId, studentId, tags);
+      return;
     }
+    authFetch(`/api/v1/sessions/${sessionId}/students/${studentId}/tags`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(tags),
+    }).catch((err) => console.error("Erro ao salvar tags da sessão:", err));
   },
 };

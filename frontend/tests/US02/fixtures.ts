@@ -1,6 +1,7 @@
 import type { LoginCredentials } from "@/types/login";
 import type { AuthResponse } from "@/types/auth";
 import { authMockSuccess } from "@/mocks/auth.mock";
+export { authMockSuccess } from "@/mocks/auth.mock";
 
 // Identificadores fixos para cenários de teste da US02
 export const USER_ID = "usr_01";

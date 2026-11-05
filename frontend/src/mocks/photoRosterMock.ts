@@ -31,8 +31,9 @@ const studentsStoreByRoom = new Map<string, Student[]>();
 export const photoRosterMock = {
   getStudents(roomId: string): Student[] {
     if (!studentsStoreByRoom.has(roomId)) {
-      // Initialize with default students from Figma
-      studentsStoreByRoom.set(roomId, [...initialStudentsMock]);
+      // Se for UUID ou sala real, não injeta alunos fakes
+      const isRealRoomId = /^[0-9a-fA-F-]{10,}$/.test(roomId);
+      studentsStoreByRoom.set(roomId, isRealRoomId ? [] : [...initialStudentsMock]);
     }
     return [...(studentsStoreByRoom.get(roomId) || [])];
   },

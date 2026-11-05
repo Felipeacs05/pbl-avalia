@@ -17,14 +17,23 @@ export const registrationService = {
     }
 
     // Preparação para enviar Arquivos (File) reais para a API
+    const cleanEmail = data.email ? data.email.trim().toLowerCase() : data.email;
     const formData = new FormData();
     formData.append('name', data.name);
-    formData.append('email', data.email);
+    formData.append('email', cleanEmail);
     formData.append('password', data.password);
     // A imagem só é anexada se o usuário tiver selecionado uma (foto opcional)
     if (data.image) {
       formData.append('image', data.image);
+      formData.append('photo', data.image);
     }
+
+    // Parte 'data' com JSON exigida pelo backend Spring Boot (@RequestPart("data"))
+    const jsonBlob = new Blob(
+      [JSON.stringify({ name: data.name, email: cleanEmail, password: data.password })],
+      { type: 'application/json' }
+    );
+    formData.append('data', jsonBlob);
 
     await api.post('/auth/register', formData, {
       headers: {

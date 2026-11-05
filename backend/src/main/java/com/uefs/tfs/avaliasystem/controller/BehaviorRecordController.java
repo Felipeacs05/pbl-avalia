@@ -31,13 +31,16 @@ public class BehaviorRecordController {
 
     private final BehaviorRecordService behaviorRecordService;
 
-    @GetMapping("/rooms/{roomId}/behavior-tags")
-    @Operation(summary = "Listar tags de comportamento da sala")
+    @GetMapping({"/rooms/{roomId}/behavior-tags", "/behavior-tags"})
+    @Operation(summary = "Listar tags de comportamento")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Tags listadas com sucesso"),
             @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     })
-    public ResponseEntity<List<BehaviorTagResponse>> listBehaviorTags(@PathVariable UUID roomId) {
+    public ResponseEntity<List<BehaviorTagResponse>> listBehaviorTags(@PathVariable(required = false) UUID roomId) {
+        if (roomId == null) {
+            return ResponseEntity.ok(behaviorRecordService.listAllBehaviorTags());
+        }
         return ResponseEntity.ok(behaviorRecordService.listBehaviorTags(roomId));
     }
 

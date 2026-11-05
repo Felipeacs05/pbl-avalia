@@ -11,7 +11,7 @@ function formatDayMonth(isoDate: string): string {
     day: "2-digit",
     month: "2-digit",
     timeZone: SESSION_TIME_ZONE,
-  }).format(new Date(isoDate));
+  }).format(isoDate && !isNaN(new Date(isoDate).getTime()) ? new Date(isoDate) : new Date());
 }
 
 export function useSessionRoster(sessionId: string) {

@@ -1,11 +1,12 @@
 import type { Group, Student } from "@/types/group";
 import { groupMocks } from "@/mocks/group.mock";
 import { USE_REAL_API } from "./apiMode";
+import { authFetch } from "./authFetch";
 
 export const groupService = {
   fetchGroups: async (roomId: string): Promise<Group[]> => {
     if (!USE_REAL_API) return [...groupMocks.groups];
-    const response = await fetch(`/api/v1/rooms/${roomId}/groups`);
+    const response = await authFetch(`/api/v1/rooms/${roomId}/groups`);
     if (!response.ok) throw new Error("Failed to fetch groups");
     return response.json();
   },
@@ -16,7 +17,7 @@ export const groupService = {
       groupMocks.groups.push(newGroup);
       return;
     }
-    const response = await fetch(`/api/v1/rooms/${roomId}/groups`, {
+    const response = await authFetch(`/api/v1/rooms/${roomId}/groups`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name }),
@@ -30,7 +31,7 @@ export const groupService = {
       if (group) group.name = name;
       return;
     }
-    const response = await fetch(`/api/v1/groups/${groupId}`, {
+    const response = await authFetch(`/api/v1/groups/${groupId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name }),
@@ -47,7 +48,7 @@ export const groupService = {
       groupMocks.groups = groupMocks.groups.filter(g => g.id !== groupId);
       return;
     }
-    const response = await fetch(`/api/v1/groups/${groupId}`, {
+    const response = await authFetch(`/api/v1/groups/${groupId}`, {
       method: "DELETE",
     });
     if (!response.ok) throw new Error("Failed to delete group");
@@ -55,7 +56,7 @@ export const groupService = {
 
   fetchAvailableStudents: async (roomId: string): Promise<Student[]> => {
     if (!USE_REAL_API) return [...groupMocks.availableStudents];
-    const response = await fetch(`/api/v1/rooms/${roomId}/groups/available-students`);
+    const response = await authFetch(`/api/v1/rooms/${roomId}/groups/available-students`);
     if (!response.ok) throw new Error("Failed to fetch available students");
     return response.json();
   },
@@ -70,7 +71,7 @@ export const groupService = {
       }
       return;
     }
-    const response = await fetch(`/api/v1/groups/${groupId}/members`, {
+    const response = await authFetch(`/api/v1/groups/${groupId}/members`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ studentId }),
@@ -93,7 +94,7 @@ export const groupService = {
       }
       return;
     }
-    const response = await fetch(`/api/v1/groups/${groupId}/members/${studentId}`, {
+    const response = await authFetch(`/api/v1/groups/${groupId}/members/${studentId}`, {
       method: "DELETE",
     });
     if (!response.ok) throw new Error("Failed to remove member");
@@ -101,7 +102,7 @@ export const groupService = {
 
   fetchMyGroup: async (roomId: string): Promise<Group | null> => {
     if (!USE_REAL_API) return groupMocks.groups[0] || null;
-    const response = await fetch(`/api/v1/rooms/${roomId}/groups/me`);
+    const response = await authFetch(`/api/v1/rooms/${roomId}/groups/me`);
     if (!response.ok) throw new Error("Failed to fetch my group");
     return response.json();
   },

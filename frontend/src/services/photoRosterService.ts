@@ -2,6 +2,7 @@
 import type { Student } from "../types/student";
 import { photoRosterMock } from "../mocks/photoRosterMock";
 import { USE_REAL_API } from "./apiMode";
+import { authFetch } from "./authFetch";
 
 const BASE_URL = "/api/v1/rooms";
 
@@ -18,18 +19,15 @@ export const photoRosterService = {
       });
     }
 
-    try {
-      const response = await fetch(`${BASE_URL}/${roomId}/students`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!response.ok) {
-        return photoRosterMock.getStudents(roomId);
-      }
-      return await response.json();
-    } catch {
-      return photoRosterMock.getStudents(roomId);
+    const response = await authFetch(`${BASE_URL}/${roomId}/students`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!response.ok) {
+      throw new Error("Erro ao carregar alunos da sala.");
     }
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
   },
 
   /**
@@ -47,17 +45,13 @@ export const photoRosterService = {
       });
     }
 
-    try {
-      const response = await fetch(`${BASE_URL}/${roomId}/students/${studentId}`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!response.ok) {
-        return photoRosterMock.removeStudent(roomId, studentId);
-      }
-      return await response.json();
-    } catch {
-      return photoRosterMock.removeStudent(roomId, studentId);
+    const response = await authFetch(`${BASE_URL}/${roomId}/students/${studentId}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!response.ok) {
+      throw new Error("Erro ao remover aluno da sala.");
     }
+    return this.getStudentsByRoom(roomId);
   },
 };
