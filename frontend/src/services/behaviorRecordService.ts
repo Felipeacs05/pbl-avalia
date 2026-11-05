@@ -2,6 +2,7 @@
 import type { BehaviorRecord, BehaviorRecordInput, BehaviorTag } from "../types/behaviorRecord";
 import { behaviorRecordMock } from "../mocks/behaviorRecord.mock";
 import { USE_REAL_API } from "./apiMode";
+import { authFetch } from "./authFetch";
 
 const FORBIDDEN_MSG = "Apenas o tutor responsável pela sala pode registrar comportamentos.";
 const DEFAULT_ERROR_MSG = "Não foi possível registrar o comportamento. Tente novamente.";
@@ -38,7 +39,7 @@ export const behaviorRecordService = {
       return behaviorRecordMock.getTags();
     }
 
-    const response = await fetch("/api/v1/behavior-tags");
+    const response = await authFetch("/api/v1/behavior-tags");
     if (!response.ok) await throwHttpError(response);
     return (await response.json()) as BehaviorTag[];
   },
@@ -53,7 +54,7 @@ export const behaviorRecordService = {
       return behaviorRecordMock.createRecord(sessionId, studentId, input);
     }
 
-    const response = await fetch(`/api/v1/sessions/${sessionId}/students/${studentId}/behavior-records`, {
+    const response = await authFetch(`/api/v1/sessions/${sessionId}/students/${studentId}/behavior-records`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),

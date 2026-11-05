@@ -23,7 +23,7 @@ public class SelfAssessmentService {
     @Transactional
     public void submitSelfAssessment(UUID problemId, UUID studentId, AssessmentRequest request) {
         Problem p = problemRepository.findById(problemId).orElseThrow();
-        if (!p.getSelfAssessmentReleased()) {
+        if (!Boolean.TRUE.equals(p.getSelfAssessmentReleased())) {
             throw new AccessDeniedException("Self-assessment is currently closed");
         }
         User student = userRepository.findById(studentId).orElseThrow();

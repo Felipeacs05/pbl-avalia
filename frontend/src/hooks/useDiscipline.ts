@@ -1,23 +1,54 @@
 // src/hooks/useDiscipline.ts
 import { useState, useEffect, useCallback } from "react";
-import type { Discipline } from "../types/discipline";
+import type { Discipline, Problem } from "../types/discipline";
 import { gradeMock } from "../mocks/grade.mock";
+import { IS_TEST, USE_REAL_API } from "../services/apiMode";
+import { authFetch } from "../services/authFetch";
+
+async function fetchRealDisciplineData(roomId: string): Promise<Discipline | null> {
+  try {
+    const problemsRes = await authFetch(`/api/v1/rooms/${roomId}/problems`, { method: "GET" });
+    const problemsData = problemsRes.ok ? await problemsRes.json() : [];
+
+    let roomName = "Disciplina PBL";
+    const roomRes = await authFetch(`/api/v1/rooms/${roomId}`, { method: "GET" });
+    if (roomRes.ok) {
+      const roomData = await roomRes.json();
+      if (roomData.name) roomName = roomData.name;
+    }
+
+    const problems: Problem[] = Array.isArray(problemsData)
+      ? problemsData.map((p: { id: string; title: string; description?: string }) => ({
+          id: String(p.id),
+          title: p.title,
+          description: p.description || "",
+        }))
+      : [];
+
+    return {
+      id: roomId,
+      name: roomName,
+      description: "Problemas e sessões tutoriais da turma.",
+      roomId: roomId,
+      problems,
+    };
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Hook to fetch a specific discipline from a room.
- * Currently uses mock data; will consume the API in the future.
- *
- * Back-end: ainda não há service nem endpoint para disciplinas; os dois hooks leem o gradeMock direto.
- * Endpoints previstos (criar um disciplineService no padrão dos outros services, com o desvio USE_REAL_API):
- *   GET /api/v1/rooms/{roomId}/disciplines                 -> Discipline[] (cada uma com seus problems)
- *   GET /api/v1/rooms/{roomId}/disciplines/{disciplineId}  -> Discipline
- * A tela de disciplinas do professor e a sala do aluno usam estes hooks: trocando aqui, as duas passam a usar a API.
  */
 export function useDiscipline(roomId: string, disciplineId: string) {
   const [discipline, setDiscipline] = useState<Discipline | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchDiscipline = useCallback(async () => {
+    if (!IS_TEST && USE_REAL_API) {
+      const real = await fetchRealDisciplineData(roomId);
+      if (real) return real;
+    }
     return new Promise<Discipline | null>((resolve) => {
       setTimeout(() => {
         const found = gradeMock.find(
@@ -54,6 +85,10 @@ export function useDisciplines(roomId: string) {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchDisciplines = useCallback(async () => {
+    if (!IS_TEST && USE_REAL_API) {
+      const real = await fetchRealDisciplineData(roomId);
+      if (real) return [real];
+    }
     return new Promise<Discipline[]>((resolve) => {
       setTimeout(() => {
         const found = gradeMock.filter((d) => d.roomId === roomId);

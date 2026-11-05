@@ -41,6 +41,14 @@ public class BehaviorRecordService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<BehaviorTagResponse> listAllBehaviorTags() {
+        return behaviorTagRepository.findAll().stream()
+                .map(tag -> new BehaviorTagResponse(tag.getId(), tag.getName()))
+                .distinct()
+                .toList();
+    }
+
     @Transactional
     @PreAuthorize("@tutoringSessionSecurity.requireTutor(#sessionId, #requesterId)")
     public BehaviorRecordResponse createBehaviorRecord(

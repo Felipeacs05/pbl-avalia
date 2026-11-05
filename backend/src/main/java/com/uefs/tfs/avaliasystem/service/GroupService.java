@@ -156,6 +156,49 @@ public class GroupService {
                 .toList();
     }
 
+    @Transactional
+    public GroupResponse updateGroupDirect(UUID groupId, GroupRequest request, UUID tutorId) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new ResourceNotFoundException("Grupo não encontrado"));
+        validateTutor(group.getRoom(), tutorId);
+        group.setName(request.getName());
+        return new GroupResponse(groupRepository.save(group));
+    }
+
+    @Transactional
+    public void deleteGroupDirect(UUID groupId, UUID tutorId) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new ResourceNotFoundException("Grupo não encontrado"));
+        validateTutor(group.getRoom(), tutorId);
+        groupRepository.delete(group);
+    }
+
+    @Transactional
+    public GroupResponse addMemberDirect(UUID groupId, UUID studentId, UUID tutorId) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new ResourceNotFoundException("Grupo não encontrado"));
+        UUID roomId = group.getRoom().getId();
+        validateTutor(group.getRoom(), tutorId);
+
+        RoomMember roomMember = findActiveRoomMemberForUpdate(roomId, studentId);
+        addMemberToGroup(group, roomMember);
+        return new GroupResponse(group);
+    }
+
+    @Transactional
+    public void removeMemberDirect(UUID groupId, UUID studentId, UUID tutorId) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new ResourceNotFoundException("Grupo não encontrado"));
+        validateTutor(group.getRoom(), tutorId);
+
+        GroupMember groupMember = groupMemberRepository
+                .findByGroupIdAndUserId(groupId, studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Aluno não encontrado neste grupo"));
+
+        group.getMembers().remove(groupMember);
+        groupMemberRepository.delete(groupMember);
+    }
+
     private Room findRoomAndValidateTutor(UUID roomId, UUID tutorId) {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new ResourceNotFoundException("Sala não encontrada"));

@@ -5,6 +5,7 @@ import type {
   ExportFormat,
   ReportScope,
 } from "../types/reportExport";
+import { authFetch } from "./authFetch";
 
 const DEFAULT_IN_PROGRESS_MESSAGE =
   "Relatório em processamento. Aguarde a conclusão antes de solicitar novamente.";
@@ -64,7 +65,7 @@ export const reportExportService = {
     format: ExportFormat
   ): Promise<ExportedFile> {
     const url = buildExportUrl(scope, format);
-    const response = await fetch(url, { method: "GET" });
+    const response = await authFetch(url, { method: "GET" });
 
     if (!response.ok) {
       const backendMessage = await readErrorMessage(response);

@@ -23,6 +23,7 @@ async function renderLoadedHook() {
 
 describe("[US05] useProblems", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     service.deleteProblem.mockResolvedValue(undefined);
   });
 
@@ -51,7 +52,7 @@ describe("[US05] useProblems", () => {
     });
 
     expect(service.createProblem).toHaveBeenCalledTimes(1);
-    expect(service.createProblem).toHaveBeenCalledWith(ROOM_ID, "Problem 3");
+    expect(service.createProblem).toHaveBeenCalledWith(ROOM_ID, { title: "Problem 3", description: "" });
     // O problema mais novo é o último na cronologia do semestre
     await waitFor(() => expect(result.current.problems).toEqual([makeProblem(), makeOtherProblem(), created]));
   });
@@ -69,7 +70,7 @@ describe("[US05] useProblems", () => {
     });
 
     expect(service.updateProblem).toHaveBeenCalledTimes(1);
-    expect(service.updateProblem).toHaveBeenCalledWith(PROBLEM_ID, "Problem 1 - Revised");
+    expect(service.updateProblem).toHaveBeenCalledWith(PROBLEM_ID, { title: "Problem 1 - Revised", description: "" });
     await waitFor(() => expect(result.current.problems).toEqual([updated, makeOtherProblem()]));
   });
 
@@ -97,7 +98,7 @@ describe("[US05] useProblems", () => {
       await result.current.updateProblem(PROBLEM_ID, "Hijacked Title");
     });
 
-    expect(service.updateProblem).toHaveBeenCalledWith(PROBLEM_ID, "Hijacked Title");
+    expect(service.updateProblem).toHaveBeenCalledWith(PROBLEM_ID, { title: "Hijacked Title", description: "" });
     expect(result.current.error).not.toBeNull();
     expect(result.current.problems).toEqual([makeProblem(), makeOtherProblem()]);
   });

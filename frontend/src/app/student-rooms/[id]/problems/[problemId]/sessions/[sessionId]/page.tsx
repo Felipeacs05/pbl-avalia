@@ -15,6 +15,8 @@ import { useFeedback } from "../../../../../../../hooks/useFeedback";
 import { useProblemDetails } from "../../../../../../../hooks/useProblemDetails";
 import { MOCK_SESSION_SUMMARY } from "../../../../../../../mocks/feedback.mock";
 import { gradeAdjustmentMock } from "../../../../../../../mocks/gradeAdjustment.mock";
+import { sessionGradesService, type StudentSessionSummary } from "../../../../../../../services/sessionGradesService";
+import { USE_REAL_API } from "../../../../../../../services/apiMode";
 import type { SubmittedSelfAssessment } from "../../../../../../../types/gradeAdjustment";
 
 const DEFAULT_STUDENT_ASSESSMENT_ID = "151e1515-e15b-15d5-a515-151515151515";
@@ -29,14 +31,45 @@ export default function StudentSessionDashboardPage() {
     typeof params?.sessionId === "string" ? params.sessionId : "session_01";
 
   const [isFeedbacksModalOpen, setIsFeedbacksModalOpen] = useState(false);
-  // Autoavaliação e avaliação por pares abrem como modal, sem trocar de tela
   const [activeModal, setActiveModal] = useState<"self" | "peer" | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [loggedStudentId, setLoggedStudentId] = useState<string | null>(null);
+  const [sessionSummary, setSessionSummary] = useState<StudentSessionSummary | null>(null);
+
+  // Read from localStorage inside a microtask so setState is never called
+  // synchronously in the effect body -- avoids react-hooks/set-state-in-effect.
+  useEffect(() => {
+    Promise.resolve().then(() => {
+      if (typeof window !== "undefined") {
+        const raw = localStorage.getItem("user");
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw) as { id?: string };
+            if (parsed?.id) setLoggedStudentId(parsed.id);
+          } catch {}
+        }
+      }
+    });
+  }, []);
+
   const [myAssessment, setMyAssessment] = useState<SubmittedSelfAssessment>(() =>
     gradeAdjustmentMock.getAssessmentById(DEFAULT_STUDENT_ASSESSMENT_ID)
   );
 
-  const { feedbacks, refreshFeedbacks } = useFeedback(problemId, "stu_alice");
+  const activeStudentId = loggedStudentId || "stu_alice";
+  const { feedbacks, refreshFeedbacks } = useFeedback(problemId, activeStudentId);
+
+  const loadSummary = React.useCallback(() => {
+    if (!sessionId || !loggedStudentId || !USE_REAL_API) return;
+    sessionGradesService
+      .getStudentSummary(sessionId, loggedStudentId)
+      .then((data) => setSessionSummary(data))
+      .catch(() => {});
+  }, [sessionId, loggedStudentId]);
+
+  useEffect(() => {
+    loadSummary();
+  }, [loadSummary]);
 
   useEffect(() => {
     const syncData = () => {
@@ -44,30 +77,46 @@ export default function StudentSessionDashboardPage() {
         gradeAdjustmentMock.getAssessmentById(DEFAULT_STUDENT_ASSESSMENT_ID)
       );
       void refreshFeedbacks();
+      loadSummary();
     };
     syncData();
     window.addEventListener("storage", syncData);
     window.addEventListener("focus", syncData);
+
+    const interval = setInterval(() => {
+      loadSummary();
+    }, 3500);
+
     return () => {
       window.removeEventListener("storage", syncData);
       window.removeEventListener("focus", syncData);
+      clearInterval(interval);
     };
-  }, [refreshFeedbacks]);
+  }, [refreshFeedbacks, loadSummary]);
 
-  // Back-end: a nota e as tags rápidas da sessão ainda vêm do MOCK_SESSION_SUMMARY (feedback.mock).
-  // Endpoint previsto: GET /api/v1/sessions/{sessionId}/students/{studentId}/summary -> { grade, quickTags }
-  // (o título do problema e a data da sessão já vêm do problemService, via useProblemDetails)
-  const isModifiedByTutor = Boolean(
-    myAssessment.modifiedByTutor ?? myAssessment.ajustado_por_tutor
-  );
-  const displayScore = isModifiedByTutor
+  const isGradeReleased = sessionSummary ? sessionSummary.isGradeReleased : !USE_REAL_API;
+  const isModifiedByTutor = sessionSummary
+    ? sessionSummary.isModifiedByTutor
+    : Boolean(myAssessment.modifiedByTutor ?? myAssessment.ajustado_por_tutor);
+
+  const displayScore = sessionSummary
+    ? sessionSummary.grade
+    : isModifiedByTutor
     ? myAssessment.score
+    : USE_REAL_API
+    ? null
     : MOCK_SESSION_SUMMARY.grade ?? 7.5;
 
-  // Título do problema e data da sessão vêm do mesmo problema da tela do professor
+  const quickTags = sessionSummary
+    ? sessionSummary.quickTags
+    : USE_REAL_API
+    ? []
+    : MOCK_SESSION_SUMMARY.quickTags;
+
+  // Título do problema e data da sessão
   const { problem } = useProblemDetails(problemId);
   const session = problem?.sessions.find((s) => s.id === sessionId);
-  const problemTitle = problem?.title ?? MOCK_SESSION_SUMMARY.problemTitle;
+  const problemTitle = sessionSummary?.problemTitle ?? problem?.title ?? MOCK_SESSION_SUMMARY.problemTitle;
   const sessionDateLabel = session?.displayDate ?? MOCK_SESSION_SUMMARY.sessionDate;
   const disciplineTag = problem ? `${problem.disciplineCode} - ${problem.semester}` : MOCK_SESSION_SUMMARY.roomCode;
 
@@ -97,18 +146,26 @@ export default function StudentSessionDashboardPage() {
           <h1 className="text-2xl font-bold text-gray-900 leading-snug underline decoration-gray-200 underline-offset-4">
             {problemTitle}
           </h1>
-          <p className="text-lg font-bold text-gray-800 mt-1">
-            Sessão de {sessionDateLabel}
-          </p>
+          <div className="flex items-center gap-2 mt-1">
+            <p className="text-lg font-bold text-gray-800">
+              Sessão de {sessionDateLabel}
+            </p>
+            {sessionSummary?.isClosed && (
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-200 text-gray-700">
+                Encerrada
+              </span>
+            )}
+          </div>
         </div>
 
         <SelfAssessmentGrade
           score={displayScore}
+          isGradeReleased={isGradeReleased}
           modifiedByTutor={isModifiedByTutor}
           ajustado_por_tutor={isModifiedByTutor}
-          originalGrade={myAssessment.originalGrade}
-          nota_original={myAssessment.nota_original}
-          justification={myAssessment.justification}
+          originalGrade={sessionSummary?.originalGrade ?? myAssessment.originalGrade}
+          nota_original={sessionSummary?.originalGrade ?? myAssessment.nota_original}
+          justification={sessionSummary?.justification ?? myAssessment.justification}
         />
 
         <div className="grid grid-cols-3 gap-3">
@@ -151,7 +208,7 @@ export default function StudentSessionDashboardPage() {
           </button>
         </div>
 
-        <SessionQuickTagsCard tags={MOCK_SESSION_SUMMARY.quickTags} />
+        <SessionQuickTagsCard tags={quickTags} />
       </div>
 
       {/* ===== DESKTOP LAYOUT (>= md — 2 colunas igual ao professor) ===== */}
@@ -163,18 +220,26 @@ export default function StudentSessionDashboardPage() {
               {problemTitle}
             </h1>
             <div className="w-full h-px bg-gray-200 mb-3" />
-            <p className="text-sm font-semibold text-[#4354A0]">
-              Sessão de {sessionDateLabel}
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-[#4354A0]">
+                Sessão de {sessionDateLabel}
+              </p>
+              {sessionSummary?.isClosed && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-200 text-gray-700">
+                  Encerrada
+                </span>
+              )}
+            </div>
           </div>
 
           <SelfAssessmentGrade
             score={displayScore}
+            isGradeReleased={isGradeReleased}
             modifiedByTutor={isModifiedByTutor}
             ajustado_por_tutor={isModifiedByTutor}
-            originalGrade={myAssessment.originalGrade}
-            nota_original={myAssessment.nota_original}
-            justification={myAssessment.justification}
+            originalGrade={sessionSummary?.originalGrade ?? myAssessment.originalGrade}
+            nota_original={sessionSummary?.originalGrade ?? myAssessment.nota_original}
+            justification={sessionSummary?.justification ?? myAssessment.justification}
           />
 
           <div className="grid grid-cols-3 gap-3.5">
@@ -216,7 +281,7 @@ export default function StudentSessionDashboardPage() {
 
         {/* Coluna Direita: Card de Marcações Rápidas da Sessão */}
         <div className="w-1/2">
-          <SessionQuickTagsCard tags={MOCK_SESSION_SUMMARY.quickTags} />
+          <SessionQuickTagsCard tags={quickTags} />
         </div>
       </div>
 

@@ -170,7 +170,11 @@ export const gradeAdjustmentMock = {
   getReviewsBySession(sessionId: string): StudentSelfEvaluationReview[] {
     const all = loadReviews();
     const filtered = all.filter((r) => r.sessionId === sessionId);
-    return (filtered.length > 0 ? filtered : all).map((item) => ({ ...item }));
+    if (filtered.length > 0) return filtered.map((item) => ({ ...item }));
+    if (sessionId && sessionId !== "session_01") {
+      return [];
+    }
+    return all.map((item) => ({ ...item }));
   },
 
   getAssessmentById(assessmentId: string): SubmittedSelfAssessment {

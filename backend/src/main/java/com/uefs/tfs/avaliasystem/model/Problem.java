@@ -29,6 +29,9 @@ public class Problem {
     @Column(name = "title", nullable = false)
     private String title;
 
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
     @Column(name = "order_index", nullable = false)
     private Integer orderIndex = 0;
 

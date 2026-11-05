@@ -22,4 +22,11 @@ public class LoginResponse {
      * Ex.: System.currentTimeMillis() + 24 * 60 * 60 * 1000L (24 horas).
      */
     private long expiresAt;
+
+    private UserResponse user;
+
+    public LoginResponse(String token, long expiresAt) {
+        this.token = token;
+        this.expiresAt = expiresAt;
+    }
 }

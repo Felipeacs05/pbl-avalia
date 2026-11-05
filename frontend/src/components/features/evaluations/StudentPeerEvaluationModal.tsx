@@ -8,6 +8,7 @@ import { useCriteriaPreset } from "../../../hooks/useCriteriaPreset";
 import { isEvaluationTypeReleased } from "../../../types/evaluation";
 import { peerEvaluationMock } from "../../../mocks/peerEvaluation.mock";
 import { authMockSuccess } from "../../../mocks/auth.mock";
+import { getLoggedUserProfile } from "../../../services/authFetch";
 import { PeerEvaluationModal } from "./PeerEvaluationModal";
 
 interface StudentPeerEvaluationModalProps {
@@ -32,9 +33,10 @@ export function StudentPeerEvaluationModal({
   const isEnabledInPreset = criteria.find((c) => c.id === "crit_pares")?.enabled ?? true;
 
   // colegas do grupo, sem o aluno logado
-  const currentStudentId = authMockSuccess.user?.id;
+  const loggedUser = getLoggedUserProfile();
+  const currentStudentId = loggedUser?.id || (typeof window !== "undefined" && localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")!).id : null) || authMockSuccess.user?.id;
   const peers = group?.members
-      .filter((member) => member.id !== currentStudentId)
+      .filter((member) => member.id !== currentStudentId && member.id !== loggedUser?.name)
       .map((member) => ({ avatarUrl: "", ...member })) ?? [];
 
   if (isLoadingStatus || isLoadingGroup || isLoadingPreset) return null;

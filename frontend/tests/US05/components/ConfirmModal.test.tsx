@@ -41,7 +41,7 @@ function renderModal(props: Partial<ComponentProps<typeof ConfirmModal>> = {}) {
         onClose,
         dialog: screen.getByRole("alertdialog"),
         confirmButton: screen.getByRole("button", { name: /^excluir$/i }),
-        cancelButton: screen.getByRole("button", { name: /^cancelar$/i }),
+        cancelButton: screen.queryByRole("button", { name: /^cancelar$/i }) ?? screen.getByRole("button", { name: new RegExp(`^${props.cancelLabel}$`, "i") }),
         closeButton: screen.getByRole("button", { name: /^fechar$/i }),
     };
 }

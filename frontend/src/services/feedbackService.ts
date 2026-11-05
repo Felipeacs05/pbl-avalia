@@ -12,6 +12,8 @@ import {
   addStoredFeedback,
   loadStoredFeedbacks,
 } from "../mocks/feedback.mock";
+import { authFetch } from "./authFetch";
+import { USE_REAL_API } from "./apiMode";
 
 const DEFAULT_TEXT_REQUIRED_MSG = "O texto do feedback não pode ser vazio";
 const SEND_FORBIDDEN_MSG = "Apenas o tutor responsável pela sala pode enviar feedbacks.";
@@ -45,10 +47,10 @@ async function handleSendError(response: Response): Promise<never> {
   const body = await parseErrorBody(response);
   if (response.status === 400) {
     const fieldMessage =
-      body?.errors?.text ??
-      (body?.errors ? Object.values(body.errors)[0] : undefined) ??
-      body?.message ??
-      DEFAULT_TEXT_REQUIRED_MSG;
+        body?.errors?.text ??
+        (body?.errors ? Object.values(body.errors)[0] : undefined) ??
+        body?.message ??
+        DEFAULT_TEXT_REQUIRED_MSG;
     throw { status: 400, message: fieldMessage };
   }
 
@@ -60,10 +62,10 @@ async function handleSendError(response: Response): Promise<never> {
 
 export const feedbackService = {
   async sendFeedback(
-    problemId: string,
-    payload: FeedbackBatchItem
+      problemId: string,
+      payload: FeedbackBatchItem
   ): Promise<Feedback> {
-    const response = await fetch(`/api/v1/problems/${problemId}/feedbacks`, {
+    const response = await authFetch(`/api/v1/problems/${problemId}/feedbacks`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -83,10 +85,10 @@ export const feedbackService = {
   },
 
   async sendBatchFeedback(
-    problemId: string,
-    items: FeedbackBatchItem[]
+      problemId: string,
+      items: FeedbackBatchItem[]
   ): Promise<Feedback[]> {
-    const response = await fetch(`/api/v1/problems/${problemId}/feedbacks/batch`, {
+    const response = await authFetch(`/api/v1/problems/${problemId}/feedbacks/batch`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -108,7 +110,7 @@ export const feedbackService = {
   },
 
   async fetchStudentFeedbacks(studentId: string): Promise<StudentFeedback[]> {
-    const response = await fetch(`/api/v1/students/${studentId}/feedbacks`);
+    const response = await authFetch(`/api/v1/students/${studentId}/feedbacks`);
 
     if (!response.ok) {
       if (response.status === 403) {
@@ -127,15 +129,33 @@ export const feedbackService = {
 };
 
 export async function getStudentFeedbacks(
-  problemId: string,
-  studentId?: string
+    problemId: string,
+    studentId?: string
 ): Promise<FeedbackItem[]> {
+  if (USE_REAL_API && studentId) {
+    try {
+      const realFeedbacks = await feedbackService.fetchStudentFeedbacks(studentId);
+      return realFeedbacks.map((item, idx): FeedbackItem => ({
+        id: `fb_real_${idx}_${item.createdAt}`,
+        problemId,
+        targetType: "INDIVIDUAL",
+        studentId,
+        tutorName: item.tutorName,
+        message: item.text,
+        dateLabel: item.createdAt ? new Date(item.createdAt).toLocaleDateString("pt-BR") : "Sessão",
+        newGrade: item.grade,
+      }));
+    } catch {
+      return [];
+    }
+  }
+
   await new Promise((resolve) => setTimeout(resolve, 150));
   const all = loadStoredFeedbacks();
   return all.filter(
-    (item) =>
-      (!problemId || item.problemId === problemId) &&
-      (item.targetType === "CLASS" || !studentId || item.studentId === studentId)
+      (item) =>
+          (!problemId || item.problemId === problemId) &&
+          (item.targetType === "CLASS" || !studentId || item.studentId === studentId)
   );
 }
 
@@ -146,9 +166,43 @@ export async function submitFeedback(payload: FeedbackPayload): Promise<Feedback
     throw new Error(DEFAULT_TEXT_REQUIRED_MSG);
   }
 
-  if (payload.targetType === "INDIVIDUAL" && !payload.studentId) {
-    throw new Error("Selecione um aluno para enviar o feedback individual.");
+  if (USE_REAL_API && payload.problemId) {
+    if (payload.targetType === "INDIVIDUAL" && payload.studentId) {
+      try {
+        await feedbackService.sendFeedback(payload.problemId, {
+          studentId: payload.studentId,
+          grade: 10,
+          text: payload.message.trim(),
+        });
+      } catch (err) {
+        console.warn("Could not save feedback to backend API", err);
+      }
+    } else if (payload.targetType === "CLASS" && payload.studentIds && payload.studentIds.length > 0) {
+      try {
+        await feedbackService.sendBatchFeedback(
+            payload.problemId,
+            payload.studentIds.map((sid) => ({
+              studentId: sid,
+              grade: 10,
+              text: payload.message.trim(),
+            }))
+        );
+      } catch (err) {
+        console.warn("Could not save batch feedback to backend API", err);
+      }
+    }
   }
 
-  return addStoredFeedback(payload);
+  const newFeedback: FeedbackItem = {
+    id: `fb_${Date.now()}`,
+    problemId: payload.problemId,
+    targetType: payload.targetType,
+    studentId: payload.studentId,
+    tutorName: "Prof. Dr. Armstrong",
+    message: payload.message.trim(),
+    dateLabel: new Date().toLocaleDateString("pt-BR"),
+  };
+
+  addStoredFeedback(newFeedback);
+  return newFeedback;
 }

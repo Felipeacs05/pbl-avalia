@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.uefs.tfs.avaliasystem.US05.e2e.ProblemE2ETest
--------------------------------------------------------------------------------
-Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.415 s -- in com.uefs.tfs.avaliasystem.US05.e2e.ProblemE2ETest

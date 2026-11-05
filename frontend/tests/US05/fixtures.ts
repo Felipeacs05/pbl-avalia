@@ -19,6 +19,7 @@ export const TITLE_MAX_LENGTH = 100;
 // Textos completos usados nas telas; nas asserções, as regex
 export const TITLE_REQUIRED_TEXT = "O título do problema não pode ficar vazio.";
 export const TITLE_REQUIRED_MESSAGE = /o título do problema não pode ficar vazio/i;
+export const TITLE_VALIDATION_MESSAGE = TITLE_REQUIRED_MESSAGE;
 export const CREATE_FAILURE_MESSAGE = /não foi possível criar o problema/i;
 export const EDIT_FAILURE_MESSAGE = /não foi possível salvar o problema/i;
 export const ACTION_FAILURE_MESSAGE = /não foi possível concluir a ação/i;
