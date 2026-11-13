@@ -8,4 +8,6 @@ import java.util.UUID;
 
 @Repository
 public interface TutoringSessionRepository extends JpaRepository<TutoringSession, UUID> {
+    boolean existsByIdAndProblemRoomTutorId(UUID sessionId, UUID tutorId);
+    java.util.List<TutoringSession> findAllByProblemId(UUID problemId);
 }

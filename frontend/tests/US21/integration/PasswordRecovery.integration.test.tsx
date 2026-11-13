@@ -91,6 +91,7 @@ async function resetWith(token: string, newPassword: string) {
   const user = userEvent.setup();
   const view = render(<ResetPasswordPanel token={token} />);
   await user.type(screen.getByLabelText(/nova senha/i), newPassword);
+  await user.type(screen.getByLabelText(/confirmar senha/i), newPassword);
   await user.click(screen.getByRole("button", { name: /redefinir senha/i }));
   return view;
 }

@@ -47,6 +47,7 @@ export function EditRoomModal({
         <button
           onClick={onClose}
           disabled={isSubmitting}
+          aria-label="Fechar"
           className="absolute top-5 right-5 text-white/70 hover:text-white transition-colors"
         >
           <X size={20} />
@@ -76,10 +77,10 @@ export function EditRoomModal({
               </label>
               <span
                 className={`text-xs font-medium ${
-                  name.length > 50 ? "text-red-400" : "text-white/50"
+                  name.length > 100 ? "text-red-400" : "text-white/50"
                 }`}
               >
-                {name.length}/50
+                {name.length}/100
               </span>
             </div>
 
@@ -91,7 +92,7 @@ export function EditRoomModal({
               disabled={isSubmitting}
               placeholder="Nome da sala"
               className={`w-full bg-white text-gray-900 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 transition-all ${
-                name.length > 50 ? "ring-2 ring-red-400" : "focus:ring-[#757DC3]"
+                name.length > 100 ? "ring-2 ring-red-400" : "focus:ring-[#757DC3]"
               }`}
             />
           </div>

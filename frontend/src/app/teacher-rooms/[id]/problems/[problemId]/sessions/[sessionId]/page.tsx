@@ -4,6 +4,7 @@
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AttendanceSessionView } from "@/components/features/attendance/AttendanceSessionView";
+import { authFetch } from "@/services/authFetch";
 
 export default function SessionAttendancePage() {
   const params = useParams();
@@ -17,7 +18,12 @@ export default function SessionAttendancePage() {
     router.push(`/teacher-rooms/${roomId}/problems/${problemId}`);
   };
 
-  const handleEndSession = () => {
+  const handleEndSession = async () => {
+    try {
+      await authFetch(`/api/v1/sessions/${sessionId}/end`, { method: "POST" });
+    } catch {
+      // Ignora erro e prossegue
+    }
     router.push(`/teacher-rooms/${roomId}/problems/${problemId}/sessions/${sessionId}/evaluate`);
   };
 

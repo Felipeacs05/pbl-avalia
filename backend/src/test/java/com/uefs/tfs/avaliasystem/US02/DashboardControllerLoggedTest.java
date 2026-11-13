@@ -2,6 +2,7 @@ package com.uefs.tfs.avaliasystem.US02;
 
 import com.uefs.tfs.avaliasystem.AvaliaSystemApplication;
 import com.uefs.tfs.avaliasystem.config.SecurityConfig;
+import com.uefs.tfs.avaliasystem.repository.UserRepository;
 import com.uefs.tfs.avaliasystem.controller.AuthController;
 import com.uefs.tfs.avaliasystem.controller.DashboardController;
 import com.uefs.tfs.avaliasystem.dto.LoginRequest;
@@ -44,6 +45,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(SecurityConfig.class)
 @ContextConfiguration(classes = AvaliaSystemApplication.class)
 class DashboardControllerLoggedTest {
+
+    @MockitoBean
+    private UserRepository userRepository;
 
     @Autowired
     private MockMvc mockMvc;

@@ -8,6 +8,8 @@ import tools.jackson.databind.ObjectMapper;
 import com.uefs.tfs.avaliasystem.controller.AuthController;
 import com.uefs.tfs.avaliasystem.dto.RegisterUserRequest;
 import com.uefs.tfs.avaliasystem.model.User;
+import com.uefs.tfs.avaliasystem.repository.UserRepository;
+import com.uefs.tfs.avaliasystem.service.PasswordResetService;
 import com.uefs.tfs.avaliasystem.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,6 +43,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(AuthController.class)
 class AuthControllerRegisterTest {
 
+    @MockitoBean
+    private UserRepository userRepository;
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -49,6 +54,9 @@ class AuthControllerRegisterTest {
 
     @MockitoBean
     private UserService userService;
+
+    @MockitoBean
+    private PasswordResetService passwordResetService;
 
     @Test
     @DisplayName("US01 - cadastro válido com foto retorna 201 e não vaza senha pura")

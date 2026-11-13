@@ -1,9 +1,9 @@
-// src/components/features/performance-tables/StudentPerformanceTableView.tsx
+﻿// src/components/features/performance-tables/StudentPerformanceTableView.tsx
 "use client";
 
 import React from "react";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Plus, Share2 } from "lucide-react";
+import { ArrowLeft, Plus, Share2, User, Users } from "lucide-react";
 import { useRooms } from "../../../hooks/useRooms";
 import { useSessionRoster } from "../../../hooks/useSessionRoster";
 import { useCopyLink } from "../../../hooks/useCopyLink";
@@ -34,7 +34,6 @@ export function StudentPerformanceTableView({
 
   // Localiza o aluno correspondente ao ID
   const currentStudent = roster?.students.find((s) => s.id === studentId);
-  // antes caía no nome fixo "Luana Angélica"
   const studentName = currentStudent?.name || "Aluno";
   const studentTags = currentStudent?.tags || [];
 
@@ -69,14 +68,26 @@ export function StudentPerformanceTableView({
     }
   };
 
-  const handleSave = async () => {
-    await saveEvaluation();
-  };
-
   const scores = evaluation?.criteria ?? {};
 
+  const handleSave = async () => {
+    let totalWeightedScore = 0;
+    let totalWeights = 0;
+    weightedCriteria.forEach((c) => {
+      const score = scores[c.id] ?? 100;
+      totalWeightedScore += score * (c.weight / 100);
+      totalWeights += c.weight;
+    });
+    const calculatedGrade =
+      totalWeights > 0 ? Number(((totalWeightedScore / totalWeights) * 10).toFixed(1)) : 10.0;
+    await saveEvaluation(calculatedGrade);
+  };
+
   // sem tags de exemplo: mostra só as marcações reais da sessão
-  const tags = evaluation?.tags ?? [];
+  const tags =
+    evaluation?.tags && evaluation.tags.length > 0
+      ? evaluation.tags
+      : (currentStudent?.tags || []);
 
   const message = evaluation?.message || "";
 
@@ -172,7 +183,6 @@ export function StudentPerformanceTableView({
                 Marcações Recebidas pelo aluno durante a sessão
               </h2>
               <div className="w-full bg-white rounded-2xl border border-gray-200/90 p-4 min-h-[90px] flex flex-wrap gap-2 content-start shadow-xs">
-                {/* aviso quando o aluno não recebeu marcações */}
                 {tags.length === 0 && (
                   <p className="text-xs italic text-gray-400">Nenhuma marcação recebida nesta sessão.</p>
                 )}
@@ -184,6 +194,82 @@ export function StudentPerformanceTableView({
                     {tag}
                   </span>
                 ))}
+              </div>
+            </section>
+
+            {/* Seção Autoavaliação do Aluno */}
+            <section className="flex flex-col gap-2">
+              <div className="flex items-center justify-between px-1">
+                <h2 className="text-sm font-bold text-gray-700 flex items-center gap-1.5">
+                  <User size={16} className="text-[#4354A0]" />
+                  <span>Autoavaliação do Aluno</span>
+                </h2>
+                {evaluation?.selfEvaluation?.score !== undefined && (
+                  <span className="text-xs font-bold text-[#4354A0] bg-[#EEEDF8] px-2.5 py-1 rounded-full border border-[#757DC3]/30">
+                    Nota: {evaluation.selfEvaluation.score.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} / 10
+                  </span>
+                )}
+              </div>
+              <div className="w-full bg-white rounded-2xl border border-gray-200/90 p-4 shadow-xs">
+                {evaluation?.selfEvaluation ? (
+                  <div className="space-y-2">
+                    <p className="text-xs text-gray-500 font-medium">Reflexão do Aluno:</p>
+                    <p className="text-sm text-gray-800 italic bg-gray-50 p-3 rounded-xl border border-gray-100">
+                      &quot;{evaluation.selfEvaluation.comments || "Sem comentários adicionais."}&quot;
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-xs italic text-gray-400">
+                    O aluno ainda não enviou sua autoavaliação ou a autoavaliação não foi liberada.
+                  </p>
+                )}
+              </div>
+            </section>
+
+            {/* Seção Avaliações entre Pares (Colegas) */}
+            <section className="flex flex-col gap-2">
+              <div className="flex items-center justify-between px-1">
+                <h2 className="text-sm font-bold text-gray-700 flex items-center gap-1.5">
+                  <Users size={16} className="text-[#4354A0]" />
+                  <span>Avaliações dos Colegas (Avaliação entre Pares)</span>
+                </h2>
+                {evaluation?.peerEvaluations && evaluation.peerEvaluations.length > 0 && (
+                  <span className="text-xs font-semibold text-gray-500">
+                    {evaluation.peerEvaluations.length} {evaluation.peerEvaluations.length === 1 ? "avaliação" : "avaliações"}
+                  </span>
+                )}
+              </div>
+              <div className="w-full bg-white rounded-2xl border border-gray-200/90 p-4 shadow-xs space-y-3">
+                {(!evaluation?.peerEvaluations || evaluation.peerEvaluations.length === 0) ? (
+                  <p className="text-xs italic text-gray-400">
+                    Nenhuma avaliação entre pares enviada por colegas até o momento.
+                  </p>
+                ) : (
+                  evaluation.peerEvaluations.map((peer, idx) => (
+                    <div
+                      key={idx}
+                      className="p-3 rounded-xl bg-gray-50 border border-gray-100 flex flex-col gap-1.5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-gray-800">
+                          {peer.evaluatorName}
+                        </span>
+                        <span className="text-xs font-bold text-[#4354A0] bg-[#EEEDF8] px-2 py-0.5 rounded-md">
+                          Nota {peer.score.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                        </span>
+                      </div>
+                      {peer.comments ? (
+                        <p className="text-xs text-gray-600 italic">
+                          &quot;{peer.comments}&quot;
+                        </p>
+                      ) : (
+                        <p className="text-[11px] text-gray-400 italic">
+                          Sem comentário registrado.
+                        </p>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
             </section>
 

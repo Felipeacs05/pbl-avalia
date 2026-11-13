@@ -1,64 +1,158 @@
-// src/hooks/useRooms.ts
 import { useState, useEffect, useCallback } from "react";
-import type { Room } from "../types/room";
+import { Room } from "../types/room";
 import { roomService } from "../services/roomService";
-import { USE_REAL_API } from "@/services/apiMode";
+import { IS_TEST, USE_REAL_API } from "../services/apiMode";
+import { getLoggedUserProfile } from "../services/authFetch";
 
-export function useRooms() {
+function toErrorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : "Erro ao carregar as salas.";
+}
+
+function filterRoomsByRole(rawRooms: Room[], targetRole?: 'teacher' | 'student'): Room[] {
+  if (!targetRole || IS_TEST) return rawRooms;
+  const currentUser = getLoggedUserProfile();
+  if (!currentUser || (!currentUser.id && !currentUser.name)) return rawRooms;
+
+  if (targetRole === 'teacher') {
+    return rawRooms.filter((r) => {
+      if (r.tutorId && currentUser.id) {
+        return r.tutorId === currentUser.id;
+      }
+      if (r.tutor && currentUser.name) {
+        return r.tutor.trim().toLowerCase() === currentUser.name.trim().toLowerCase();
+      }
+      return false;
+    });
+  }
+
+  if (targetRole === 'student') {
+    return rawRooms.filter((r) => {
+      if (r.tutorId && currentUser.id) {
+        return r.tutorId !== currentUser.id;
+      }
+      if (r.tutor && currentUser.name) {
+        return r.tutor.trim().toLowerCase() !== currentUser.name.trim().toLowerCase();
+      }
+      return true;
+    });
+  }
+
+  return rawRooms;
+}
+
+export function useRooms(role?: 'teacher' | 'student') {
   const [rooms, setRooms] = useState<Room[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchAllRooms = useCallback(async () => {
+  // Carga inicial: todos os setState acontecem nos callbacks da Promise
+  // (nunca de forma síncrona no corpo do effect — regra react-hooks/set-state-in-effect).
+  useEffect(() => {
+    let isActive = true;
+
+    roomService
+      .fetchRooms()
+      .then((data) => {
+        if (isActive && Array.isArray(data)) {
+          setRooms(filterRoomsByRole(data, role));
+        }
+      })
+      .catch((err: unknown) => {
+        if (isActive) setError(toErrorMessage(err));
+      })
+      .finally(() => {
+        if (isActive) setIsLoading(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [role]);
+
+  // Recarga manual (chamada por eventos, fora de effects)
+  const refreshRooms = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
     try {
       const data = await roomService.fetchRooms();
-      setRooms(data);
-    } catch (error) {
-      console.error("Erro ao carregar salas:", error);
+      if (Array.isArray(data)) {
+        setRooms(filterRoomsByRole(data, role));
+      }
+    } catch (err) {
+      setError(toErrorMessage(err));
+    } finally {
+      setIsLoading(false);
     }
-  }, []);
-
-  useEffect(() => {
-    let mounted = true;
-    async function init() {
-      await fetchAllRooms();
-      if (mounted) setIsLoading(false);
-    }
-    init();
-    return () => {
-      mounted = false;
-    };
-  }, [fetchAllRooms]);
+  }, [role]);
 
   const createRoom = async (name: string) => {
-    const generated = await roomService.createRoom(name);
-    // Optimistic UI local + refetch para testes
-    setRooms((prev) => [
-      ...prev,
-      {
-        id: String(Date.now()),
-        name,
-        code: generated.code,
-        joinLink: generated.joinLink,
-        semester: "2026.2",
-        tutor: "Marlus Rios",
-      },
-    ]);
-    if (USE_REAL_API) await fetchAllRooms();
+    const newRoom = await roomService.createRoom(name);
+    const created: Room = {
+      id: newRoom?.id || `room-${newRoom?.code || Date.now()}`,
+      name: newRoom?.name || name,
+      code: newRoom?.code || "",
+      joinLink: newRoom?.joinLink || `app/join/${newRoom?.code || ""}`,
+      semester: newRoom?.semester || "2026.2",
+      ...newRoom,
+    };
+    setRooms((prev) => [...prev, created]);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("pbl_rooms_sync", String(Date.now()));
+        window.dispatchEvent(new CustomEvent("rooms:updated"));
+      } catch {}
+    }
+
+    // Com a API real, sincroniza a lista com o que o servidor gravou
+    if (USE_REAL_API) {
+      const data = await roomService.fetchRooms();
+      if (Array.isArray(data)) {
+        setRooms(filterRoomsByRole(data, role));
+      }
+    }
   };
 
-  const updateRoom = async (id: string, name: string) => {
-    await roomService.updateRoom(id, name);
-    setRooms((prev) =>
-      prev.map((room) => (room.id === id ? { ...room, name } : room))
-    );
-    if (USE_REAL_API) await fetchAllRooms();
+  const updateRoom = async (roomId: string, newName: string) => {
+    await roomService.updateRoom(roomId, newName);
+    setRooms((prev) => prev.map((r) => (r.id === roomId ? { ...r, name: newName } : r)));
   };
 
-  const deleteRoom = async (id: string) => {
-    await roomService.deleteRoom(id);
-    setRooms((prev) => prev.filter((room) => room.id !== id));
-    if (USE_REAL_API) await fetchAllRooms();
+  useEffect(() => {
+    if (typeof window === "undefined" || IS_TEST) return;
+
+    const handleSync = () => {
+      void refreshRooms();
+    };
+
+    window.addEventListener("storage", handleSync);
+    window.addEventListener("focus", handleSync);
+    window.addEventListener("rooms:updated", handleSync);
+
+    return () => {
+      window.removeEventListener("storage", handleSync);
+      window.removeEventListener("focus", handleSync);
+      window.removeEventListener("rooms:updated", handleSync);
+    };
+  }, [refreshRooms]);
+
+  const deleteRoom = async (roomId: string) => {
+    await roomService.deleteRoom(roomId);
+    setRooms((prev) => prev.filter((r) => r.id !== roomId));
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("pbl_rooms_sync", String(Date.now()));
+        window.dispatchEvent(new CustomEvent("rooms:updated"));
+      } catch {}
+    }
   };
 
-  return { rooms, isLoading, createRoom, updateRoom, deleteRoom };
+  return {
+    rooms,
+    isLoading,
+    error,
+    createRoom,
+    updateRoom,
+    deleteRoom,
+    refreshRooms,
+  };
 }

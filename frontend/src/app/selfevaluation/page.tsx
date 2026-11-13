@@ -1,4 +1,4 @@
-// src/app/selfevaluation/page.tsx
+﻿// src/app/selfevaluation/page.tsx
 
 // Tela isolada de Autoavaliação: só se chega nela digitando http://localhost:3000/selfevaluation.
 
@@ -9,10 +9,12 @@
 import React, { useState, useEffect } from "react";
 import { ClipboardCheck, Lock } from "lucide-react";
 import { useEvaluationManager } from "../../hooks/useEvaluationManager";
+import { isEvaluationTypeReleased } from "../../types/evaluation";
 import { useMyGroup } from "../../hooks/useMyGroup";
 import { SelfEvaluationModal } from "../../components/features/evaluations/SelfEvaluationModal";
 import { SelfAssessmentGrade } from "../../components/features/grade-adjustment/SelfAssessmentGrade";
 import { Toast } from "../../components/ui/Toast";
+
 import {
   selfEvaluationMock,
   SELF_EVALUATION_MOCK_PROBLEM_ID,
@@ -57,7 +59,7 @@ export default function SelfEvaluationPage() {
   }, []);
 
   // Botão ativado só quando o tipo liberado pelo tutor é a autoavaliação
-  const isSelfEvaluationOpen = evaluationStatus.activeType === "self_evaluation";
+  const isSelfEvaluationOpen = isEvaluationTypeReleased(evaluationStatus, "self_evaluation");
 
   return (
     <main className="w-full min-h-screen bg-[#F5F5F5] font-sans flex flex-col items-center justify-center px-5">

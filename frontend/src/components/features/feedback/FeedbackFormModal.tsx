@@ -55,6 +55,7 @@ export function FeedbackFormModal({
         sessionId,
         targetType,
         studentId: isIndividual ? selectedStudentId : undefined,
+        studentIds: !isIndividual ? students.map((s) => s.id) : undefined,
         message: message.trim(),
       });
       onClose();

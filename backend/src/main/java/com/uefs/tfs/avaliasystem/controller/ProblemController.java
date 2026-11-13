@@ -22,7 +22,7 @@ public class ProblemController {
         this.problemService = problemService;
     }
 
-    @PostMapping("/rooms/{roomId}/problems")
+    @PostMapping({"/rooms/{roomId}/problems", "/disciplines/{roomId}/problems"})
     public ResponseEntity<ProblemResponse> createProblem(
             @PathVariable UUID roomId,
             @Valid @RequestBody ProblemRequest request,
@@ -30,6 +30,12 @@ public class ProblemController {
         UUID userId = UUID.fromString(principal.getName());
         ProblemResponse response = problemService.createProblem(roomId, request, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/problems/{id}")
+    public ResponseEntity<ProblemResponse> getProblem(@PathVariable UUID id) {
+        ProblemResponse response = problemService.getProblem(id);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/problems/{id}")
@@ -51,7 +57,7 @@ public class ProblemController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/rooms/{roomId}/problems")
+    @GetMapping({"/rooms/{roomId}/problems", "/disciplines/{roomId}/problems"})
     public ResponseEntity<List<ProblemResponse>> listProblems(@PathVariable UUID roomId) {
         List<ProblemResponse> response = problemService.listProblems(roomId);
         return ResponseEntity.ok(response);

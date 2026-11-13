@@ -31,6 +31,8 @@ export function StudentRoomCard({ room, index, onEnter }: StudentRoomCardProps) 
         <hr className="border-t border-white/30" />
         <div className="absolute right-0 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-[#CDD3EE] text-[#182860] text-sm font-bold flex items-center justify-center overflow-hidden border-2 border-white/80">
           {room.tutorPhoto ? (
+            // Foto do tutor vinda de URL externa arbitrária: mesmo padrão do ui/Avatar (thumb de 48px, sem impacto no LCP)
+            // eslint-disable-next-line @next/next/no-img-element
             <img src={room.tutorPhoto} alt={room.tutor} className="w-full h-full object-cover" />
           ) : (
             getInitials(room.tutor ?? "?")

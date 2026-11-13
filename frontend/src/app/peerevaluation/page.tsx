@@ -1,34 +1,46 @@
 // src/app/peerevaluation/page.tsx
-
-// só se chega nela digitando http://localhost:3000/peerevaluation. 
-//   PEER_EVALUATION_MOCK_PROBLEM_ID = "prob_3" -> liberada (botão ativado)
-//   PEER_EVALUATION_MOCK_PROBLEM_ID = "prob_1" ou "prob_2" -> não liberada (botão desativado)
 "use client";
 
 import React, { useState } from "react";
 import { Users, Lock } from "lucide-react";
 import { useEvaluationManager } from "../../hooks/useEvaluationManager";
+import { isEvaluationTypeReleased } from "../../types/evaluation";
 import { PeerEvaluationModal } from "../../components/features/evaluations/PeerEvaluationModal";
 import { Toast } from "../../components/ui/Toast";
+import { useMyGroup } from "../../hooks/useMyGroup";
+import { authMockSuccess } from "../../mocks/auth.mock";
+import { getLoggedUserProfile } from "../../services/authFetch";
 import {
   peerEvaluationMock,
   PEER_EVALUATION_MOCK_PROBLEM_ID,
   PEER_EVALUATION_MOCK_PEERS,
 } from "../../mocks/peerEvaluation.mock";
+import { SELF_EVALUATION_MOCK_ROOM_ID } from "../../mocks/selfEvaluation.mock";
 
 export default function PeerEvaluationPage() {
-  // quando a tela entrar no fluxo do app, ler o problema da rota (useParams).
+  const roomId = SELF_EVALUATION_MOCK_ROOM_ID;
   const problemId = PEER_EVALUATION_MOCK_PROBLEM_ID;
-  const { evaluationStatus, isLoading } = useEvaluationManager(problemId);
+  const { evaluationStatus, isLoading: isLoadingStatus } = useEvaluationManager(problemId);
+  const { group, isLoading: isLoadingGroup } = useMyGroup(roomId);
 
-  // trocar pelos membros do grupo (useMyGroup), sem o aluno logado, quando houver back-end
-  const peers = PEER_EVALUATION_MOCK_PEERS;
+  const loggedUser = getLoggedUserProfile();
+  const currentStudentId = loggedUser?.id || authMockSuccess.user?.id;
+  const peers =
+    group?.members && group.members.length > 0
+      ? group.members
+          .filter(
+            (member) =>
+              member.id !== currentStudentId &&
+              member.name !== (loggedUser?.name || authMockSuccess.user?.name)
+          )
+          .map((member) => ({ avatarUrl: "", ...member }))
+      : PEER_EVALUATION_MOCK_PEERS;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Botão ativado só quando o tipo liberado pelo tutor é a avaliação entre pares
-  const isPeerEvaluationOpen = evaluationStatus.activeType === "peer_evaluation";
+  const isPeerEvaluationOpen = isEvaluationTypeReleased(evaluationStatus, "peer_evaluation");
+  const isLoading = isLoadingStatus || isLoadingGroup;
 
   return (
     <main className="w-full min-h-screen bg-[#F5F5F5] font-sans flex flex-col items-center justify-center px-5">
@@ -60,7 +72,6 @@ export default function PeerEvaluationPage() {
         isEvaluationOpen={isPeerEvaluationOpen}
         peers={peers}
         onSubmit={async (data) => {
-          // trocar pelo endpoint real quando o back-end existir
           await peerEvaluationMock.submit(problemId, data);
           setToastMessage("Avaliações enviadas com sucesso!");
         }}

@@ -36,7 +36,13 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @JsonIgnore
+    @Column(nullable = false, columnDefinition = "integer default 0")
+    private int tokenVersion; //garante que , se um usuário trocar a sua senha, todas as sessões dele se tornem inválidas
+    //(padrão de mercado aparentemnete, é basicamente obrigatório)
+
     private String profilePictureUrl;
+
 
     public User(String name, String email, String password, String profilePictureUrl) {
         this.name = name;
@@ -44,4 +50,13 @@ public class User {
         this.password = password;
         this.profilePictureUrl = profilePictureUrl;
     }
+
+    public User(UUID id, String name, String email, String password, String profilePictureUrl) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.profilePictureUrl = profilePictureUrl;
+    }
+
 }

@@ -12,6 +12,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docs/schema.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tfs_user -d tfs_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
 
   backend:
     build: ./backend
@@ -24,8 +29,12 @@ services:
       - SPRING_DATASOURCE_USERNAME=tfs_user
       - SPRING_DATASOURCE_PASSWORD=tfs_pass
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - JWT_SECRET_KEY=bXlfc3VwZXJfc2VjcmV0X2tleV9mb3JfdGVzdGluZ18xMjM0NTY3ODkwMTI=
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   frontend:
     build: ./frontend
@@ -34,7 +43,9 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8080
+      - BACKEND_URL=http://backend:8080
+      - NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
+      - NEXT_PUBLIC_USE_MOCKS=false
     depends_on:
       - backend
 

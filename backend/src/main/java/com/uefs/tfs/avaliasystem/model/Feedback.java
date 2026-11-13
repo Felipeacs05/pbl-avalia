@@ -29,11 +29,17 @@ public class Feedback {
     @JoinColumn(name = "student_id", nullable = false)
     private User student;
 
-    @Column(nullable = false)
+    @Column
     private Double grade;
 
     @Column(name = "feedback_text", nullable = false, length = 2000)
     private String text;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "session_id") // opcional
+    private TutoringSession session;
+
+
 
     private Instant createdAt = Instant.now();
 }

@@ -68,22 +68,29 @@ export function useStudentEvaluation(
     });
   }, []);
 
-  const saveEvaluation = useCallback(async (): Promise<boolean> => {
-    if (!evaluation) return false;
-    try {
-      setIsSaving(true);
-      await studentEvaluationService.saveStudentEvaluation(evaluation);
-      setToastType("success");
-      setToastMessage("Avaliação salva com sucesso!");
-      return true;
-    } catch {
-      setToastType("error");
-      setToastMessage("Erro ao salvar avaliação. Tente novamente.");
-      return false;
-    } finally {
-      setIsSaving(false);
-    }
-  }, [evaluation]);
+  const saveEvaluation = useCallback(
+    async (calculatedGrade?: number): Promise<boolean> => {
+      if (!evaluation) return false;
+      try {
+        setIsSaving(true);
+        const dataToSave: StudentEvaluationData = {
+          ...evaluation,
+          ...(typeof calculatedGrade === "number" ? { calculatedGrade } : {}),
+        };
+        await studentEvaluationService.saveStudentEvaluation(dataToSave);
+        setToastType("success");
+        setToastMessage("Avaliação salva com sucesso!");
+        return true;
+      } catch {
+        setToastType("error");
+        setToastMessage("Erro ao salvar avaliação. Tente novamente.");
+        return false;
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [evaluation]
+  );
 
   const clearToast = useCallback(() => {
     setToastMessage(null);

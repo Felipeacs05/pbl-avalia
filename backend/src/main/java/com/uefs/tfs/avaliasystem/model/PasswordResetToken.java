@@ -2,8 +2,13 @@
 package com.uefs.tfs.avaliasystem.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import lombok.Getter;
+import lombok.Setter;
 
+import java.time.Instant;
+
+@Getter
+@Setter
 @Entity
 public class PasswordResetToken {
     @Id
@@ -18,20 +23,21 @@ public class PasswordResetToken {
     private User user;
 
     @Column(nullable = false)
-    private LocalDateTime expiryDate;
+    private Instant expiryDate;
 
     @Column(nullable = false)
     private boolean used;
 
-    // Construtores
     public PasswordResetToken() {}
 
-    public PasswordResetToken(User user, String token, LocalDateTime expiryDate) {
+    public PasswordResetToken(User user, String token, Instant expiryDate) {
         this.user = user;
         this.token = token;
         this.expiryDate = expiryDate;
         this.used = false;
     }
 
-    // Getters e Setters
+    public boolean isValid() {
+        return !used && expiryDate != null && expiryDate.isAfter(Instant.now());
+    }
 }

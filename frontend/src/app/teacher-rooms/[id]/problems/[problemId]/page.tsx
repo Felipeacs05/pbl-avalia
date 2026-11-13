@@ -12,11 +12,23 @@ import { PastSessionsList } from "../../../../../components/features/problem-det
 import { ReleaseEvaluationButton } from "../../../../../components/features/problem-details/ReleaseEvaluationButton";
 import { ReleaseEvaluationModal } from "../../../../../components/features/evaluations/ReleaseEvaluationModal";
 import { FeedbackFormModal } from "../../../../../components/features/feedback/FeedbackFormModal";
+import { ReportExportModal } from "../../../../../components/features/reports/ReportExportModal";
 import { useFeedback } from "../../../../../hooks/useFeedback";
 import { MOCK_FEEDBACK_STUDENTS } from "../../../../../mocks/feedback.mock";
+import { photoRosterService } from "../../../../../services/photoRosterService";
+import { IS_TEST } from "../../../../../services/apiMode";
+import type { FeedbackStudentOption } from "../../../../../types/feedback";
 import { Toast } from "../../../../../components/ui/Toast";
 import type { Session } from "../../../../../types/problem";
-import { FileQuestion, CheckCircle2, MessageSquarePlus } from "lucide-react";
+import type { Student } from "../../../../../types/student";
+import { getReleasedTypes } from "../../../../../types/evaluation";
+import type { ReportScope } from "../../../../../types/reportExport";
+import {
+  FileQuestion,
+  CheckCircle2,
+  MessageSquarePlus,
+  BarChart3,
+} from "lucide-react";
 
 export default function ProblemDetailsPage() {
   const params = useParams();
@@ -36,8 +48,10 @@ export default function ProblemDetailsPage() {
     isModalOpen,
     evaluationStatus,
     selectedType,
+    selectedTypes,
     isLoading: isLoadingEvaluation,
     isSubmitting: isSubmittingEvaluation,
+    error: evaluationError,
     openModal,
     closeModal,
     toggleType,
@@ -46,6 +60,31 @@ export default function ProblemDetailsPage() {
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState<boolean>(false);
+  const [realStudents, setRealStudents] = useState<FeedbackStudentOption[]>([]);
+
+  React.useEffect(() => {
+    if (!roomId) return;
+    photoRosterService
+      .getStudentsByRoom(roomId)
+      .then((students) => {
+        if (Array.isArray(students)) {
+          setRealStudents(
+            students.filter((s: Student) => s.role !== "TUTOR").map((s) => ({
+              id: s.id,
+              name: s.name,
+              email: s.email,
+              avatarUrl: s.avatarUrl,
+            }))
+          );
+        }
+      })
+      .catch(() => {});
+  }, [roomId]);
+  const [exportModalState, setExportModalState] = useState<{
+    scope: ReportScope;
+    title?: string;
+    subtitle?: string;
+  } | null>(null);
   const { sendFeedback } = useFeedback(problemId);
 
   const room = rooms.find((r) => r.id === roomId);
@@ -60,8 +99,16 @@ export default function ProblemDetailsPage() {
   const handleStartSession = async () => {
     const result = await startSession();
     if (result && result.sessionId) {
-      router.push(`/teacher-rooms/${roomId}/problems/${problemId}/sessions/${result.sessionId}`);
+      router.push(
+        `/teacher-rooms/${roomId}/problems/${problemId}/sessions/${result.sessionId}`
+      );
     }
+  };
+
+  const handleEvaluateSession = (sessionId: string) => {
+    router.push(
+      `/teacher-rooms/${roomId}/problems/${problemId}/sessions/${sessionId}/evaluate`
+    );
   };
 
   const handleSelectPastSession = (session: Session) => {
@@ -70,14 +117,43 @@ export default function ProblemDetailsPage() {
     );
   };
 
+  const handleOpenProblemExport = () => {
+    setExportModalState({
+      scope: { type: "problem", roomId, problemId },
+      title: `Exportar Relatório — ${problem?.title ?? "Problema"}`,
+      subtitle:
+        "Extraia o consolidado parcial de notas e frequência de todas as sessões deste problema.",
+    });
+  };
+
+  const handleOpenSessionExport = (session: Session) => {
+    setExportModalState({
+      scope: { type: "session", roomId, sessionId: session.id },
+      title: `Exportar Sessão (${session.displayDate})`,
+      subtitle:
+        "Extraia a chamada, as funções desempenhadas e as avaliações desta sessão específica.",
+    });
+  };
+
+  const releasedTypes = getReleasedTypes(evaluationStatus);
+  const releasedLabel =
+    releasedTypes.length > 1
+      ? "Autoavaliação e Avaliação entre Pares Liberadas"
+      : releasedTypes[0] === "self_evaluation"
+        ? "Autoavaliação Liberada"
+        : "Avaliação entre Pares Liberada";
+
   const handleConfirmRelease = async () => {
     const updated = await confirmRelease();
     if (updated) {
       if (updated.isReleased) {
+        const types = getReleasedTypes(updated);
         setToastMessage(
-          updated.activeType === "self_evaluation"
-            ? "Autoavaliação liberada com sucesso!"
-            : "Avaliação entre Pares liberada com sucesso!"
+          types.length > 1
+            ? "Autoavaliação e Avaliação entre Pares liberadas com sucesso!"
+            : types[0] === "self_evaluation"
+              ? "Autoavaliação liberada com sucesso!"
+              : "Avaliação entre Pares liberada com sucesso!"
         );
       } else {
         setToastMessage("Liberação de avaliações desativada.");
@@ -149,11 +225,14 @@ export default function ProblemDetailsPage() {
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="text-[#4354A0]" size={20} />
                     <div>
-                      <p className="text-xs text-gray-500 font-medium">Status da Avaliação</p>
+                      <p className="text-xs text-gray-500 font-medium">
+                        Status da Avaliação
+                      </p>
+                      <p className="text-[11px] font-bold uppercase tracking-wide text-emerald-700">
+                        Avaliações Abertas
+                      </p>
                       <p className="text-sm font-semibold text-[#4354A0]">
-                        {evaluationStatus.activeType === "self_evaluation"
-                          ? "Autoavaliação Liberada"
-                          : "Avaliação entre Pares Liberada"}
+                        {releasedLabel}
                       </p>
                     </div>
                   </div>
@@ -170,6 +249,8 @@ export default function ProblemDetailsPage() {
               <PastSessionsList
                 sessions={problem.sessions}
                 onSelectSession={handleSelectPastSession}
+                onEvaluateSession={handleEvaluateSession}
+                onExportSession={handleOpenSessionExport}
               />
             </div>
 
@@ -180,6 +261,7 @@ export default function ProblemDetailsPage() {
                 isLoading={isLoadingEvaluation}
                 isReleased={evaluationStatus.isReleased}
                 activeType={evaluationStatus.activeType}
+                activeTypes={releasedTypes}
               />
               <button
                 type="button"
@@ -187,8 +269,17 @@ export default function ProblemDetailsPage() {
                 data-testid="open-feedback-modal-btn-mobile"
                 className="w-full py-3.5 rounded-2xl font-semibold text-sm shadow-sm transition-all flex items-center justify-center gap-2 bg-[#4354A0] hover:bg-[#364485] text-white active:scale-[0.98] cursor-pointer"
               >
-                <MessageSquarePlus size={18} />
+                <MessageSquarePlus size={18} aria-hidden="true" />
                 <span>Enviar Feedback</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleOpenProblemExport}
+                data-testid="open-problem-export-modal-btn-mobile"
+                className="w-full py-3.5 rounded-2xl font-semibold text-sm shadow-sm transition-all flex items-center justify-center gap-2 bg-[#757DC3] hover:bg-[#6870B5] text-white active:scale-[0.98] cursor-pointer"
+              >
+                <BarChart3 size={18} aria-hidden="true" />
+                <span>Extrair Relatório do Problema</span>
               </button>
             </div>
           </div>
@@ -210,11 +301,14 @@ export default function ProblemDetailsPage() {
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="text-[#4354A0]" size={20} />
                     <div>
-                      <p className="text-xs text-gray-500 font-medium">Status da Avaliação</p>
+                      <p className="text-xs text-gray-500 font-medium">
+                        Status da Avaliação
+                      </p>
+                      <p className="text-[11px] font-bold uppercase tracking-wide text-emerald-700">
+                        Avaliações Abertas
+                      </p>
                       <p className="text-sm font-semibold text-[#4354A0]">
-                        {evaluationStatus.activeType === "self_evaluation"
-                          ? "Autoavaliação Liberada"
-                          : "Avaliação entre Pares Liberada"}
+                        {releasedLabel}
                       </p>
                     </div>
                   </div>
@@ -232,6 +326,7 @@ export default function ProblemDetailsPage() {
                 isLoading={isLoadingEvaluation}
                 isReleased={evaluationStatus.isReleased}
                 activeType={evaluationStatus.activeType}
+                activeTypes={releasedTypes}
               />
 
               <button
@@ -240,8 +335,18 @@ export default function ProblemDetailsPage() {
                 data-testid="open-feedback-modal-btn"
                 className="w-full py-3.5 rounded-2xl font-semibold text-sm shadow-sm transition-all flex items-center justify-center gap-2 bg-[#4354A0] hover:bg-[#364485] text-white active:scale-[0.98] cursor-pointer"
               >
-                <MessageSquarePlus size={18} />
+                <MessageSquarePlus size={18} aria-hidden="true" />
                 <span>Enviar Feedback</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleOpenProblemExport}
+                data-testid="open-problem-export-modal-btn"
+                className="w-full py-3.5 rounded-2xl font-semibold text-sm shadow-sm transition-all flex items-center justify-center gap-2 bg-[#757DC3] hover:bg-[#6870B5] text-white active:scale-[0.98] cursor-pointer"
+              >
+                <BarChart3 size={18} aria-hidden="true" />
+                <span>Extrair Relatório do Problema</span>
               </button>
             </div>
 
@@ -250,6 +355,8 @@ export default function ProblemDetailsPage() {
               <PastSessionsList
                 sessions={problem.sessions}
                 onSelectSession={handleSelectPastSession}
+                onEvaluateSession={handleEvaluateSession}
+                onExportSession={handleOpenSessionExport}
               />
             </div>
           </div>
@@ -261,16 +368,24 @@ export default function ProblemDetailsPage() {
         isOpen={isModalOpen}
         onClose={closeModal}
         selectedType={selectedType}
+        selectedTypes={selectedTypes}
         onToggleType={toggleType}
         onConfirm={handleConfirmRelease}
         isSubmitting={isSubmittingEvaluation}
+        error={evaluationError}
       />
 
       {/* Feedback Form Modal (US16) */}
       {isFeedbackModalOpen && (
         <FeedbackFormModal
           problemId={problemId}
-          students={MOCK_FEEDBACK_STUDENTS}
+          students={
+            realStudents.length > 0
+              ? realStudents
+              : IS_TEST
+              ? MOCK_FEEDBACK_STUDENTS
+              : []
+          }
           onClose={() => setIsFeedbackModalOpen(false)}
           onSubmit={async (payload) => {
             await sendFeedback(payload);
@@ -280,6 +395,16 @@ export default function ProblemDetailsPage() {
                 : "Feedback individual enviado com sucesso!"
             );
           }}
+        />
+      )}
+
+      {/* Report Export Modal (US19 - Problem or Session Scope) */}
+      {exportModalState && (
+        <ReportExportModal
+          scope={exportModalState.scope}
+          title={exportModalState.title}
+          subtitle={exportModalState.subtitle}
+          onClose={() => setExportModalState(null)}
         />
       )}
     </main>

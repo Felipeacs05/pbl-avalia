@@ -23,7 +23,7 @@ public class JwtService {
     private final JwtDecoder jwtDecoder;
     private final Duration expiration;
 
-    public JwtService(
+    public JwtService( 
             JwtEncoder jwtEncoder,
             JwtDecoder jwtDecoder,
             @Value("${security.jwt.expiration-time}") long expirationTime
@@ -34,14 +34,33 @@ public class JwtService {
     }
 
     public String generateToken(UUID id) {
+        return generateToken(id, null, null, 0);
+    }
+
+    public String generateToken(UUID id, int tokenVersion) {
+        return generateToken(id, null, null, tokenVersion);
+    }
+
+    public String generateToken(UUID id, String name, String email) {
+        return generateToken(id, name, email, 0);
+    }
+
+    public String generateToken(UUID id, String name, String email, int tokenVersion) {
         Instant issuedAt = Instant.now();
         Instant expiresAt = issuedAt.plus(expiration);
 
-        JwtClaimsSet claims = JwtClaimsSet.builder()
+        JwtClaimsSet.Builder builder = JwtClaimsSet.builder()
                 .subject(id.toString())
+                .claim("tokenVersion", tokenVersion)
                 .issuedAt(issuedAt)
-                .expiresAt(expiresAt)
-                .build();
+                .expiresAt(expiresAt);
+
+        if (name != null) {
+            builder.claim("name", name);
+        }
+        if (email != null) {
+            builder.claim("email", email);
+        }
 
         JwsHeader header = JwsHeader
                 .with(MacAlgorithm.HS256)
@@ -49,7 +68,7 @@ public class JwtService {
                 .build();
 
         Jwt jwt = jwtEncoder.encode(
-                JwtEncoderParameters.from(header, claims)
+                JwtEncoderParameters.from(header, builder.build())
         );
 
         return jwt.getTokenValue();

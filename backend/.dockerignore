@@ -1,4 +1,6 @@
 target/
 .mvn/
+.env
+
 # Testes não fazem parte da imagem de produção
 src/test/

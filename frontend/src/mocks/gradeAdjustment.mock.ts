@@ -7,7 +7,8 @@ import type {
   SubmittedSelfAssessment,
 } from "../types/gradeAdjustment";
 
-const STORAGE_KEY = "avalia_pbl_us15_self_evaluations_v1";
+const OLD_STORAGE_KEY = "avalia_pbl_us15_self_evaluations_v1";
+const STORAGE_KEY = "avalia_pbl_us15_self_evaluations_v2";
 
 const INITIAL_REVIEWS: StudentSelfEvaluationReview[] = [
   {
@@ -138,6 +139,7 @@ let memoryReviews: StudentSelfEvaluationReview[] = INITIAL_REVIEWS.map((item) =>
 function loadReviews(): StudentSelfEvaluationReview[] {
   if (typeof window !== "undefined") {
     try {
+      window.localStorage.removeItem(OLD_STORAGE_KEY);
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as StudentSelfEvaluationReview[];
@@ -168,7 +170,11 @@ export const gradeAdjustmentMock = {
   getReviewsBySession(sessionId: string): StudentSelfEvaluationReview[] {
     const all = loadReviews();
     const filtered = all.filter((r) => r.sessionId === sessionId);
-    return (filtered.length > 0 ? filtered : all).map((item) => ({ ...item }));
+    if (filtered.length > 0) return filtered.map((item) => ({ ...item }));
+    if (sessionId && sessionId !== "session_01") {
+      return [];
+    }
+    return all.map((item) => ({ ...item }));
   },
 
   getAssessmentById(assessmentId: string): SubmittedSelfAssessment {

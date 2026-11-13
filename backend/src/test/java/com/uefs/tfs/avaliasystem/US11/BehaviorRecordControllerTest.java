@@ -7,6 +7,7 @@ import com.uefs.tfs.avaliasystem.dto.BehaviorRecordRequest;
 import com.uefs.tfs.avaliasystem.dto.BehaviorRecordResponse;
 import com.uefs.tfs.avaliasystem.dto.BehaviorTagResponse;
 import com.uefs.tfs.avaliasystem.service.BehaviorRecordService;
+import com.uefs.tfs.avaliasystem.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -41,6 +42,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("[US11] Controller de registro de comportamento")
 class BehaviorRecordControllerTest {
 
+    @MockitoBean
+    private UserRepository userRepository;
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -53,6 +57,7 @@ class BehaviorRecordControllerTest {
     private final UUID TUTOR_UUID = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
     private final UUID OTHER_TUTOR_UUID = UUID.fromString("444e4444-e44b-44d4-a444-444444444444");
     private final UUID STUDENT_UUID = UUID.fromString("999e9999-e99b-99d9-a999-999999999999");
+    private final UUID ROOM_UUID = UUID.fromString("987e6543-e21b-12d3-a456-426614174000");
     private final UUID SESSION_UUID = UUID.fromString("777e7777-e77b-77d7-a777-777777777777");
     private final UUID TAG_UUID = UUID.fromString("888e8888-e88b-88d8-a888-888888888888");
     private final UUID OTHER_TAG_UUID = UUID.fromString("111e1111-e11b-11d1-a111-111111111111");
@@ -60,7 +65,7 @@ class BehaviorRecordControllerTest {
 
     private final Instant RECORDED_AT = Instant.parse("2026-10-12T14:00:00Z");
 
-    private static final String TAGS_ROUTE = "/api/v1/behavior-tags";
+    private static final String TAGS_ROUTE = "/api/v1/rooms/{roomId}/behavior-tags";
     private static final String RECORDS_ROUTE = "/api/v1/sessions/{sessionId}/students/{studentId}/behavior-records";
     private static final String NOT_TUTOR_MESSAGE = "Apenas o tutor responsável pela sala pode registrar comportamentos.";
     private static final String TEXT_TOO_LONG_MESSAGE = "O texto deve ter no máximo 500 caracteres.";
@@ -70,11 +75,11 @@ class BehaviorRecordControllerTest {
     @Test
     @DisplayName("Deve retornar 200 com as tags predefinidas, com id e nome")
     void listBehaviorTags_Returns200WithTags() throws Exception {
-        Mockito.when(behaviorRecordService.listBehaviorTags()).thenReturn(List.of(
+        Mockito.when(behaviorRecordService.listBehaviorTags(ROOM_UUID)).thenReturn(List.of(
                 new BehaviorTagResponse(TAG_UUID, "Atraso"),
                 new BehaviorTagResponse(OTHER_TAG_UUID, "Celular fora de contexto")));
 
-        mockMvc.perform(get(TAGS_ROUTE)
+        mockMvc.perform(get(TAGS_ROUTE, ROOM_UUID)
                         .with(jwt().jwt(j -> j.subject(TUTOR_UUID.toString()))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))

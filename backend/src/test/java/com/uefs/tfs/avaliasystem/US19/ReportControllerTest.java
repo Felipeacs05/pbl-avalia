@@ -10,6 +10,7 @@ import com.uefs.tfs.avaliasystem.dto.ClassReportResponse.WithdrawnStudentRow;
 import com.uefs.tfs.avaliasystem.exception.ExportInProgressException;
 import com.uefs.tfs.avaliasystem.exception.ResourceNotFoundException;
 import com.uefs.tfs.avaliasystem.model.ExportFormat;
+import com.uefs.tfs.avaliasystem.repository.UserRepository;
 import com.uefs.tfs.avaliasystem.security.RoomSecurity;
 import com.uefs.tfs.avaliasystem.service.ClassReportService;
 import com.uefs.tfs.avaliasystem.service.ExportedFile;
@@ -57,6 +58,9 @@ class ReportControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private UserRepository userRepository;
 
     @MockitoBean
     private ClassReportService classReportService;

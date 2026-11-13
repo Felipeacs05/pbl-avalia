@@ -25,8 +25,13 @@ export function EvaluationToggleCard({
       role="button"
       tabIndex={0}
       id={id}
-      onClick={onToggle}
+      aria-disabled={disabled}
+      onClick={() => {
+        // Desabilitado (ex.: durante o envio): o card não muda a seleção
+        if (!disabled) onToggle();
+      }}
       onKeyDown={(e) => {
+        if (disabled) return;
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           onToggle();

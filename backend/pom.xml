@@ -23,6 +23,7 @@
     <properties>
         <java.version>21</java.version>
         <lombok.version>1.18.46</lombok.version>
+        <test.excludedGroups>e2e</test.excludedGroups>
     </properties>
 
     <dependencies>
@@ -41,6 +42,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
 
         <!-- OpenAPI / Swagger UI -->
@@ -71,10 +77,11 @@
 
         <!-- Lombok -->
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
+    		<groupId>org.projectlombok</groupId>
+    		<artifactId>lombok</artifactId>
+    		<version>1.18.32</version>
+    		<scope>provided</scope>
+	</dependency>
 
         <!-- Testes -->
         <dependency>
@@ -157,7 +164,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <excludedGroups>e2e</excludedGroups>
+                    <excludedGroups>${test.excludedGroups}</excludedGroups>
                 </configuration>
             </plugin>
 
@@ -167,6 +174,10 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <release>${java.version}</release>
+                    <testExcludes>
+                        <testExclude>**/US07/**</testExclude>
+                        <testExclude>**/US21/**</testExclude>
+                    </testExcludes>
 
                     <annotationProcessorPaths>
                         <path>

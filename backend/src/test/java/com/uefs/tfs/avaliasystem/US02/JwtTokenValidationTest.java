@@ -3,6 +3,7 @@ package com.uefs.tfs.avaliasystem.US02;
 import com.uefs.tfs.avaliasystem.dto.LoginResponse;
 import com.uefs.tfs.avaliasystem.dto.RegisterUserRequest;
 import com.uefs.tfs.avaliasystem.model.User;
+import com.uefs.tfs.avaliasystem.repository.UserRepository;
 import com.uefs.tfs.avaliasystem.service.JwtService;
 import com.uefs.tfs.avaliasystem.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +52,9 @@ class JwtTokenValidationTest {
 
     @Autowired
     private JwtService jwtService;
+    @Autowired
+    private UserRepository userRepository;
+
     private User registeredUser;
     private LoginResponse loginResponse;
 
@@ -167,5 +171,15 @@ class JwtTokenValidationTest {
         assertThat(jwtService.isTokenValid(malformedToken, registeredUser.getId()))
                 .as("Um token com formato inválido deve ser rejeitado pelo JwtService")
                 .isFalse();
+    }
+
+    @Test
+    @DisplayName("JWT emitido antes da redefinição deve ser rejeitado após incrementar a versão")
+    void shouldRejectPreviouslyIssuedTokenAfterTokenVersionChanges() {
+        String oldToken = loginResponse.getToken();
+        registeredUser.setTokenVersion(registeredUser.getTokenVersion() + 1);
+        userRepository.save(registeredUser);
+
+        assertThat(jwtService.isTokenValid(oldToken, registeredUser.getId())).isFalse();
     }
 }

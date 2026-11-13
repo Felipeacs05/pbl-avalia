@@ -27,15 +27,15 @@ public class PeerAssessmentService {
     @Transactional
     public void submitPeerAssessments(UUID problemId, UUID evaluatorId, List<AssessmentRequest> requests) {
         Problem p = problemRepository.findById(problemId).orElseThrow();
-        if (!p.getPeerAssessmentReleased()) {
+        if (!Boolean.TRUE.equals(p.getPeerAssessmentReleased())) {
             throw new AccessDeniedException("Peer-assessment is currently closed");
         }
         
         RoomMember evaluatorMember = roomMemberRepository.findByRoomIdAndUserId(p.getRoom().getId(), evaluatorId)
             .orElseThrow(() -> new AccessDeniedException("Evaluator not in room"));
             
-        if (!evaluatorMember.isActive() || evaluatorMember.getTeam() == null) {
-            throw new AccessDeniedException("Evaluator is not active or has no team");
+        if (!evaluatorMember.isActive()) {
+            throw new AccessDeniedException("Evaluator is not active");
         }
         
         User evaluator = userRepository.findById(evaluatorId).orElseThrow();
@@ -48,7 +48,8 @@ public class PeerAssessmentService {
             RoomMember targetMember = roomMemberRepository.findByRoomIdAndUserId(p.getRoom().getId(), req.targetId())
                 .orElseThrow(() -> new AccessDeniedException("Target not in room"));
                 
-            if (targetMember.getTeam() == null || !targetMember.getTeam().getId().equals(evaluatorMember.getTeam().getId())) {
+            if (evaluatorMember.getTeam() != null && 
+                (targetMember.getTeam() == null || !targetMember.getTeam().getId().equals(evaluatorMember.getTeam().getId()))) {
                 throw new AccessDeniedException("Target is not in the same team");
             }
             

@@ -4,7 +4,7 @@ import axios from 'axios';
 //src/services/api.ts (USO AXIOS PARA REQUISIÇÕES HTTP)
 
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -33,6 +33,9 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token');
+        // O interceptor do axios roda fora da árvore React (não há useRouter aqui). O reload completo
+        // é intencional: com a sessão expirada, todo o estado em memória da aplicação precisa ser descartado.
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination
         window.location.href = '/';
       }
     }
@@ -47,4 +50,4 @@ api.interceptors.response.use(
 
     return Promise.reject(error);
   }
-); 
+);
