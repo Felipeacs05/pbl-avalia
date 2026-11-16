@@ -29,6 +29,9 @@ export default defineConfig({
     timeout: 120_000,
     env: {
       NEXT_PUBLIC_USE_MOCKS: "false",
+      // O axios (api.ts) usa esta base; relativa, passa pelo rewrite /api/* -> BACKEND_URL como o fetch,
+      // em vez de ir ao padrão http://localhost:8080 (fora do backend do e2e). Necessário para a US22.
+      NEXT_PUBLIC_API_URL: "/api/v1",
       NEXT_DIST_DIR: ".next-e2e",
       BACKEND_URL: backendURL,
     },
