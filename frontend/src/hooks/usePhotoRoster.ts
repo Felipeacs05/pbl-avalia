@@ -7,6 +7,8 @@ export function usePhotoRoster(roomId: string) {
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isRemoving, setIsRemoving] = useState<boolean>(false);
+  const [removeError, setRemoveError] = useState<string | null>(null);
 
   const fetchStudents = useCallback(async () => {
     if (!roomId) return;
@@ -53,16 +55,26 @@ export function usePhotoRoster(roomId: string) {
   }, [roomId]);
 
   const removeStudent = useCallback(
-    async (studentId: string) => {
-      if (!roomId) return;
+    async (studentId: string): Promise<boolean> => {
+      if (!roomId) return false;
       try {
+        setIsRemoving(true);
+        setRemoveError(null);
         const updated = await photoRosterService.removeStudentFromRoom(
           roomId,
           studentId
         );
         setStudents(updated);
+        return true;
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Erro ao remover aluno");
+        setRemoveError(
+          err instanceof Error && err.message.trim()
+            ? err.message
+            : "Erro ao remover aluno"
+        );
+        return false;
+      } finally {
+        setIsRemoving(false);
       }
     },
     [roomId]
@@ -72,6 +84,8 @@ export function usePhotoRoster(roomId: string) {
     students,
     isLoading,
     error,
+    isRemoving,
+    removeError,
     refreshStudents: fetchStudents,
     removeStudent,
   };

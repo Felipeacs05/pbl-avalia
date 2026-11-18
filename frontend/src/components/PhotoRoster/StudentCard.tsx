@@ -13,6 +13,7 @@ interface StudentCardProps {
 
 export function StudentCard({ student, onAction }: StudentCardProps) {
   const [imageError, setImageError] = useState(false);
+  const isTutor = student.role?.toUpperCase() === "TUTOR";
 
   return (
     <div className="w-full bg-[#3B4C9B] hover:bg-[#34448C] transition-all duration-200 rounded-full p-2.5 sm:p-3 pr-4 sm:pr-5 flex items-center justify-between shadow-sm border border-white/10">
@@ -41,15 +42,18 @@ export function StudentCard({ student, onAction }: StudentCardProps) {
         </span>
       </div>
 
-      {/* Right: Tag with 'X' Action Icon */}
-      <button
-        type="button"
-        onClick={() => onAction?.(student)}
-        aria-label={`Remover ou desvincular ${student.name}`}
-        className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white/90 hover:text-white transition-all cursor-pointer shrink-0 ml-3"
-      >
-        <Delete size={18} strokeWidth={2.2} />
-      </button>
+      {/* Right: Tag with 'X' Action Icon (oculto para o tutor da sala) */}
+      {!isTutor && (
+        <button
+          id={`btn-remover-aluno_${student.id}`}
+          type="button"
+          onClick={() => onAction?.(student)}
+          aria-label={`Remover ou desvincular ${student.name}`}
+          className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white/90 hover:text-white transition-all cursor-pointer shrink-0 ml-3"
+        >
+          <Delete size={18} strokeWidth={2.2} />
+        </button>
+      )}
     </div>
   );
 }
