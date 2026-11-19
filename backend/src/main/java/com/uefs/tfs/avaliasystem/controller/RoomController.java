@@ -23,6 +23,7 @@ public class RoomController {
     @Autowired
     private RoomService roomService;
 
+    @PreAuthorize("@emailVerificationSecurity.isEmailVerified(authentication)")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public RoomResponse createRoom(@RequestBody @Valid RoomRequest request, Principal principal) {

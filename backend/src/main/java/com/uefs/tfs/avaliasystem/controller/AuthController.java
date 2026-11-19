@@ -77,7 +77,7 @@ public class AuthController {
     public ResponseEntity<UserResponse> register(
             @Valid @RequestPart("data") RegisterUserRequest request,
             @RequestPart(value = "photo", required = false) MultipartFile photo
-    ) {
+    ) throws MessagingException {
 
         if (request.getName() != null
                 && (request.getName().contains("<")

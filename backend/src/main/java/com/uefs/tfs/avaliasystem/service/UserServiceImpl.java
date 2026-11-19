@@ -4,14 +4,19 @@ import com.uefs.tfs.avaliasystem.dto.RegisterUserRequest;
 import com.uefs.tfs.avaliasystem.dto.DashboardResponse;
 import com.uefs.tfs.avaliasystem.dto.LoginResponse;
 import com.uefs.tfs.avaliasystem.dto.UserResponse;
+import com.uefs.tfs.avaliasystem.exception.EmailNotVerifiedException;
 import com.uefs.tfs.avaliasystem.exception.InvalidCredentialsException;
 import com.uefs.tfs.avaliasystem.exception.InvalidRegisterException;
+import com.uefs.tfs.avaliasystem.exception.ResourceConflictException;
+import com.uefs.tfs.avaliasystem.exception.UserNotFoundException;
 import com.uefs.tfs.avaliasystem.model.User;
 import com.uefs.tfs.avaliasystem.repository.UserRepository;
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -28,6 +33,8 @@ import java.util.UUID;
 @Service
 public class UserServiceImpl implements UserService {
 
+
+    private final EmailVerificationService emailVerificationService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -43,28 +50,29 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     public UserServiceImpl(
-            UserRepository userRepository,
+            EmailVerificationService emailVerificationService, UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
             @Value("${app.storage.upload-dir:uploads/fotosPerfil}") String uploadDir
     ) {
+        this.emailVerificationService = emailVerificationService;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.uploadDir = Paths.get(uploadDir).toAbsolutePath().normalize();
     }
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
-        this(userRepository, passwordEncoder, jwtService, "uploads/fotosPerfil");
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, EmailVerificationService emailVerificationService) {
+        this(emailVerificationService, userRepository, passwordEncoder, jwtService, "uploads/fotosPerfil");
     }
 
     //pra um teste funcionar
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this(userRepository, passwordEncoder, null, "uploads/fotosPerfil");
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailVerificationService emailVerificationService) {
+        this(emailVerificationService, userRepository, passwordEncoder, null, "uploads/fotosPerfil");
     }
 
     @Override
-    public User register(RegisterUserRequest request, MultipartFile photo) {
+    public User register(RegisterUserRequest request, MultipartFile photo) throws MessagingException {
 
         String profilePictureUrl = null;
 
@@ -110,7 +118,12 @@ public class UserServiceImpl implements UserService {
         String encodedPassword = passwordEncoder.encode(request.getPassword());
 
         User user = new User(request.getName(), normalizedEmail, encodedPassword, profilePictureUrl);
-        return userRepository.save(user);
+
+        User savedUser = userRepository.save(user);
+
+        emailVerificationService.requestEmailVerification(savedUser);
+
+        return savedUser;
     }
 
     /**
@@ -127,15 +140,47 @@ public class UserServiceImpl implements UserService {
        User user = userRepository.findByEmail(cleanEmail)
                .or(() -> userRepository.findByEmailIgnoreCase(cleanEmail))
                .orElseThrow(InvalidCredentialsException::new);
+
         //verifica a senha
        if(!passwordEncoder.matches(password, user.getPassword())) {
            throw new InvalidCredentialsException();
        }
+
        //agora sim começa o login
        String token = jwtService.generateToken(user.getId(), user.getName(), user.getEmail(), user.getTokenVersion());
        long expiresAt = System.currentTimeMillis() + jwtService.getExpirationTime();
 
        return new LoginResponse(token, expiresAt, UserResponse.fromUser(user));
+    }
+
+    @Override
+    @Transactional
+    public UserResponse changeEmail(UUID userId, String newEmail) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado."));
+
+        if (user.isEmailVerified()) {
+            throw new ResourceConflictException(
+                    "Não é possível alterar o e-mail de uma conta já verificada."
+            );
+        }
+
+        String normalizedEmail = newEmail == null ? "" : newEmail.trim().toLowerCase();
+
+        if (normalizedEmail.isBlank()) {
+            throw new IllegalArgumentException("O e-mail é obrigatório.");
+        }
+
+        boolean emailChanged = !normalizedEmail.equalsIgnoreCase(user.getEmail());
+
+        if (emailChanged && userRepository.existsByEmailIgnoreCase(normalizedEmail)) {
+            throw new ResourceConflictException("Este e-mail já está em uso.");
+        }
+
+        user.setEmail(normalizedEmail);
+        user.setEmailVerified(false);
+
+        return UserResponse.fromUser(userRepository.save(user));
     }
 
     /**

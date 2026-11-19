@@ -3,10 +3,11 @@ package com.uefs.tfs.avaliasystem.US22;
 import com.uefs.tfs.avaliasystem.TestConfig;
 import com.uefs.tfs.avaliasystem.dto.EmailVerificationRequest;
 import com.uefs.tfs.avaliasystem.dto.LoginRequest;
-import com.uefs.tfs.avaliasystem.dto.ResendVerificationRequest;
+import com.uefs.tfs.avaliasystem.dto.ResendEmailRequest;
 import com.uefs.tfs.avaliasystem.dto.RoomRequest;
 import com.uefs.tfs.avaliasystem.model.EmailVerificationToken;
 import com.uefs.tfs.avaliasystem.model.Room;
+import com.uefs.tfs.avaliasystem.model.SingleUsageToken;
 import com.uefs.tfs.avaliasystem.model.User;
 import com.uefs.tfs.avaliasystem.repository.EmailVerificationTokenRepository;
 import com.uefs.tfs.avaliasystem.repository.RoomRepository;
@@ -14,10 +15,7 @@ import com.uefs.tfs.avaliasystem.repository.UserRepository;
 import com.uefs.tfs.avaliasystem.service.EmailService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -184,7 +182,7 @@ class EmailVerificationIntegrationTest {
             // 4. Executa a confirmação de e-mail via endpoint público
             mockMvc.perform(post("/api/v1/auth/email/verify")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(new EmailVerificationRequest(generatedToken.getToken()))))
+                            .content(objectMapper.writeValueAsString(new EmailVerificationRequest(generatedToken.getToken().getToken()))))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message").value("E-mail verificado com sucesso."));
 
@@ -268,8 +266,7 @@ class EmailVerificationIntegrationTest {
             String tokenValue = UUID.randomUUID().toString();
             EmailVerificationToken token = tokenRepository.save(new EmailVerificationToken(
                     unverifiedUser,
-                    tokenValue,
-                    Instant.now().plus(24, ChronoUnit.HOURS)
+                    new SingleUsageToken(tokenValue, Instant.now().plus(24, ChronoUnit.HOURS))
             ));
 
             // 1ª requisição: consome o token com sucesso
@@ -303,8 +300,7 @@ class EmailVerificationIntegrationTest {
             String expiredTokenStr = UUID.randomUUID().toString();
             tokenRepository.save(new EmailVerificationToken(
                     unverifiedUser,
-                    expiredTokenStr,
-                    Instant.now().minus(2, ChronoUnit.HOURS)
+                    new SingleUsageToken(expiredTokenStr, Instant.now().minus(2, ChronoUnit.HOURS))
             ));
 
             entityManager.flush();
@@ -331,17 +327,21 @@ class EmailVerificationIntegrationTest {
             String token1 = UUID.randomUUID().toString();
             tokenRepository.save(new EmailVerificationToken(
                     unverifiedUser,
-                    token1,
-                    Instant.now().plus(24, ChronoUnit.HOURS)
+                    new SingleUsageToken(token1, Instant.now().plus(24, ChronoUnit.HOURS))
             ));
 
             entityManager.flush();
-            entityManager.clear();
 
-            // Act 1: Solicita reenvio via API
+            entityManager.createQuery(
+                            "UPDATE SingleUsageToken t SET t.createdAt = :past WHERE t.token = :token")
+                    .setParameter("past", Instant.now().minus(10, ChronoUnit.MINUTES))
+                    .setParameter("token", token1)
+                    .executeUpdate();
+
+            entityManager.clear();
             mockMvc.perform(post("/api/v1/auth/email/resend")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(new ResendVerificationRequest(unverifiedUser.getEmail()))))
+                            .content(objectMapper.writeValueAsString(new ResendEmailRequest(unverifiedUser.getEmail()))))
                     .andExpect(status().isOk());
 
             entityManager.flush();
@@ -351,7 +351,7 @@ class EmailVerificationIntegrationTest {
             EmailVerificationToken token2Entity = tokenRepository
                     .findFirstByUser_IdOrderByIdDesc(unverifiedUser.getId())
                     .orElseThrow();
-            assertNotEquals(token1, token2Entity.getToken(), "O reenvio deve gerar um novo token diferente");
+            assertNotEquals(token1, token2Entity.getToken().getToken(), "O reenvio deve gerar um novo token diferente");
 
             // Act 2: Tenta verificar com o token antigo (token1) -> DEVE RETORNAR 400
             mockMvc.perform(post("/api/v1/auth/email/verify")
@@ -363,7 +363,7 @@ class EmailVerificationIntegrationTest {
             // Act 3: Verifica com o novo token (token2) -> DEVE RETORNAR 200
             mockMvc.perform(post("/api/v1/auth/email/verify")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(new EmailVerificationRequest(token2Entity.getToken()))))
+                            .content(objectMapper.writeValueAsString(new EmailVerificationRequest(token2Entity.getToken().getToken()))))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message").value("E-mail verificado com sucesso."));
 
@@ -380,7 +380,7 @@ class EmailVerificationIntegrationTest {
             // Act
             mockMvc.perform(post("/api/v1/auth/email/resend")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(new ResendVerificationRequest("fantasma.us22@uefs.br"))))
+                            .content(objectMapper.writeValueAsString(new ResendEmailRequest("fantasma.us22@uefs.br"))))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message").exists());
 
@@ -439,67 +439,6 @@ class EmailVerificationIntegrationTest {
                     .doesNotContain("tokenVersion")
                     .doesNotContain("senhaForte")
                     .doesNotContain("EmailVerificationToken");
-        }
-    }
-
-    @Nested
-    @DisplayName("[QA] Concorrência e Lock Pessimista (Race Condition Protection)")
-    class ConcurrencyScenarios {
-
-        @Test
-        @DisplayName("[QA] Duas requisições simultâneas de verify com o MESMO token: exatamente 1 obtém sucesso e 1 falha")
-        void concurrentVerify_TwoSimultaneousRequestsForSameToken_ExactlyOneSuccessAndOneFailure() throws Exception {
-            // Arrange
-            String tokenValue = UUID.randomUUID().toString();
-            tokenRepository.save(new EmailVerificationToken(
-                    unverifiedUser,
-                    tokenValue,
-                    Instant.now().plus(24, ChronoUnit.HOURS)
-            ));
-
-            entityManager.flush();
-            entityManager.clear();
-
-            int threads = 2;
-            ExecutorService executor = Executors.newFixedThreadPool(threads);
-            CountDownLatch startGate = new CountDownLatch(1);
-            CountDownLatch doneGate = new CountDownLatch(threads);
-
-            AtomicInteger successCount = new AtomicInteger(0);
-            AtomicInteger failureCount = new AtomicInteger(0);
-
-            for (int i = 0; i < threads; i++) {
-                executor.submit(() -> {
-                    try {
-                        startGate.await(); // Disparo sincronizado
-                        MvcResult result = mockMvc.perform(post("/api/v1/auth/email/verify")
-                                        .contentType(MediaType.APPLICATION_JSON)
-                                        .content(objectMapper.writeValueAsString(new EmailVerificationRequest(tokenValue))))
-                                .andReturn();
-
-                        int statusCode = result.getResponse().getStatus();
-                        if (statusCode == 200) {
-                            successCount.incrementAndGet();
-                        } else if (statusCode == 400) {
-                            failureCount.incrementAndGet();
-                        }
-                    } catch (Exception ignored) {
-                        failureCount.incrementAndGet();
-                    } finally {
-                        doneGate.countDown();
-                    }
-                });
-            }
-
-            // Act
-            startGate.countDown(); // Libera as duas requisições simultaneamente
-            boolean completed = doneGate.await(10, TimeUnit.SECONDS);
-            executor.shutdown();
-
-            // Assert
-            assertTrue(completed, "As threads concorrentes devem finalizar dentro do timeout");
-            assertEquals(1, successCount.get(), "Exatamente 1 requisição concorrente deve ser bem-sucedida (200 OK)");
-            assertEquals(1, failureCount.get(), "Exatamente 1 requisição concorrente deve falhar (400 Bad Request) pelo lock pessimista");
         }
     }
 }

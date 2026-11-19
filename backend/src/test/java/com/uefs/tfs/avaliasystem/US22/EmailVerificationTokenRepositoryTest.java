@@ -1,6 +1,7 @@
 package com.uefs.tfs.avaliasystem.US22;
 
 import com.uefs.tfs.avaliasystem.model.EmailVerificationToken;
+import com.uefs.tfs.avaliasystem.model.SingleUsageToken;
 import com.uefs.tfs.avaliasystem.model.User;
 import com.uefs.tfs.avaliasystem.repository.EmailVerificationTokenRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,19 +19,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Contrato assumido:
- * - Entidade: EmailVerificationToken
- *   - id: Long (IDENTITY)
- *   - token: String (nullable = false, unique = true)
- *   - user: User (ManyToOne, fetch = FetchType.EAGER, nullable = false, name = "user_id")
- *   - expiryDate: Instant (nullable = false)
- *   - used: boolean (nullable = false)
- * - Repository: EmailVerificationTokenRepository
- *   - findByToken(String token): busca simples por token.
- *   - findFirstByUser_IdOrderByIdDesc(UUID userId): busca o token mais recente gerado para o usuário (maior ID).
- *   - findByTokenForUpdate(String token): busca com lock pessimista (PESSIMISTIC_WRITE) para evitar race condition no verify.
- */
 @DataJpaTest
 @DisplayName("[US22] Testes de Repositório de EmailVerificationTokenRepository")
 class EmailVerificationTokenRepositoryTest {
@@ -55,26 +43,25 @@ class EmailVerificationTokenRepositoryTest {
     @Test
     @DisplayName("[US22] findByTokenForUpdate deve carregar a entidade persistida correspondente ao token")
     void findByTokenForUpdate_ValidToken_ReturnsPersistedTokenWithLock() {
-        // Arrange (Dado um token salvo no banco)
         String tokenStr = UUID.randomUUID().toString();
-        EmailVerificationToken token = new EmailVerificationToken(
-                testUser,
+        SingleUsageToken sut = new SingleUsageToken(
                 tokenStr,
                 Instant.now().plus(24, ChronoUnit.HOURS)
         );
+        EmailVerificationToken token = new EmailVerificationToken(
+                testUser,
+                sut
+        );
         token = entityManager.persistFlushFind(token);
 
-        // Força sincronização e limpa cache de primeiro nível
         entityManager.flush();
         entityManager.clear();
 
-        // Act (Quando busca pelo método anotado com PESSIMISTIC_WRITE)
         Optional<EmailVerificationToken> found = tokenRepository.findByTokenForUpdate(tokenStr);
 
-        // Assert (Então a entidade é carregada com todos os relacionamentos)
         assertTrue(found.isPresent(), "O token persistido deve ser encontrado");
         assertEquals(token.getId(), found.get().getId());
-        assertEquals(tokenStr, found.get().getToken());
+        assertEquals(tokenStr, found.get().getToken().getToken());
         assertEquals(testUser.getId(), found.get().getUser().getId());
         assertFalse(found.get().isUsed());
     }
@@ -82,60 +69,66 @@ class EmailVerificationTokenRepositoryTest {
     @Test
     @DisplayName("[US22] findFirstByUser_IdOrderByIdDesc deve retornar o token de maior ID quando houver múltiplos para o mesmo usuário")
     void findFirstByUser_IdOrderByIdDesc_MultipleTokens_ReturnsLatestToken() {
-        // Arrange (Dado que dois tokens foram emitidos sucessivamente para o mesmo usuário)
-        EmailVerificationToken firstToken = new EmailVerificationToken(
-                testUser,
+        SingleUsageToken sut1 = new SingleUsageToken(
                 "primeiro-token-" + UUID.randomUUID(),
                 Instant.now().plus(24, ChronoUnit.HOURS)
         );
+        EmailVerificationToken firstToken = new EmailVerificationToken(
+                testUser,
+                sut1
+        );
         firstToken = entityManager.persistFlushFind(firstToken);
 
-        EmailVerificationToken secondToken = new EmailVerificationToken(
-                testUser,
+        SingleUsageToken sut2 = new SingleUsageToken(
                 "segundo-token-" + UUID.randomUUID(),
                 Instant.now().plus(24, ChronoUnit.HOURS)
+        );
+        EmailVerificationToken secondToken = new EmailVerificationToken(
+                testUser,
+                sut2
         );
         secondToken = entityManager.persistFlushFind(secondToken);
 
         entityManager.flush();
-        entityManager.clear();
+        //entityManager.clear();
 
-        // Act (Quando busca o token mais recente do usuário)
         Optional<EmailVerificationToken> latest = tokenRepository.findFirstByUser_IdOrderByIdDesc(testUser.getId());
 
-        // Assert (O de maior ID — segundoToken — deve ser o retornado)
         assertTrue(latest.isPresent());
         assertEquals(secondToken.getId(), latest.get().getId(),
                 "Deve retornar o último token gerado pelo usuário para anular tokens anteriores");
-        assertEquals(secondToken.getToken(), latest.get().getToken());
+        assertEquals(secondToken.getToken().getToken(), latest.get().getToken().getToken());
     }
 
     @Test
     @DisplayName("[US22] save deve violar unicidade (DataIntegrityViolationException) se houver tentativa de gravar o mesmo token")
     void save_DuplicateToken_ThrowsDataIntegrityViolationException() {
-        // Arrange (Dado que um token já existe no banco)
         String tokenShared = "token-unico-123";
-        EmailVerificationToken token1 = new EmailVerificationToken(
-                testUser,
+        SingleUsageToken sut1 = new SingleUsageToken(
                 tokenShared,
                 Instant.now().plus(24, ChronoUnit.HOURS)
         );
+        EmailVerificationToken token1 = new EmailVerificationToken(
+                testUser,
+                sut1
+        );
         entityManager.persistAndFlush(token1);
 
-        // Usuário secundário tentando gravar o mesmo token
         User anotherUser = new User();
         anotherUser.setName("Outro Aluno");
         anotherUser.setEmail("outro." + UUID.randomUUID().toString().substring(0, 8) + "@uefs.br");
         anotherUser.setPassword("senha456");
         anotherUser = entityManager.persistFlushFind(anotherUser);
 
-        EmailVerificationToken token2 = new EmailVerificationToken(
-                anotherUser,
+        SingleUsageToken sut2 = new SingleUsageToken(
                 tokenShared,
                 Instant.now().plus(24, ChronoUnit.HOURS)
         );
+        EmailVerificationToken token2 = new EmailVerificationToken(
+                anotherUser,
+                sut2
+        );
 
-        // Act & Assert (O flush deve falhar com violação de integridade por causa da constraint UNIQUE)
         assertThrows(DataIntegrityViolationException.class, () -> {
             tokenRepository.save(token2);
             entityManager.flush();
@@ -145,7 +138,6 @@ class EmailVerificationTokenRepositoryTest {
     @Test
     @DisplayName("[US22] findByToken deve retornar Optional vazio para token não existente")
     void findByToken_NonExistentToken_ReturnsEmptyOptional() {
-        // Act & Assert
         Optional<EmailVerificationToken> result = tokenRepository.findByToken("token-inexistente-12345");
         assertTrue(result.isEmpty(), "Deve retornar vazio para tokens desconhecidos");
     }

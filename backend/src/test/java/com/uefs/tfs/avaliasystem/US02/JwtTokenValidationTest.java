@@ -6,6 +6,7 @@ import com.uefs.tfs.avaliasystem.model.User;
 import com.uefs.tfs.avaliasystem.repository.UserRepository;
 import com.uefs.tfs.avaliasystem.service.JwtService;
 import com.uefs.tfs.avaliasystem.service.UserService;
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -78,7 +79,7 @@ class JwtTokenValidationTest {
     }
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws MessagingException {
         this.objectMapper = new ObjectMapper();
 
         String email = "ana@uefs.br";
@@ -95,6 +96,10 @@ class JwtTokenValidationTest {
         );
 
         this.registeredUser = userService.register(registration, photo);
+
+        this.registeredUser.setEmailVerified(true);
+        this.registeredUser = userRepository.save(this.registeredUser);
+
         this.loginResponse = userService.login(email, password);
     }
 

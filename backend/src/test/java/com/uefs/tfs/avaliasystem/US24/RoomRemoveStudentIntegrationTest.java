@@ -1,4 +1,4 @@
-package com.uefs.tfs.avaliasystem.US24;
+package com.uefs.tfs.avaliasystem.US22.US24;
 
 import com.uefs.tfs.avaliasystem.TestConfig;
 import com.uefs.tfs.avaliasystem.model.*;
