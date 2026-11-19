@@ -4,6 +4,7 @@ import com.uefs.tfs.avaliasystem.dto.LoginResponse;
 import com.uefs.tfs.avaliasystem.exception.InvalidCredentialsException;
 import com.uefs.tfs.avaliasystem.model.User;
 import com.uefs.tfs.avaliasystem.repository.UserRepository;
+import com.uefs.tfs.avaliasystem.service.EmailVerificationService;
 import com.uefs.tfs.avaliasystem.service.JwtService;
 import com.uefs.tfs.avaliasystem.service.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,13 +45,15 @@ class UserServiceLoginTest {
     @Mock
     private JwtService jwtService;
 
+    @Mock
+    private EmailVerificationService emailVerificationService;
     private UserServiceImpl userService;
 
     private static final String GENERIC_MESSAGE = "Credenciais inválidas";
 
     @BeforeEach
     void setUp() {
-        userService = new UserServiceImpl(userRepository, passwordEncoder, jwtService);
+        userService = new UserServiceImpl(userRepository, passwordEncoder, jwtService,emailVerificationService);
     }
 
     @Nested

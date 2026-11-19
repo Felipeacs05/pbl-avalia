@@ -4,8 +4,10 @@ import com.uefs.tfs.avaliasystem.TestConfig;
 import com.uefs.tfs.avaliasystem.dto.PasswordRecoveryRequest;
 import com.uefs.tfs.avaliasystem.dto.PasswordResetRequest;
 import com.uefs.tfs.avaliasystem.model.PasswordResetToken;
+import com.uefs.tfs.avaliasystem.model.SingleUsageToken;
 import com.uefs.tfs.avaliasystem.model.User;
 import com.uefs.tfs.avaliasystem.repository.PasswordResetTokenRepository;
+import com.uefs.tfs.avaliasystem.repository.SingleUsageTokenRepository;
 import com.uefs.tfs.avaliasystem.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,12 +49,19 @@ class PasswordRecoveryIntegrationTest {
     private PasswordEncoder passwordEncoder;
 
     private User testUser;
+    @Autowired
+    private SingleUsageTokenRepository singleUsageTokenRepository;
+
+    private SingleUsageToken testToken;
 
     @BeforeEach
     void setUp() {
         tokenRepository.deleteAll();
+        testToken =  singleUsageTokenRepository.save(new SingleUsageToken(
+                UUID.randomUUID().toString(),
+                Instant.now().plusSeconds(30 * 60)
+        ));
         userRepository.deleteAll();
-
         testUser = new User();
         testUser.setName("João Silva");
         testUser.setEmail("joaocarlosrodrigues307@gmail.com");
@@ -84,16 +93,18 @@ class PasswordRecoveryIntegrationTest {
 
     @Test
     void shouldResetPasswordSuccessfullyAndInvalidateSessions() throws Exception {
+
+
         PasswordResetToken resetToken = tokenRepository.save(new PasswordResetToken(
                 testUser,
-                UUID.randomUUID().toString(),
-                Instant.now().plusSeconds(30 * 60)
+                testToken
+
         ));
 
         mockMvc.perform(post("/api/v1/auth/password/reset")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                new PasswordResetRequest(resetToken.getToken(), "novaSenhaForte456"))))
+                                new PasswordResetRequest(resetToken.toString(), "novaSenhaForte456"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Senha redefinida com sucesso."));
 
@@ -109,16 +120,15 @@ class PasswordRecoveryIntegrationTest {
     void shouldRejectUsedToken() throws Exception {
         PasswordResetToken resetToken = new PasswordResetToken(
                 testUser,
-                UUID.randomUUID().toString(),
-                Instant.now().plusSeconds(30 * 60)
+                testToken
         );
-        resetToken.setUsed(true);
+        resetToken.getToken().setUsed(false);
         tokenRepository.save(resetToken);
 
         mockMvc.perform(post("/api/v1/auth/password/reset")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                new PasswordResetRequest(resetToken.getToken(), "novaSenhaForte456"))))
+                                new PasswordResetRequest(resetToken.toString(), "novaSenhaForte456"))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Token inválido ou expirado."));
     }
@@ -127,14 +137,13 @@ class PasswordRecoveryIntegrationTest {
     void shouldRejectExpiredToken() throws Exception {
         PasswordResetToken resetToken = tokenRepository.save(new PasswordResetToken(
                 testUser,
-                UUID.randomUUID().toString(),
-                Instant.now().minusSeconds(5 * 60)
+                testToken
         ));
 
         mockMvc.perform(post("/api/v1/auth/password/reset")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                new PasswordResetRequest(resetToken.getToken(), "novaSenhaForte456"))))
+                                new PasswordResetRequest(resetToken.toString(), "novaSenhaForte456"))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Token inválido ou expirado."));
     }

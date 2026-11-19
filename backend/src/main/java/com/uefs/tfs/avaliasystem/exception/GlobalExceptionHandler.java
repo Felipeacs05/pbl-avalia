@@ -1,5 +1,6 @@
 package com.uefs.tfs.avaliasystem.exception;
 
+import com.uefs.tfs.avaliasystem.model.EmailVerificationToken;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -106,6 +107,19 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<Map<String, Object>> handleInvalidCredentialsException(InvalidCredentialsException ex) {
         log.warn("Invalid credentials attempt: {}", ex.getMessage());
+        return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    @ExceptionHandler(EmailNotVerifiedException.class)
+    public ResponseEntity<Map<String, Object>> handleEmailNotVerifiedException(EmailNotVerifiedException ex) {
+        log.warn("Invalid login attempt: {}", ex.getMessage());
+        return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+
+    @ExceptionHandler(EmailAlreadyVerifiedException.class)
+    public ResponseEntity<Map<String, Object>> handleEmailAlreadyVerifiedException(EmailAlreadyVerifiedException ex) {
+        log.warn("Invalid Verification Attempt: {}", ex.getMessage());
         return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
 
