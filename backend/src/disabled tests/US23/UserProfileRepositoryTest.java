@@ -1,4 +1,4 @@
-package com.uefs.tfs.avaliasystem.US22.US23;
+package com.uefs.tfs.avaliasystem.US23;
 
 import com.uefs.tfs.avaliasystem.model.User;
 import com.uefs.tfs.avaliasystem.repository.UserRepository;

@@ -1,4 +1,4 @@
-package com.uefs.tfs.avaliasystem.US22.US23.e2e;
+package com.uefs.tfs.avaliasystem.US23.e2e;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
