@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { Suspense, useCallback, useState } from "react";
 import { useRooms } from "../../hooks/useRooms";
 import { BottomTabBar } from "../../components/features/navigation/BottomTabBar";
 import { StudentRoomCard } from "../../components/features/rooms-student/StudentRoomCard";
 import { useRouter, useSearchParams } from "next/navigation";
 import { EnterRoomModal } from "../../components/features/rooms-student/EnterRoomModal";
+import { Toast } from "../../components/ui/Toast";
 import { attemptEnterRoom } from "../../mocks/roomCode.mock";
 import { IS_TEST, USE_REAL_API } from "../../services/apiMode";
 import { authFetch, getLoggedUserProfile } from "../../services/authFetch";
@@ -29,9 +30,12 @@ function StudentContent() {
   const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
   const [attemptedCode, setAttemptedCode] = useState("");
   const [blockMessage, setBlockMessage] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const clearToast = useCallback(() => setToastMessage(null), []);
 
   const handleConfirmCode = async (code: string) => {
     setBlockMessage(null);
+    setToastMessage(null);
     try {
       if (IS_TEST || !USE_REAL_API) {
         if (await attemptEnterRoom(code)) {
@@ -61,7 +65,7 @@ function StudentContent() {
               "Você fez muitas tentativas com códigos inválidos, então seu acesso foi bloqueado temporariamente por segurança. Tente novamente em cerca de 15 min."
             );
           } else if (response.status === 400 && errorData.message?.includes("Tutor não pode")) {
-            alert("Tutor não pode ingressar como aluno na própria sala.");
+            setToastMessage("Tutor não pode ingressar como aluno na própria sala.");
             return;
           }
           setAttemptedCode(code);
@@ -181,6 +185,10 @@ function StudentContent() {
             </div>
           </div>
         </div>
+      )}
+
+      {toastMessage && (
+        <Toast message={toastMessage} type="error" onClose={clearToast} />
       )}
     </main>
   );

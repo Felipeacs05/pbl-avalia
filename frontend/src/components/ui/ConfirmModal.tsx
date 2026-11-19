@@ -13,6 +13,12 @@ interface ConfirmModalProps {
   confirmLabel: string;
   cancelLabel?: string;
   variant?: "default" | "danger"; // "danger" deixa o botão vermelho (ex.: excluir)
+  role?: "alertdialog" | "dialog";
+  isLoading?: boolean;
+  modalId?: string;
+  messageId?: string;
+  confirmButtonId?: string;
+  cancelButtonId?: string;
   onConfirm: () => void | Promise<void>; // pode ser async: o modal mostra o carregamento
   onClose: () => void;
 }
@@ -23,21 +29,28 @@ export function ConfirmModal({
   confirmLabel,
   cancelLabel = "Cancelar",
   variant = "default",
+  role = "alertdialog",
+  isLoading = false,
+  modalId,
+  messageId = "confirm-modal-message",
+  confirmButtonId,
+  cancelButtonId,
   onConfirm,
   onClose,
 }: ConfirmModalProps) {
   const [isConfirming, setIsConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isDanger = variant === "danger";
+  const busy = isConfirming || isLoading;
 
   // Esc fecha, exceto enquanto a ação está em andamento
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !isConfirming) onClose();
+      if (e.key === "Escape" && !busy) onClose();
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose, isConfirming]);
+  }, [onClose, busy]);
 
   const handleConfirm = async () => {
     setError(null);
@@ -52,12 +65,13 @@ export function ConfirmModal({
 
   return (
     <div
-      role="alertdialog"
+      id={modalId}
+      role={role}
       aria-modal="true"
       aria-labelledby="confirm-modal-title"
-      aria-describedby="confirm-modal-message"
+      aria-describedby={messageId}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
-      onClick={() => !isConfirming && onClose()}
+      onClick={() => !busy && onClose()}
     >
       <div
         onClick={(e) => e.stopPropagation()}
@@ -66,7 +80,7 @@ export function ConfirmModal({
         <button
           type="button"
           onClick={onClose}
-          disabled={isConfirming}
+          disabled={busy}
           aria-label="Fechar"
           className="absolute top-5 right-5 text-gray-400 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100 disabled:opacity-50"
         >
@@ -86,7 +100,7 @@ export function ConfirmModal({
           </h2>
         </div>
 
-        <div id="confirm-modal-message" className="text-sm text-gray-600 leading-relaxed">
+        <div id={messageId} className="text-sm text-gray-600 leading-relaxed">
           {message}
         </div>
 
@@ -98,24 +112,26 @@ export function ConfirmModal({
 
         <div className="grid grid-cols-2 gap-3 pt-1">
           <button
+            id={cancelButtonId}
             type="button"
             onClick={onClose}
-            disabled={isConfirming}
+            disabled={busy}
             autoFocus={isDanger} // em ações perigosas, o foco começa em "Cancelar" (Enter não exclui por acidente)
             className="py-3 rounded-2xl border border-gray-300 bg-white text-gray-700 font-bold text-sm hover:bg-gray-50 transition-colors disabled:opacity-60"
           >
             {cancelLabel}
           </button>
           <button
+            id={confirmButtonId}
             type="button"
             onClick={handleConfirm}
-            disabled={isConfirming}
+            disabled={busy}
             autoFocus={!isDanger}
             className={`py-3 rounded-2xl text-white font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-70 ${
               isDanger ? "bg-red-600 hover:bg-red-700" : "bg-[#4354A0] hover:bg-[#384890]"
             }`}
           >
-            {isConfirming && <Loader2 size={16} className="animate-spin" />}
+            {busy && <Loader2 size={16} className="animate-spin" />}
             <span>{confirmLabel}</span>
           </button>
         </div>
