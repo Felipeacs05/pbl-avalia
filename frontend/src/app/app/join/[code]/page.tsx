@@ -6,7 +6,8 @@ import { roomService } from "../../../../services/roomService";
 
 export default function JoinByLinkPage() {
   const params = useParams();
-  const router = useRouter();
+  // Só o push entra nas dependências do efeito: o objeto do router pode mudar entre renderizações
+  const { push } = useRouter();
   const rawCode = params?.code ? String(params.code).trim().toUpperCase() : "";
 
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
@@ -21,7 +22,7 @@ export default function JoinByLinkPage() {
       if (typeof window !== "undefined") {
         localStorage.setItem("pendingJoinCode", rawCode);
       }
-      router.push(`/?joinCode=${rawCode}`);
+      push(`/?joinCode=${rawCode}`);
       return;
     }
 
@@ -33,7 +34,7 @@ export default function JoinByLinkPage() {
         if (isMounted) {
           setStatus("success");
           setTimeout(() => {
-            router.push(`/student-rooms/${joinedRoom.id}`);
+            push(`/student-rooms/${joinedRoom.id}`);
           }, 800);
         }
       } catch (err: unknown) {
@@ -44,7 +45,7 @@ export default function JoinByLinkPage() {
 
         if (status === 400 && msg.includes("Tutor não pode")) {
           // O próprio tutor abriu o link: redireciona para a aba do professor
-          router.push("/teacher-rooms");
+          push("/teacher-rooms");
           return;
         }
 
@@ -62,7 +63,7 @@ export default function JoinByLinkPage() {
     return () => {
       isMounted = false;
     };
-  }, [rawCode, router]);
+  }, [rawCode, push]);
 
   return (
     <div className="w-full min-h-screen bg-[#F8F9FA] flex flex-col items-center justify-center p-6 font-sans">
@@ -102,7 +103,7 @@ export default function JoinByLinkPage() {
             <p className="text-xs text-gray-500 mb-6 leading-relaxed">{errorMessage}</p>
             <button
               type="button"
-              onClick={() => router.push("/student-rooms")}
+              onClick={() => push("/student-rooms")}
               className="w-full py-3 text-xs font-semibold text-white bg-[#182860] hover:bg-[#121e48] rounded-xl transition-colors cursor-pointer"
             >
               Ir para Minhas Salas
