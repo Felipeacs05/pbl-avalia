@@ -2,6 +2,7 @@ import React from "react";
 import { Presentation, GraduationCap, User, Plus } from "lucide-react";
 import { PrimaryButton } from "../../ui/PrimaryButton";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface BottomTabBarProps {
   onCreateRoom?: () => void;
@@ -10,6 +11,7 @@ interface BottomTabBarProps {
 
 export function BottomTabBar({ onCreateRoom, activeTab = "teacher" }: BottomTabBarProps) {
   const isStudent = activeTab === "student";
+  const router = useRouter();
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 pt-3 pb-4 px-4 z-50">
@@ -57,7 +59,10 @@ export function BottomTabBar({ onCreateRoom, activeTab = "teacher" }: BottomTabB
           </Link>
         )}
 
-        <button className="flex flex-col items-center justify-center text-gray-400 hover:text-[#757DC3] transition-colors">
+        <button
+          onClick={() => router.push("/profile")}
+          className="flex flex-col items-center justify-center text-gray-400 hover:text-[#757DC3] transition-colors"
+        >
           <User size={20} className="mb-1" />
           <span className="text-[10px] font-semibold">Perfil</span>
         </button>
