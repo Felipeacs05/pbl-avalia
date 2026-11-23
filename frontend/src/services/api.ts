@@ -1,5 +1,6 @@
 // src/services/api.ts
 import axios from 'axios';
+import { redirectIfEmailNotVerified } from './emailNotVerified';
 
 //src/services/api.ts (USO AXIOS PARA REQUISIÇÕES HTTP)
 
@@ -40,6 +41,9 @@ api.interceptors.response.use(
       }
     }
     
+    // 403 de e-mail não verificado (US22): leva à verificação, sem apagar o token
+    redirectIfEmailNotVerified(error.response?.status, error.response?.data);
+
 // 429 (Too Many Requests): IP bloqueado por excesso de requisições.
     if (error.response?.status === 429) {
       error.response.data = {
