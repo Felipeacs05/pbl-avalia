@@ -15,6 +15,11 @@ const nextConfig: NextConfig = {
         source: "/api/:path*",
         destination: `${BACKEND_URL}/api/:path*`,
       },
+      // Fotos de perfil servidas pelo backend (US23)
+      {
+        source: "/fotosPerfil/:path*",
+        destination: `${BACKEND_URL}/fotosPerfil/:path*`,
+      },
     ];
   },
 };
