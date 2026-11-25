@@ -77,4 +77,34 @@ export const roomService = {
     }
     return response.json();
   },
+
+  leaveRoom: async (roomId: string): Promise<void> => {
+    if (!USE_REAL_API) {
+      const index = roomsMock.findIndex((r) => r.id === roomId);
+      if (index > -1) roomsMock.splice(index, 1);
+      return;
+    }
+
+    let response: Response;
+    try {
+      response = await authFetch(`/api/v1/rooms/${roomId}/leave`, {
+        method: "POST",
+      });
+    } catch {
+      throw { status: 0, message: "Sem conexão com o servidor. Tente novamente." };
+    }
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => null);
+      const fallback =
+        response.status === 401
+          ? "Sua sessão expirou. Entre novamente."
+          : "Não foi possível sair da sala. Tente novamente.";
+      const message =
+        typeof body?.message === "string" && body.message.trim().length > 0
+          ? body.message
+          : fallback;
+      throw { status: response.status, message };
+    }
+  },
 };
