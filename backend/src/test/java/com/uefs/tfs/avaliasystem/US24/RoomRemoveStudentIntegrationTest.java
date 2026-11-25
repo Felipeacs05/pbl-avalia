@@ -477,10 +477,8 @@ class RoomRemoveStudentIntegrationTest {
     @DisplayName("[US24] ACHADOS — Comportamentos a investigar")
     class FindingsScenarios {
 
-        @Disabled("Achado US24-A1: Aluno removido continua como GroupMember — " +
-                  "removeStudentFromRoom não remove GroupMember ao inativar RoomMember")
         @Test
-        @DisplayName("[US24] ACHADO A1: Aluno removido ainda aparece como GroupMember (grupo não é limpo)")
+        @DisplayName("[US24] ACHADO A1: Aluno removido é removido também do grupo (GroupMember limpo)")
         void findingA1_RemovedStudentRemainsGroupMember() throws Exception {
             // Arrange — coloca aluno em um grupo
             Group group = new Group();
@@ -510,11 +508,8 @@ class RoomRemoveStudentIntegrationTest {
                     "deletar o GroupMember para consistência");
         }
 
-        @Disabled("Achado US24-A2: SelfAssessmentService não verifica vínculo ativo — " +
-                  "aluno removido consegue enviar autoavaliação pois a verificação só checa existência do Problem, " +
-                  "não a associação ativa do aluno à sala")
         @Test
-        @DisplayName("[US24] ACHADO A2: Aluno removido consegue enviar autoavaliação (SelfAssessmentService sem guarda de active)")
+        @DisplayName("[US24] ACHADO A2: Aluno removido não consegue enviar autoavaliação (403 Forbidden)")
         void findingA2_RemovedStudentCanSubmitSelfAssessment() throws Exception {
             // Arrange
             Problem problem = persistProblem(room, "PBL-SA");
@@ -542,11 +537,8 @@ class RoomRemoveStudentIntegrationTest {
                     .andExpect(status().isForbidden());
         }
 
-        @Disabled("Achado US24-A3: Possível remover vínculo de Role.TUTOR — " +
-                  "removeStudentFromRoom não verifica o role do RoomMember antes de inativar; " +
-                  "se o tutor também tiver um RoomMember, pode ser inativado indevidamente")
         @Test
-        @DisplayName("[US24] ACHADO A3: Tutor pode (erroneamente) remover seu próprio RoomMember de tutor")
+        @DisplayName("[US24] ACHADO A3: Tutor não pode remover seu próprio RoomMember de tutor (400 Bad Request)")
         void findingA3_TutorCanRemoveOwnTutorRoomMember() throws Exception {
             // Arrange — cria RoomMember com Role.TUTOR para o tutor da sala
             RoomMember tutorMember = new RoomMember();

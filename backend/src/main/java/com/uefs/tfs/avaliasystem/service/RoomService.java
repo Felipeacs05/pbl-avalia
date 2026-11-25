@@ -12,11 +12,13 @@ import com.uefs.tfs.avaliasystem.model.Role;
 import com.uefs.tfs.avaliasystem.model.Room;
 import com.uefs.tfs.avaliasystem.model.RoomMember;
 import com.uefs.tfs.avaliasystem.model.User;
+import com.uefs.tfs.avaliasystem.repository.GroupMemberRepository;
 import com.uefs.tfs.avaliasystem.repository.RoomMemberRepository;
 import com.uefs.tfs.avaliasystem.repository.RoomRepository;
 import com.uefs.tfs.avaliasystem.repository.UserRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +38,9 @@ public class RoomService {
 
     @PersistenceContext
     private EntityManager entityManager;
+
+    @Autowired(required = false)
+    private GroupMemberRepository groupMemberRepository;
 
     public RoomService(RoomRepository roomRepository,
                        UserRepository userRepository,
@@ -208,9 +213,19 @@ public class RoomService {
         }
         RoomMember member = roomMemberRepository.findByRoomIdAndUserId(roomId, studentId)
                 .orElseThrow(() -> new IllegalArgumentException("Aluno não encontrado na sala"));
+        if (member.getRole() != Role.STUDENT) {
+            throw new IllegalArgumentException("Não é possível remover o tutor da sala");
+        }
+        if (!member.isActive()) {
+            throw new IllegalArgumentException("Aluno não encontrado na sala");
+        }
         member.setActive(false);
         member.setUnlinkedAt(java.time.Instant.now());
         roomMemberRepository.save(member);
+        if (groupMemberRepository != null) {
+            groupMemberRepository.findByGroupRoomIdAndUserId(roomId, studentId)
+                    .ifPresent(groupMemberRepository::delete);
+        }
     }
 
     @Transactional(readOnly = true)
