@@ -219,6 +219,77 @@ class RoomRemoveStudentIntegrationTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isArray());
         }
+
+        @Test
+        @DisplayName("[US24] Relatório final (US20) continua somando notas do aluno removido em withdrawnStudents")
+        void removeStudent_ClassReport_ContinuesSummingRemovedStudentGradesInWithdrawnStudents() throws Exception {
+            // Arrange — dois problemas com pesos 2.0 e 3.0 e notas para o aluno que será removido + um aluno que permanecerá ativo
+            User activePeer = persistUser("Colega Ativo US24");
+            persistMember(room, activePeer, Role.STUDENT, true);
+
+            Problem p1 = persistProblem(room, "Problema 1", 2.0);
+            Problem p2 = persistProblem(room, "Problema 2", 3.0);
+
+            // Aluno que será removido tem notas 7.0 (peso 2) e 9.0 (peso 3) -> média ponderada = (14 + 27) / 5 = 8.2
+            Feedback fbRemoved1 = new Feedback();
+            fbRemoved1.setProblem(p1);
+            fbRemoved1.setStudent(student);
+            fbRemoved1.setGrade(7.0);
+            fbRemoved1.setText("Feedback P1 aluno removido");
+            fbRemoved1.setCreatedAt(Instant.now());
+            feedbackRepository.save(fbRemoved1);
+
+            Feedback fbRemoved2 = new Feedback();
+            fbRemoved2.setProblem(p2);
+            fbRemoved2.setStudent(student);
+            fbRemoved2.setGrade(9.0);
+            fbRemoved2.setText("Feedback P2 aluno removido");
+            fbRemoved2.setCreatedAt(Instant.now());
+            feedbackRepository.save(fbRemoved2);
+
+            // Colega ativo tem nota 10.0 no P1 e 8.0 no P2 -> média ponderada = (20 + 24) / 5 = 8.8
+            Feedback fbActive1 = new Feedback();
+            fbActive1.setProblem(p1);
+            fbActive1.setStudent(activePeer);
+            fbActive1.setGrade(10.0);
+            fbActive1.setText("Feedback P1 colega ativo");
+            fbActive1.setCreatedAt(Instant.now());
+            feedbackRepository.save(fbActive1);
+
+            Feedback fbActive2 = new Feedback();
+            fbActive2.setProblem(p2);
+            fbActive2.setStudent(activePeer);
+            fbActive2.setGrade(8.0);
+            fbActive2.setText("Feedback P2 colega ativo");
+            fbActive2.setCreatedAt(Instant.now());
+            feedbackRepository.save(fbActive2);
+
+            entityManager.flush();
+            entityManager.clear();
+
+            // Act 1 — Tutor remove o aluno via endpoint da US24
+            mockMvc.perform(delete("/api/v1/rooms/{roomId}/members/{studentId}", room.getId(), student.getId())
+                            .with(jwt().jwt(j -> j.subject(tutor.getId().toString()))))
+                    .andExpect(status().isNoContent());
+
+            entityManager.flush();
+            entityManager.clear();
+
+            // Act 2 & Assert — Consulta de desempenho (US20) soma os dados do membro inativo em withdrawnStudents
+            mockMvc.perform(get("/api/v1/rooms/{roomId}/reports/final", room.getId())
+                            .with(jwt().jwt(j -> j.subject(tutor.getId().toString()))))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.students.length()").value(1))
+                    .andExpect(jsonPath("$.students[0].studentId").value(activePeer.getId().toString()))
+                    .andExpect(jsonPath("$.students[0].weightedAverage").value(8.8))
+                    .andExpect(jsonPath("$.withdrawnStudents.length()").value(1))
+                    .andExpect(jsonPath("$.withdrawnStudents[0].studentId").value(student.getId().toString()))
+                    .andExpect(jsonPath("$.withdrawnStudents[0].studentName").value(student.getName()))
+                    .andExpect(jsonPath("$.withdrawnStudents[0].unlinkedAt").isNotEmpty())
+                    .andExpect(jsonPath("$.withdrawnStudents[0].gradesByProblem['" + p1.getId() + "']").value(7.0))
+                    .andExpect(jsonPath("$.withdrawnStudents[0].gradesByProblem['" + p2.getId() + "']").value(9.0))
+                    .andExpect(jsonPath("$.withdrawnStudents[0].partialAverage").value(8.2));
+        }
     }
 
     // ─────────────── ACESSO REVOGADO ───────────────
@@ -525,12 +596,17 @@ class RoomRemoveStudentIntegrationTest {
     }
 
     private Problem persistProblem(Room r, String title) {
+        return persistProblem(r, title, 1.0);
+    }
+
+    private Problem persistProblem(Room r, String title, double weight) {
         Problem p = new Problem();
         p.setRoom(r);
         p.setTitle(title);
         p.setDescription("Descrição " + title);
         p.setOrderIndex(0);
-        p.setWeight(1.0);
+        p.setWeight(weight);
+        p.setCreatedAt(Instant.now());
         return problemRepository.save(p);
     }
 
