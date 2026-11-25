@@ -11,7 +11,7 @@ const STUDENT_ROOMS_ROUTE = "/student-rooms";
  */
 export function useStudentRoomAccess(roomId: string) {
   const router = useRouter();
-  const { rooms, isLoading } = useRooms();
+  const { rooms, isLoading } = useRooms("student");
   const room = rooms.find((r) => r.id === roomId);
   const hasAccess = !isLoading && Boolean(room);
 

@@ -39,6 +39,19 @@ export function useLeaveRoom(roomId: string) {
   const [error, setError] = useState<string | null>(null);
   const inFlightRef = useRef(false);
 
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  const notifyRoomsSync = () => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("pbl_rooms_sync", String(Date.now()));
+        window.dispatchEvent(new CustomEvent("rooms:updated"));
+      } catch {}
+    }
+  };
+
   const leaveRoom = useCallback(async (): Promise<boolean> => {
     if (inFlightRef.current) return false;
 
@@ -48,6 +61,7 @@ export function useLeaveRoom(roomId: string) {
 
     try {
       await roomService.leaveRoom(roomId);
+      notifyRoomsSync();
       router.replace(STUDENT_ROOMS_ROUTE);
       return true;
     } catch (err) {
@@ -55,6 +69,7 @@ export function useLeaveRoom(roomId: string) {
 
       // 404/409 indicam que o aluno já não possui vínculo ativo com a sala.
       if (status === 404 || status === 409) {
+        notifyRoomsSync();
         router.replace(STUDENT_ROOMS_ROUTE);
         return true;
       }
@@ -80,5 +95,6 @@ export function useLeaveRoom(roomId: string) {
     leaveRoom,
     isLeaving,
     error,
+    clearError,
   };
 }

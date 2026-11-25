@@ -20,9 +20,21 @@ export default function StudentRoomDetailsPage() {
 
   // Mesmos dados da tela do professor: o que ele criar, editar ou excluir aparece aqui
   const { room, isCheckingAccess, hasAccess } = useStudentRoomAccess(roomId);
-  const { leaveRoom, isLeaving, error: leaveError } = useLeaveRoom(roomId);
+  const { leaveRoom, isLeaving, error: leaveError, clearError } = useLeaveRoom(roomId);
   const { disciplines, isLoading } = useDisciplines(roomId);
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
+
+  const openLeaveModal = () => {
+    clearError();
+    setIsLeaveModalOpen(true);
+  };
+
+  const closeLeaveModal = () => {
+    if (!isLeaving) {
+      clearError();
+      setIsLeaveModalOpen(false);
+    }
+  };
 
   const disciplineTag = room ? `${room.code} - ${room.semester ?? ""}` : "...";
   const problems = disciplines.flatMap((discipline) =>
@@ -105,7 +117,7 @@ export default function StudentRoomDetailsPage() {
         <div className="sticky bottom-0 bg-[#F5F5F5] border-t border-gray-200/60 px-5 py-4">
           <button
             type="button"
-            onClick={() => setIsLeaveModalOpen(true)}
+            onClick={openLeaveModal}
             className="w-full bg-[#FF2957] hover:bg-[#E01E48] active:scale-[0.99] text-white py-3.5 px-6 rounded-2xl font-semibold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <LogOut size={17} />
@@ -130,7 +142,7 @@ export default function StudentRoomDetailsPage() {
 
           <button
             type="button"
-            onClick={() => setIsLeaveModalOpen(true)}
+            onClick={openLeaveModal}
             className="w-full bg-[#FF2957] hover:bg-[#E01E48] active:scale-[0.99] text-white py-3.5 px-6 rounded-2xl font-semibold text-sm shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <LogOut size={17} />
@@ -180,11 +192,7 @@ export default function StudentRoomDetailsPage() {
               setIsLeaveModalOpen(false);
             }
           }}
-          onClose={() => {
-            if (!isLeaving) {
-              setIsLeaveModalOpen(false);
-            }
-          }}
+          onClose={closeLeaveModal}
         />
       )}
     </main>
