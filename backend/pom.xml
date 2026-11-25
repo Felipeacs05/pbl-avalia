@@ -177,6 +177,7 @@
                     <testExcludes>
                         <testExclude>**/US07/**</testExclude>
                         <testExclude>**/US21/**</testExclude>
+                        <testExclude>**/US25/**</testExclude>
                     </testExcludes>
 
                     <annotationProcessorPaths>

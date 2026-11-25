@@ -14,6 +14,9 @@ import java.lang.annotation.Target;
 @TestPropertySource(properties = {
     "security.jwt.secret-key=MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
     "app.password-reset-url=http://localhost:3000/reset-password",
+    "app.email-verification-url=http://localhost:3000/verify-email",
+    "spring.mail.username=test@uefs.br",
+    "spring.mail.password=testpass",
     "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1",
     "spring.datasource.username=sa",
     "spring.datasource.password=",

@@ -208,37 +208,9 @@ class RoomRemoveStudentServiceTest {
     // ─────────────── ACHADO: SEGUNDA REMOÇÃO ───────────────
 
     @Nested
-    @DisplayName("[US24] ACHADO A4 — Segunda remoção sobrescreve unlinkedAt")
+    @DisplayName("[US24] ACHADO A4 — Segunda remoção preserva unlinkedAt original")
     class DoubleRemovalScenarios {
 
-        @Test
-        @DisplayName("[US24] Comportamento atual: segunda remoção sobrescreve unlinkedAt (documenta o bug)")
-        void removeStudentFromRoom_SecondRemoval_CurrentlyOverwritesUnlinkedAt() {
-            // Arrange — membro já inativo com unlinkedAt da primeira remoção
-            Instant originalUnlinkedAt = Instant.now().minusSeconds(3600);
-            activeMember.setActive(false);
-            activeMember.setUnlinkedAt(originalUnlinkedAt);
-
-            when(roomRepository.findById(ROOM_ID)).thenReturn(Optional.of(room));
-            when(roomMemberRepository.findByRoomIdAndUserId(ROOM_ID, STUDENT_ID))
-                    .thenReturn(Optional.of(activeMember));
-            when(roomMemberRepository.save(any(RoomMember.class))).thenAnswer(i -> i.getArgument(0));
-
-            // Act (Segunda remoção — o código atual não verifica se já está inativo)
-            roomService.removeStudentFromRoom(ROOM_ID, STUDENT_ID, TUTOR_ID);
-
-            // Assert — documenta que o código atual SOBRESCREVE (comportamento atual, não desejado)
-            ArgumentCaptor<RoomMember> captor = ArgumentCaptor.forClass(RoomMember.class);
-            verify(roomMemberRepository).save(captor.capture());
-            assertThat(captor.getValue().getUnlinkedAt())
-                    .as("ACHADO US24-A4: O código atual sobrescreve unlinkedAt na segunda remoção " +
-                        "perdendo a data real da saída")
-                    .isNotEqualTo(originalUnlinkedAt);
-        }
-
-        @Disabled("Achado US24-A4: segunda remoção deve preservar o unlinkedAt original — " +
-                  "correção: verificar isActive() antes de sobrescrever ou lançar exceção " +
-                  "(IllegalArgumentException(\"Aluno não encontrado na sala\") se já inativo)")
         @Test
         @DisplayName("[US24] ESPERADO: segunda remoção deve preservar o unlinkedAt original da primeira remoção")
         void removeStudentFromRoom_SecondRemoval_ShouldPreserveOriginalUnlinkedAt() {
