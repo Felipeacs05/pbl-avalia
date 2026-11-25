@@ -13,6 +13,7 @@ import { StudentPeerEvaluationModal } from "../../../../../../../components/feat
 import { Toast } from "../../../../../../../components/ui/Toast";
 import { useFeedback } from "../../../../../../../hooks/useFeedback";
 import { useProblemDetails } from "../../../../../../../hooks/useProblemDetails";
+import { useStudentRoomAccess } from "../../../../../../../hooks/useStudentRoomAccess";
 import { MOCK_SESSION_SUMMARY } from "../../../../../../../mocks/feedback.mock";
 import { gradeAdjustmentMock } from "../../../../../../../mocks/gradeAdjustment.mock";
 import { sessionGradesService, type StudentSessionSummary } from "../../../../../../../services/sessionGradesService";
@@ -29,6 +30,8 @@ export default function StudentSessionDashboardPage() {
     typeof params?.problemId === "string" ? params.problemId : "prob_01";
   const sessionId =
     typeof params?.sessionId === "string" ? params.sessionId : "session_01";
+
+  const { isCheckingAccess, hasAccess } = useStudentRoomAccess(roomId);
 
   const [isFeedbacksModalOpen, setIsFeedbacksModalOpen] = useState(false);
   const [activeModal, setActiveModal] = useState<"self" | "peer" | null>(null);
@@ -124,6 +127,14 @@ export default function StudentSessionDashboardPage() {
     void refreshFeedbacks();
     setIsFeedbacksModalOpen(true);
   };
+
+  if (!hasAccess) {
+    return isCheckingAccess ? (
+      <main className="w-full min-h-screen bg-[#F5F5F5] flex items-center justify-center">
+        <p className="text-sm text-gray-500">Carregando...</p>
+      </main>
+    ) : null;
+  }
 
   return (
     <main className="w-full min-h-screen bg-[#F5F5F5] font-sans relative flex flex-col">

@@ -1,12 +1,14 @@
 // src/app/student-rooms/[id]/page.tsx
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ProblemDetailsHeader } from "../../../components/features/problem-details/ProblemDetailsHeader";
+import { LeaveRoomModal } from "../../../components/features/rooms-student/LeaveRoomModal";
 import { ChevronRight, LogOut } from "lucide-react";
-import { useRooms } from "../../../hooks/useRooms";
 import { useDisciplines } from "../../../hooks/useDiscipline";
+import { useLeaveRoom } from "../../../hooks/useLeaveRoom";
+import { useStudentRoomAccess } from "../../../hooks/useStudentRoomAccess";
 
 // Cores alternadas dos cards de problema
 const PROBLEM_GRADIENTS = ["from-[#3B4899] to-[#4354A0]", "from-[#25316D] to-[#34438E]"];
@@ -17,9 +19,11 @@ export default function StudentRoomDetailsPage() {
   const roomId = typeof params?.id === "string" ? params.id : "1";
 
   // Mesmos dados da tela do professor: o que ele criar, editar ou excluir aparece aqui
-  const { rooms } = useRooms();
+  const { room, isCheckingAccess, hasAccess } = useStudentRoomAccess(roomId);
+  const { leaveRoom, isLeaving, error: leaveError } = useLeaveRoom(roomId);
   const { disciplines, isLoading } = useDisciplines(roomId);
-  const room = rooms.find((r) => r.id === roomId);
+  const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
+
   const disciplineTag = room ? `${room.code} - ${room.semester ?? ""}` : "...";
   const problems = disciplines.flatMap((discipline) =>
     discipline.problems.map((problem) => ({ ...problem, disciplineName: discipline.name }))
@@ -29,6 +33,14 @@ export default function StudentRoomDetailsPage() {
   const handleOpenProblem = (problemId: string) => {
     router.push(`/student-rooms/${roomId}/problems/${problemId}`);
   };
+
+  if (!hasAccess) {
+    return isCheckingAccess ? (
+      <main className="w-full min-h-screen bg-[#F5F5F5] flex items-center justify-center">
+        <p className="text-sm text-gray-500">Carregando sala...</p>
+      </main>
+    ) : null;
+  }
 
   return (
     <main className="w-full min-h-screen bg-[#F5F5F5] font-sans relative flex flex-col">
@@ -93,7 +105,7 @@ export default function StudentRoomDetailsPage() {
         <div className="sticky bottom-0 bg-[#F5F5F5] border-t border-gray-200/60 px-5 py-4">
           <button
             type="button"
-            onClick={() => router.push("/student-rooms")}
+            onClick={() => setIsLeaveModalOpen(true)}
             className="w-full bg-[#FF2957] hover:bg-[#E01E48] active:scale-[0.99] text-white py-3.5 px-6 rounded-2xl font-semibold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <LogOut size={17} />
@@ -118,7 +130,7 @@ export default function StudentRoomDetailsPage() {
 
           <button
             type="button"
-            onClick={() => router.push("/student-rooms")}
+            onClick={() => setIsLeaveModalOpen(true)}
             className="w-full bg-[#FF2957] hover:bg-[#E01E48] active:scale-[0.99] text-white py-3.5 px-6 rounded-2xl font-semibold text-sm shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <LogOut size={17} />
@@ -157,6 +169,24 @@ export default function StudentRoomDetailsPage() {
           ))}
         </div>
       </div>
+
+      {isLeaveModalOpen && (
+        <LeaveRoomModal
+          roomName={room?.name ?? "Sala"}
+          isLeaving={isLeaving}
+          error={leaveError}
+          onConfirm={async () => {
+            if (await leaveRoom()) {
+              setIsLeaveModalOpen(false);
+            }
+          }}
+          onClose={() => {
+            if (!isLeaving) {
+              setIsLeaveModalOpen(false);
+            }
+          }}
+        />
+      )}
     </main>
   );
 }
