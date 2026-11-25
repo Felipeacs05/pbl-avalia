@@ -1,10 +1,12 @@
 // src/components/PhotoRoster/PhotoRosterList.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { usePhotoRoster } from "../../hooks/usePhotoRoster";
 import { StudentCard } from "./StudentCard";
 import type { Student } from "../../types/student";
+import { ConfirmModal } from "../ui/ConfirmModal";
+import { Toast } from "../ui/Toast";
 import { Users, AlertCircle, RefreshCw } from "lucide-react";
 
 interface PhotoRosterListProps {
@@ -12,15 +14,48 @@ interface PhotoRosterListProps {
 }
 
 export function PhotoRosterList({ roomId }: PhotoRosterListProps) {
-  const { students, isLoading, error, refreshStudents, removeStudent } =
-    usePhotoRoster(roomId);
+  const {
+    students,
+    isLoading,
+    error,
+    isRemoving,
+    removeError,
+    refreshStudents,
+    removeStudent,
+  } = usePhotoRoster(roomId);
 
   const [studentToRemove, setStudentToRemove] = useState<Student | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [attemptCount, setAttemptCount] = useState(0);
+  const [dismissedError, setDismissedError] = useState<{
+    text: string;
+    attempt: number;
+  } | null>(null);
+
+  const clearSuccess = useCallback(() => setSuccessMessage(null), []);
+  const dismissError = useCallback(() => {
+    if (removeError) {
+      setDismissedError({ text: removeError, attempt: attemptCount });
+    }
+  }, [removeError, attemptCount]);
+
+  const showRemoveError =
+    Boolean(removeError) &&
+    !(
+      dismissedError?.text === removeError &&
+      dismissedError?.attempt === attemptCount
+    );
 
   const handleConfirmRemove = async () => {
     if (!studentToRemove) return;
-    await removeStudent(studentToRemove.id);
+    const target = studentToRemove;
+    setSuccessMessage(null);
+    setAttemptCount((prev) => prev + 1);
+    const removed = await removeStudent(target.id);
     setStudentToRemove(null);
+    if (removed) {
+      setSuccessMessage(`Aluno ${target.name} removido da sala.`);
+    }
   };
 
   return (
@@ -77,47 +112,35 @@ export function PhotoRosterList({ roomId }: PhotoRosterListProps) {
         </div>
       )}
 
-      {/* Modal de confirmação simples de desvinculação */}
+      {/* Modal de confirmação de desvinculação com aviso de preservação de histórico */}
       {studentToRemove && (
-        <div
+        <ConfirmModal
           role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in"
-          onClick={() => setStudentToRemove(null)}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-xl flex flex-col items-center text-center gap-4 border border-gray-100"
-          >
-            <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
-              <Users size={24} />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-800">
-                Remover aluno?
-              </h3>
-              <p className="text-xs text-gray-500 mt-1">
-                Deseja desvincular <strong>{studentToRemove.name}</strong> da turma?
-              </p>
-            </div>
-            <div className="flex gap-3 w-full mt-2">
-              <button
-                type="button"
-                onClick={() => setStudentToRemove(null)}
-                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 cursor-pointer"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmRemove}
-                className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-xs font-semibold text-white shadow-sm cursor-pointer"
-              >
-                Remover
-              </button>
-            </div>
-          </div>
-        </div>
+          modalId="modal-confirmar-remocao"
+          messageId="texto-aviso-historico"
+          confirmButtonId="btn-confirmar-remocao"
+          cancelButtonId="btn-cancelar-remocao"
+          title="Remover aluno?"
+          message={
+            <>
+              Deseja desvincular <strong>{studentToRemove.name}</strong> da turma? O{" "}
+              <strong>histórico será preservado</strong> (notas, presenças e feedbacks) e o{" "}
+              <strong>acesso será revogado</strong>.
+            </>
+          }
+          confirmLabel="Remover"
+          variant="danger"
+          isLoading={isRemoving}
+          onConfirm={handleConfirmRemove}
+          onClose={() => setStudentToRemove(null)}
+        />
+      )}
+
+      {successMessage && (
+        <Toast message={successMessage} type="success" onClose={clearSuccess} />
+      )}
+      {showRemoveError && removeError && (
+        <Toast message={removeError} type="error" onClose={dismissError} />
       )}
     </div>
   );

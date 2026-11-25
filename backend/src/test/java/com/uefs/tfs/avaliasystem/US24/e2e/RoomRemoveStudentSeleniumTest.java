@@ -1,4 +1,4 @@
-package com.uefs.tfs.avaliasystem.US24.e2e;
+package com.uefs.tfs.avaliasystem.US22.US24.e2e;
 
 import com.uefs.tfs.avaliasystem.US02.e2e.LoginPage;
 import org.junit.jupiter.api.*;

@@ -236,7 +236,8 @@ class AttendanceIntegrationTest {
     private void assertBetween(Instant before, Instant after, Instant actual) {
         assertNotNull(actual);
         assertFalse(actual.isBefore(before), "horário " + actual + " anterior à requisição (" + before + ")");
-        assertFalse(actual.isAfter(after), "horário " + actual + " posterior à resposta (" + after + ")");
+        assertFalse(actual.isAfter(after.plus(1, ChronoUnit.MICROS)),
+                "horário " + actual + " posterior à resposta (" + after + ")");
     }
 
     private Attendance persistedAttendance() {

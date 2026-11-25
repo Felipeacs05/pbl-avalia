@@ -32,9 +32,15 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
+    @Column(nullable = false)
+    @JsonIgnore
+    private boolean emailVerified = false; // marca o usuario como verificado
+
     @JsonIgnore
     @Column(nullable = false)
     private String password;
+
+
 
     @JsonIgnore
     @Column(nullable = false, columnDefinition = "integer default 0")
@@ -49,6 +55,7 @@ public class User {
         this.email = email;
         this.password = password;
         this.profilePictureUrl = profilePictureUrl;
+        this.emailVerified = false;
     }
 
     public User(UUID id, String name, String email, String password, String profilePictureUrl) {
@@ -57,6 +64,7 @@ public class User {
         this.email = email;
         this.password = password;
         this.profilePictureUrl = profilePictureUrl;
+        this.emailVerified = false;
     }
 
 }

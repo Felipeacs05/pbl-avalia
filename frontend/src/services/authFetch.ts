@@ -1,4 +1,5 @@
 // src/services/authFetch.ts
+import { redirectIfEmailNotVerified } from './emailNotVerified';
 
 /**
  * Retorna os headers com Authorization: Bearer <token> injetado
@@ -21,10 +22,16 @@ export function getAuthHeaders(customHeaders?: HeadersInit): Headers {
  */
 export async function authFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const headers = getAuthHeaders(init?.headers);
-  return fetch(input, {
+  const response = await fetch(input, {
     ...init,
     headers,
   });
+  // 403 de e-mail não verificado (US22). Lê uma cópia: o corpo original continua para quem chamou
+  if (response.status === 403) {
+    const data = await response.clone().json().catch(() => null);
+    redirectIfEmailNotVerified(response.status, data);
+  }
+  return response;
 }
 
 /**

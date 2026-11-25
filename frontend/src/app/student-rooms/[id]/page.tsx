@@ -139,7 +139,7 @@ export default function StudentRoomDetailsPage() {
         </div>
 
         {/* Coluna Direita: Problemas */}
-        <div className="w-1/2 overflow-y-auto max-h-[calc(100vh-8rem)] space-y-4">
+        <div className="w-1/2 overflow-y-auto overflow-x-hidden max-h-[calc(100vh-8rem)] space-y-4 px-2 py-1 [scrollbar-gutter:stable]">
           <h2 className="text-lg font-bold text-gray-900 tracking-tight">
             Problemas
           </h2>
@@ -150,7 +150,7 @@ export default function StudentRoomDetailsPage() {
               key={problem.id}
               type="button"
               onClick={() => handleOpenProblem(problem.id)}
-              className={`w-full text-left relative bg-gradient-to-br ${PROBLEM_GRADIENTS[index % PROBLEM_GRADIENTS.length]} text-white rounded-2xl p-5 shadow-md overflow-hidden transition-all hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] cursor-pointer group`}
+              className={`w-full text-left relative bg-gradient-to-br ${PROBLEM_GRADIENTS[index % PROBLEM_GRADIENTS.length]} text-white rounded-2xl p-5 shadow-md overflow-hidden transition-all hover:shadow-lg hover:brightness-105 active:scale-[0.99] cursor-pointer group`}
             >
               <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -translate-y-8 translate-x-8 group-hover:bg-white/10 transition-colors" />
               <p className="text-3xl font-bold tracking-tight text-center mb-3 drop-shadow-sm">

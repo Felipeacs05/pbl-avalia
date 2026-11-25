@@ -180,9 +180,6 @@ function DisciplinesContent() {
                 <DisciplineHeader
                   name={discipline.name}
                   description={discipline.description}
-                  onMessageClass={() => {
-                    /* TODO: open message modal */
-                  }}
                 />
 
                 {/* Problem list */}

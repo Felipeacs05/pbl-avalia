@@ -1,4 +1,4 @@
-package com.uefs.tfs.avaliasystem.US25;
+package com.uefs.tfs.avaliasystem.US22.US25;
 
 import com.uefs.tfs.avaliasystem.TestConfig;
 import com.uefs.tfs.avaliasystem.config.SecurityConfig;

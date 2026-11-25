@@ -3,7 +3,9 @@ package com.uefs.tfs.avaliasystem.US01;
 import com.uefs.tfs.avaliasystem.dto.RegisterUserRequest;
 import com.uefs.tfs.avaliasystem.model.User;
 import com.uefs.tfs.avaliasystem.repository.UserRepository;
+import com.uefs.tfs.avaliasystem.service.EmailVerificationService;
 import com.uefs.tfs.avaliasystem.service.UserServiceImpl;
+import jakarta.mail.MessagingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,6 +43,8 @@ class UserServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    EmailVerificationService emailVerificationService;
     @TempDir
     Path tempDir;
 
@@ -48,12 +52,12 @@ class UserServiceTest {
 
     @BeforeEach
     void setUp() {
-        userService = new UserServiceImpl(userRepository, passwordEncoder, null, tempDir.toString());
+        userService = new UserServiceImpl(emailVerificationService, userRepository, passwordEncoder, null, tempDir.toString());
     }
 
     @Test
     @DisplayName("US01 - senha deve ser criptografada via BCrypt antes de salvar no banco")
-    void shouldEncryptPasswordBeforeSaving() {
+    void shouldEncryptPasswordBeforeSaving() throws MessagingException {
         var request = new RegisterUserRequest("Ana Silva", "ana@uefs.br", "senhaForte123");
         var profilePicture = new MockMultipartFile("photo", "perfil.jpg", "image/jpeg", "conteudo-fake".getBytes());
 
@@ -98,7 +102,7 @@ class UserServiceTest {
     @ParameterizedTest
     @ValueSource(strings = {"image/jpeg", "image/jpg", "image/png"})
     @DisplayName("US01 - formatos válidos (JPG, JPEG, PNG) devem ser aceitos com sucesso e persistir arquivo no storage e URL pública no usuário")
-    void shouldAcceptValidFormats(String validContentType) throws IOException {
+    void shouldAcceptValidFormats(String validContentType) throws IOException, MessagingException {
         var request = new RegisterUserRequest("Ana Silva", "ana@uefs.br", "senhaForte123");
         byte[] photoBytes = "conteudo-ok".getBytes();
         var validPhoto = new MockMultipartFile("photo", "foto.img", validContentType, photoBytes);

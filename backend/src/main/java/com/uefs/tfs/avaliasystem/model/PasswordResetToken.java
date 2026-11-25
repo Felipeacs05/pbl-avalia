@@ -7,37 +7,36 @@ import lombok.Setter;
 
 import java.time.Instant;
 
+@Entity
 @Getter
 @Setter
-@Entity
-public class PasswordResetToken {
+public class PasswordResetToken implements SingleUsageTokenInterface{
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String token;
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "single_usage_token_id", nullable = false, unique = true)
+    private SingleUsageToken token;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, name = "user_id")
     private User user;
 
-    @Column(nullable = false)
-    private Instant expiryDate;
-
-    @Column(nullable = false)
-    private boolean used;
-
-    public PasswordResetToken() {}
-
-    public PasswordResetToken(User user, String token, Instant expiryDate) {
+    public PasswordResetToken(User user, SingleUsageToken token) {
         this.user = user;
         this.token = token;
-        this.expiryDate = expiryDate;
-        this.used = false;
     }
 
-    public boolean isValid() {
-        return !used && expiryDate != null && expiryDate.isAfter(Instant.now());
+
+
+    public PasswordResetToken() {
+
+    }
+
+    @Override
+    public String toString() {
+        return token.toString();
     }
 }
