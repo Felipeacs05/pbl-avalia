@@ -73,6 +73,12 @@ public class RoomController {
         roomService.removeStudentFromRoom(roomId, studentId, userId(principal));
     }
 
+    @PostMapping("/{roomId}/leave")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void leaveRoom(@PathVariable UUID roomId, Principal principal) {
+        roomService.leaveRoom(roomId, userId(principal));
+    }
+
     @PostMapping("/join")
     @ResponseStatus(HttpStatus.OK)
     public RoomResponse joinRoom(@RequestBody @Valid JoinRoomRequest request,

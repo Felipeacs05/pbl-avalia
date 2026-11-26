@@ -1,5 +1,6 @@
-package com.uefs.tfs.avaliasystem.US22.US25;
+package com.uefs.tfs.avaliasystem.US25;
 
+import com.uefs.tfs.avaliasystem.exception.*;
 import com.uefs.tfs.avaliasystem.model.*;
 import com.uefs.tfs.avaliasystem.repository.*;
 import com.uefs.tfs.avaliasystem.service.*;
@@ -51,7 +52,7 @@ class RoomLeaveServiceTest {
 
     @BeforeEach
     void setUp() {
-        roomService = new RoomService(roomRepository, null, roomMemberRepository, null);
+        roomService = new RoomService(roomRepository, null, roomMemberRepository, null, notificationRepository, clock);
         // Mock clock
         when(clock.instant()).thenReturn(now);
         when(clock.getZone()).thenReturn(ZoneId.systemDefault());
