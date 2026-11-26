@@ -87,8 +87,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<Map<String, Object>> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex) {
-        log.warn("Invalid parameter type: {}", ex.getMessage());
-        return buildResponse(HttpStatus.BAD_REQUEST, "Invalid parameter: " + ex.getName());
+        log.warn("Method argument type mismatch: {}", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, "Invalid parameter format: " + ex.getName());
     }
 
     @ExceptionHandler(MissingServletRequestPartException.class)

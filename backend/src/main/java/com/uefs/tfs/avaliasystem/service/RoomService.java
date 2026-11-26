@@ -16,6 +16,7 @@ import com.uefs.tfs.avaliasystem.model.Role;
 import com.uefs.tfs.avaliasystem.model.Room;
 import com.uefs.tfs.avaliasystem.model.RoomMember;
 import com.uefs.tfs.avaliasystem.model.User;
+import com.uefs.tfs.avaliasystem.repository.GroupMemberRepository;
 import com.uefs.tfs.avaliasystem.repository.NotificationRepository;
 import com.uefs.tfs.avaliasystem.repository.RoomMemberRepository;
 import com.uefs.tfs.avaliasystem.repository.RoomRepository;
@@ -46,6 +47,9 @@ public class RoomService {
 
     @PersistenceContext
     private EntityManager entityManager;
+
+    @Autowired(required = false)
+    private GroupMemberRepository groupMemberRepository;
 
     public RoomService(RoomRepository roomRepository,
                        UserRepository userRepository,
@@ -117,7 +121,7 @@ public class RoomService {
 
         if (entityManager != null) {
             try {
-                // 1. sessões tutoriais (cargos, presenças, registros de comportamento e feedbacks)
+                // 1. Filhos de sessões tutoriais (cargos, presenças, registros de comportamento e feedbacks)
                 entityManager.createNativeQuery("DELETE FROM session_role_assignment WHERE session_id IN (SELECT ts.id FROM tutoring_sessions ts JOIN problems p ON ts.problem_id = p.id WHERE p.room_id = :roomId)").setParameter("roomId", roomId).executeUpdate();
                 entityManager.createNativeQuery("DELETE FROM attendances WHERE session_id IN (SELECT ts.id FROM tutoring_sessions ts JOIN problems p ON ts.problem_id = p.id WHERE p.room_id = :roomId)").setParameter("roomId", roomId).executeUpdate();
                 entityManager.createNativeQuery("DELETE FROM behavior_record WHERE session_id IN (SELECT ts.id FROM tutoring_sessions ts JOIN problems p ON ts.problem_id = p.id WHERE p.room_id = :roomId)").setParameter("roomId", roomId).executeUpdate();
@@ -231,9 +235,19 @@ public class RoomService {
         }
         RoomMember member = roomMemberRepository.findByRoomIdAndUserId(roomId, studentId)
                 .orElseThrow(() -> new IllegalArgumentException("Aluno não encontrado na sala"));
+        if (member.getRole() != Role.STUDENT) {
+            throw new IllegalArgumentException("Não é possível remover o tutor da sala");
+        }
+        if (!member.isActive()) {
+            throw new IllegalArgumentException("Aluno não encontrado na sala");
+        }
         member.setActive(false);
         member.setUnlinkedAt(java.time.Instant.now());
         roomMemberRepository.save(member);
+        if (groupMemberRepository != null) {
+            groupMemberRepository.findByGroupRoomIdAndUserId(roomId, studentId)
+                    .ifPresent(groupMemberRepository::delete);
+        }
     }
 
     @Transactional

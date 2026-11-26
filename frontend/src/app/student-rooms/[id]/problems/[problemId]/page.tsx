@@ -9,7 +9,7 @@ import { StudentSelfEvaluationModal } from "../../../../../components/features/e
 import { StudentPeerEvaluationModal } from "../../../../../components/features/evaluations/StudentPeerEvaluationModal";
 import { Toast } from "../../../../../components/ui/Toast";
 import { useProblemDetails } from "../../../../../hooks/useProblemDetails";
-import { useRooms } from "../../../../../hooks/useRooms";
+import { useStudentRoomAccess } from "../../../../../hooks/useStudentRoomAccess";
 
 // Cores alternadas dos cards de sessão
 const SESSION_GRADIENTS = [
@@ -26,9 +26,8 @@ export default function StudentProblemSessionsPage() {
     typeof params?.problemId === "string" ? params.problemId : "prob_01";
 
   // Mesmo problema da tela do professor: título, descrição e sessões vêm dele
+  const { room, isCheckingAccess, hasAccess } = useStudentRoomAccess(roomId);
   const { problem, isLoading } = useProblemDetails(problemId);
-  const { rooms } = useRooms();
-  const room = rooms.find((r) => r.id === roomId);
   const disciplineTag = room
     ? `${room.code} - ${room.semester ?? ""}`
     : problem
@@ -52,6 +51,14 @@ export default function StudentProblemSessionsPage() {
       `/student-rooms/${roomId}/problems/${problemId}/sessions/${sessionId}`
     );
   };
+
+  if (!hasAccess) {
+    return isCheckingAccess ? (
+      <main className="w-full min-h-screen bg-[#F5F5F5] flex items-center justify-center">
+        <p className="text-sm text-gray-500">Carregando...</p>
+      </main>
+    ) : null;
+  }
 
   return (
     <main className="w-full min-h-screen bg-[#F5F5F5] font-sans relative flex flex-col">
