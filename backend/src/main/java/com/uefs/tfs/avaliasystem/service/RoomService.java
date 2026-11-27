@@ -6,13 +6,18 @@ import com.uefs.tfs.avaliasystem.dto.RoomRequest;
 import com.uefs.tfs.avaliasystem.dto.RoomResponse;
 import com.uefs.tfs.avaliasystem.dto.RoomMemberResponse;
 import com.uefs.tfs.avaliasystem.exception.InvalidAccessCodeException;
+import com.uefs.tfs.avaliasystem.exception.ResourceConflictException;
+import com.uefs.tfs.avaliasystem.exception.ResourceNotFoundException;
 import com.uefs.tfs.avaliasystem.exception.TooManyAttemptsException;
 import com.uefs.tfs.avaliasystem.exception.UserNotFoundException;
+import com.uefs.tfs.avaliasystem.model.Notification;
+import com.uefs.tfs.avaliasystem.model.NotificationType;
 import com.uefs.tfs.avaliasystem.model.Role;
 import com.uefs.tfs.avaliasystem.model.Room;
 import com.uefs.tfs.avaliasystem.model.RoomMember;
 import com.uefs.tfs.avaliasystem.model.User;
 import com.uefs.tfs.avaliasystem.repository.GroupMemberRepository;
+import com.uefs.tfs.avaliasystem.repository.NotificationRepository;
 import com.uefs.tfs.avaliasystem.repository.RoomMemberRepository;
 import com.uefs.tfs.avaliasystem.repository.RoomRepository;
 import com.uefs.tfs.avaliasystem.repository.UserRepository;
@@ -22,6 +27,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -35,6 +42,8 @@ public class RoomService {
     private final UserRepository userRepository;
     private final RoomMemberRepository roomMemberRepository;
     private final RateLimitingService rateLimitingService;
+    private final NotificationRepository notificationRepository;
+    private final Clock clock;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -46,10 +55,22 @@ public class RoomService {
                        UserRepository userRepository,
                        RoomMemberRepository roomMemberRepository,
                        RateLimitingService rateLimitingService) {
+        this(roomRepository, userRepository, roomMemberRepository, rateLimitingService, null, Clock.systemUTC());
+    }
+
+    @Autowired
+    public RoomService(RoomRepository roomRepository,
+                       UserRepository userRepository,
+                       RoomMemberRepository roomMemberRepository,
+                       RateLimitingService rateLimitingService,
+                       NotificationRepository notificationRepository,
+                       Clock clock) {
         this.roomRepository = roomRepository;
         this.userRepository = userRepository;
         this.roomMemberRepository = roomMemberRepository;
         this.rateLimitingService = rateLimitingService;
+        this.notificationRepository = notificationRepository;
+        this.clock = clock != null ? clock : Clock.systemUTC();
     }
 
     @Transactional
@@ -126,7 +147,8 @@ public class RoomService {
                 entityManager.createNativeQuery("DELETE FROM group_member WHERE group_id IN (SELECT g.id FROM groups g WHERE g.room_id = :roomId)").setParameter("roomId", roomId).executeUpdate();
                 entityManager.createNativeQuery("DELETE FROM groups WHERE room_id = :roomId").setParameter("roomId", roomId).executeUpdate();
 
-                // 8. Desvincula e remove todos os alunos/membros (room_members) e times (teams)
+                // 8. Notificações, vínculos de membros e times da sala
+                entityManager.createNativeQuery("DELETE FROM notifications WHERE room_id = :roomId").setParameter("roomId", roomId).executeUpdate();
                 entityManager.createNativeQuery("DELETE FROM room_members WHERE room_id = :roomId").setParameter("roomId", roomId).executeUpdate();
                 entityManager.createNativeQuery("DELETE FROM teams WHERE room_id = :roomId").setParameter("roomId", roomId).executeUpdate();
             } catch (Exception ignored) {
@@ -226,6 +248,40 @@ public class RoomService {
             groupMemberRepository.findByGroupRoomIdAndUserId(roomId, studentId)
                     .ifPresent(groupMemberRepository::delete);
         }
+    }
+
+    @Transactional
+    public void leaveRoom(UUID roomId, UUID studentId) {
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new ResourceNotFoundException("Sala não encontrada"));
+
+        if (room.getTutor() != null && room.getTutor().getId().equals(studentId)) {
+            throw new IllegalArgumentException("Tutor não pode sair da própria sala");
+        }
+
+        RoomMember member = roomMemberRepository.findByRoomIdAndUserIdForUpdate(roomId, studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("O aluno não pertence à sala informada"));
+
+        if (member.getRole() == Role.TUTOR) {
+            throw new IllegalArgumentException("Tutor não pode sair da própria sala");
+        }
+
+        if (!member.isActive()) {
+            throw new ResourceConflictException("O aluno já saiu desta sala");
+        }
+
+        Instant now = clock.instant();
+        member.setActive(false);
+        member.setUnlinkedAt(now);
+        roomMemberRepository.save(member);
+
+        Notification notification = new Notification();
+        notification.setRecipient(room.getTutor());
+        notification.setRoom(room);
+        notification.setStudent(member.getUser());
+        notification.setType(NotificationType.STUDENT_LEFT);
+        notification.setCreatedAt(now);
+        notificationRepository.save(notification);
     }
 
     @Transactional(readOnly = true)

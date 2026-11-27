@@ -1,4 +1,4 @@
-package com.uefs.tfs.avaliasystem.US22.US25;
+package com.uefs.tfs.avaliasystem.US25;
 
 import com.uefs.tfs.avaliasystem.model.*;
 import com.uefs.tfs.avaliasystem.repository.NotificationRepository;
