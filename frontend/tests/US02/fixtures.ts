@@ -34,7 +34,7 @@ export const SUBMIT_BUTTON_LOADING_TEXT = "Entrando...";
 export const REGISTER_LINK_TEXT = "Cadastre-se";
 
 // Títulos e cabeçalhos de dashboard
-export const DASHBOARD_TITLE = "Avalia - Suas Salas";
+export const DASHBOARD_TITLE = "Suas salas";
 export const TEACHER_TAB_LABEL = "Professor";
 export const STUDENT_TAB_LABEL = "Aluno";
 export const CREATE_ROOM_BUTTON_TEXT = "Criar nova sala";

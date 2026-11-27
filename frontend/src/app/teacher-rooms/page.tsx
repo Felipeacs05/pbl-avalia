@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useRooms } from "../../hooks/useRooms";
 import { useCopyLink } from "../../hooks/useCopyLink";
 import { RoomList } from "../../components/features/rooms/RoomList";
+import { RoomsHeader } from "../../components/features/rooms/RoomsHeader";
 import { BottomTabBar } from "../../components/features/navigation/BottomTabBar";
 import { CreateRoomModal } from "../../components/features/rooms/CreateRoomModal";
 import { EditRoomModal } from "../../components/features/rooms/EditRoomModal"; // ← ADICIONAR IMPORT
@@ -102,9 +103,7 @@ export default function Home() {
       )}
 
       <div className="flex-1 px-5 pt-12 pb-40 overflow-y-auto">
-        <h1 className="text-2xl font-bold text-center text-[#182860] mb-8 tracking-tight">
-          Avalia - Suas Salas
-        </h1>
+        <RoomsHeader />
 
         {isLoading ? (
           <p className="mt-10 text-center text-sm text-gray-500 animate-pulse">

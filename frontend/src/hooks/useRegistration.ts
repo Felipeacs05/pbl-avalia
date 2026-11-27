@@ -4,9 +4,9 @@ import { registrationService } from "../services/registrationService";
 
 type ToastState = { message: string; type: "success" | "error" } | null;
 
-// Criamos uma interface para o Linter não reclamar do 'any'
 interface ApiError {
   response?: {
+    status?: number;
     data?: {
       message?: string;
     };
@@ -45,28 +45,40 @@ export function useRegistration() {
     e.preventDefault();
     setToast(null);
 
-    if (!name || !email || !password || !confirmPassword) return showToast("Preencha todos os campos obrigatórios.");
-    if (password !== confirmPassword) return showToast("As senhas não coincidem.");
-    // [OPCIONAL] Validação "A foto de perfil é obrigatória." removida: a imagem agora é opcional.
+    console.log("📌 Tentando submeter formulário de registro...", { name, email });
+
+    if (!name || !email || !password || !confirmPassword) {
+      console.warn("⚠️ Validação falhou: Campos obrigatórios vazios.");
+      return showToast("Preencha todos os campos obrigatórios.");
+    }
+
+    if (password !== confirmPassword) {
+      console.warn("⚠️ Validação falhou: Senhas não coincidem.");
+      return showToast("As senhas não coincidem.");
+    }
 
     setLoading(true);
     try {
       await registrationService.createAccount({ name, email, password, image });
+
+      console.log("✅ Cadastro efetuado com sucesso!");
       showToast("Conta criada com sucesso! Redirecionando...", "success");
-      
+
       setTimeout(() => {
         router.push("/");
       }, 2000);
 
     } catch (error: unknown) {
-      console.error(error);
+      console.error("❌ Erro capturado no useRegistration:", error);
       let message = "Falha ao realizar o cadastro. Tente novamente.";
 
       const err = error as ApiError;
       if (err.response?.data?.message) {
         message = err.response.data.message;
+      } else if (err.response?.status === 403 || err.response?.status === 401) {
+        message = "Acesso não autorizado. Verifique as credenciais.";
       }
-      
+
       showToast(message);
     } finally {
       setLoading(false);
