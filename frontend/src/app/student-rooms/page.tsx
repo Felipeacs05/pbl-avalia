@@ -3,6 +3,7 @@
 import React, { Suspense, useCallback, useState } from "react";
 import { useRooms } from "../../hooks/useRooms";
 import { BottomTabBar } from "../../components/features/navigation/BottomTabBar";
+import { RoomsHeader } from "../../components/features/rooms/RoomsHeader";
 import { StudentRoomCard } from "../../components/features/rooms-student/StudentRoomCard";
 import { useRouter, useSearchParams } from "next/navigation";
 import { EnterRoomModal } from "../../components/features/rooms-student/EnterRoomModal";
@@ -94,9 +95,7 @@ function StudentContent() {
   return (
     <main className="w-full min-h-screen bg-[#F8F9FA] font-sans relative flex flex-col">
       <div className="flex-1 px-5 pt-12 pb-36 overflow-y-auto">
-        <h1 className="text-2xl font-bold text-center text-[#182860] mb-8 tracking-tight">
-          Avalia - Suas Salas
-        </h1>
+        <RoomsHeader />
 
         {isLoading ? (
           <p className="mt-10 text-center text-sm text-gray-500 animate-pulse">
